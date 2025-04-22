@@ -3,8 +3,15 @@
 ## Scope
 This document resumes the requirements of connections for HTTP/1.1 and our implementation choices.
 
-## References
+## Server choices
 
+This server only acts as a Origin Server (No gateway, proxy or tunnel)
+
+Support HTTP/1.0 Keep-Alive
+
+## Content
+
+## References
 ------------------
 
 HTTP servers must: maintain the states of connection, establish or reuse connections, progress messages from a connection, detect connection failures and closing connections.

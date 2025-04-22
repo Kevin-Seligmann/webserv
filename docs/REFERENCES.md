@@ -1,3 +1,7 @@
+# References
+
+This list of references has links to whole documents from where this documentation has been built. Each section has its own references, more specific to themselves (Most commonly, a specific section inside an RFC)
+
 ## HTTP/1.1
 [RFC9112](https://datatracker.ietf.org/doc/html/rfc9112) HTTP/1.1
 [RFC9110](https://datatracker.ietf.org/doc/html/rfc9110) HTTP Semantics
