@@ -51,19 +51,21 @@ Incorrect syntaxis implies a 400 message and closed connection
 
 ### Field rules
 
-In general:   field-name = token, or field-name = field-value
+field-line   = field-name ":" OWS field-value OWS; Field name is case-insensitive
 
-Field names are case insensitive
-
-A "Field section" is composed by a number of "Field lines" with a "Field name" and a "Field line value"
+No whitespace is allowed between field-name and colon
 
 When a field name is repeated in a section, it's field value is a list of all values field line values present, concatenated as a list.
 
 Never generate new fields when a name is present (Except for Set-Cookie)
 
-Set-Cookies have one value per field line, and many field lines
-
 Reject field line, values or header/trailer section if they are "too long" (Error 4xx)
+
+Line folding is a way to send multiple values for a line:
+
+obs-fold     = OWS CRLF RWS
+
+Line folding is disallowed except for message/http media type (Could be rejected or replaced by SP)
 
 ### Field value rules
 

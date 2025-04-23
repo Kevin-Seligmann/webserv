@@ -31,3 +31,5 @@ An upper limit on the number of connections can be established
 A timeout value of inactive connections is apropiate. Servers must monitor the connections for a close signal.
 
 It's important (TCP Reset problem) that the server close first the write side. Then mantains the connection until it receives a close. Then close.
+
+Syntax errors make the server reject the message with a 400 and a closed connection

@@ -1,5 +1,7 @@
 # References
 
+// To do: Field values. Transfer encoding. Media types. Accepted headers. CGI, Cookies. URI parsing.
+
 This list of references has links to whole documents from where this documentation has been built. Each section has its own references, more specific to themselves (Most commonly, a specific section inside an RFC)
 
 ## HTTP/1.1
@@ -13,3 +15,6 @@ This list of references has links to whole documents from where this documentati
 [RFC7405](https://datatracker.ietf.org/doc/html/rfc7405) Case-Sensitive String Support in ABNF
 [RFC9110#5.6.1](https://datatracker.ietf.org/doc/html/rfc9110#name-lists-rule-abnf-extension) Case-Sensitive String Support in ABNF
 
+## Other
+[RFC3875](https://datatracker.ietf.org/doc/html/rfc3875) CGI
+[RFC6265](https://datatracker.ietf.org/doc/html/rfc6265) COOKIE
