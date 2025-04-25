@@ -1,5 +1,14 @@
 # Header
 
+## Index
+
+- Server choices
+- Scope
+- List of supported headers
+- Parsing and general rules
+- Supported Fields details
+- References
+
 ## Scope
 
 This document lists and explains supported fields, header parsing rules and choices made for this web server.
@@ -8,13 +17,11 @@ This document lists and explains supported fields, header parsing rules and choi
 
 CR, LF or NUL on field-values are considered errors and replaced with SP, other invalid characters are ignored.
 
-Vary and Accept - etc are ignroed
+Vary and Accept - etc are ignored
 
 Conditionals are ignored
 
 ## Supported Fields
-
-### List
 
 - Host 
 - Connection
@@ -26,20 +33,7 @@ Conditionals are ignored
 - Allowed
 - Location
 - Expect
-
-### Host
-
-uri-host [ ":" port ]
-
-### Date
-
-Must be generated in 2xx, 3xx and 4xx responses. And optional in 1xx and 5xx. Ignored on request. (We generate it always)
-
-Read PARSING for date parsing
-
-### Content-Type
-
-Read MEDIA_TYPES for supported media types and details
+- Transfer-Encoding
 
 ## Parsing and general rules
 
@@ -52,6 +46,8 @@ Incorrect syntaxis implies a 400 message and closed connection
 ### Field rules
 
 field-line   = field-name ":" OWS field-value OWS; Field name is case-insensitive
+
+field-name = token; Case insensitive and can be dquoted
 
 No whitespace is allowed between field-name and colon
 
@@ -69,27 +65,21 @@ Line folding is disallowed except for message/http media type (Could be rejected
 
 ### Field value rules
 
-Some of the grammar is field dependant (E.g, is it a list?)
+Some of the grammar is field dependant.
+
+Fields can be singleton (1 Value) or list-based (Multiple values)
 
 Grammar:
 
 field-value    = *field-content
 field-content  = field-vchar [ 1*( SP / HTAB / field-vchar ) field-vchar ]
 field-vchar    = VCHAR / obs-text
-obs-text       = %x80-FF
 
 This grammar means that the field value ends and starts with a "field-vchar", and inside there can be any spaces, tabs, or field-vchar
 
 A field value ignores trailing and leading whitespace.
 
-For lists, a field dependant rule is defined where cardinality can be specified: "<n>#<m>element"
-
-Empty elements don't count. Recipients must ignore them to a limit. 
-
-A token is defined as 
-
-  token          = 1*tchar
-  tchar          = "!" / "#" / "$" / "%" / "&" / "'" / "*"  / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA ; any VCHAR, except delimiters
+Some fields can be defined with delimiters (E.g dquotes)
 
 Delimiters are chosen from the set of US-ASCII visual characters not allowed in a token (DQUOTE and "(),/:;<=>?@[\]{}").
 
@@ -101,27 +91,64 @@ A string of text can be dquoted and act as a single value:
   qdtext         = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
   quoted-pair    = "\" ( HTAB / SP / VCHAR / obs-text )
 
+### Comments
+
 Comments (Not always allowed) are like:
 
   comment        = "(" *( ctext / quoted-pair / comment ) ")"
   ctext          = HTAB / SP / %x21-27 / %x2A-5B / %x5D-7E / obs-text
 
-Parameters are preceding by a semicolon
+Comment avaiability is field dependant
+
+### Parameters
+
+Parameters are preceding by a semicolon.
+
+Parameters names are case-insensitive. Value case depends on field.
 
 parameters      = *( OWS ";" OWS [ parameter ] )
-parameter       = parameter-name "=" parameter-value
+parameter       = parameter-name "=" parameter-value; No whitespace around =
 parameter-name  = token
 parameter-value = ( token / quoted-string )
 
-Names are insensitive. They can be dquoted.
+### Timestamps
 
 There are 3 time formats, all of them have to be accepted but only IMF-fixdate.
 
 IMF-fixdate, RFC 850 format, ANSI C's. [Read for details](https://datatracker.ietf.org/doc/html/rfc9110#name-date-time-formats)
 
-Date is case sensitive
+Date is case sensitive.
+
+Read [RCF9110-5.6.7](https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.7) for more information
+
+### Lists
+
+For lists, a field dependant rule is defined where cardinality can be specified: "<n>#<m>element", meaning at least n at most m
+
+Each element of a list is separated by a comma and OWS
+
+Empty elements don't count. Recipients must ignore them to a limit. 
+
+(This is a grammar rule. Not actually present on lists)
+
+## Supported Fields Details
+
+### Host
+
+uri-host [ ":" port ]
+
+### Date
+
+Must be generated in 2xx, 3xx and 4xx responses. And optional in 1xx and 5xx. Ignored on request. (We generate it always)
+
+Read PARSING for date parsing
+
+### Content-Type
+
+Read MEDIA_TYPES for supported media types and details
 
 ## References
 
 [RFC9110-5](https://datatracker.ietf.org/doc/html/rfc9110#name-fields) Fields
+[RFC9112-5](https://datatracker.ietf.org/doc/html/rfc9112#name-field-syntax) Field Syntax for HTTP/1.1
 [Time format](https://datatracker.ietf.org/doc/html/rfc9110#name-date-time-formats)

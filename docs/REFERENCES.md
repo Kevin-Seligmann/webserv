@@ -1,7 +1,5 @@
 # References
 
-// To do: Field values. Transfer encoding. Media types. Accepted headers. CGI, Cookies. URI parsing.
-
 This list of references has links to whole documents from where this documentation has been built. Each section has its own references, more specific to themselves (Most commonly, a specific section inside an RFC)
 
 ## HTTP/1.1
@@ -18,3 +16,4 @@ This list of references has links to whole documents from where this documentati
 ## Other
 [RFC3875](https://datatracker.ietf.org/doc/html/rfc3875) CGI
 [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265) COOKIE
+[RFC2046](https://datatracker.ietf.org/doc/html/rfc2046) Media-Types (MIME)

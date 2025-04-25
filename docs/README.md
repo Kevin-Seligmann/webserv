@@ -1,3 +1,5 @@
+// To do: Accepted headers. CGI, Cookies. URI parsing specifics.
+
 This documentation resumes the RFC's on REFERENCES focusing on the features implemented on this server. It also speaks about the desing of the C++ implementation itself thorugh a class diagram. 
 
 For now, the documentation is composed of the following documents:
