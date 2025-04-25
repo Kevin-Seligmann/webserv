@@ -36,6 +36,12 @@ If no Location, is identified by the target URI.
 ### 204: No content
 Successful request but there's no content to send in the response.
 
+## 3xx: Information
+
+### 302: Found
+
+Answer to a CGI Client Redirect Response (Read CGI)
+
 ## 4xx: Client error
 The server should send a representation with an explanation of the error and if it's temporary or permanent.
 
