@@ -172,10 +172,10 @@
           <mxGeometry y="26" width="240" height="44" as="geometry" />
         </mxCell>
         <mxCell id="I9XYT82SZLcXuWSCUwmC-22" value="RequestType &amp;lt;&amp;lt;Enum&amp;gt;&amp;gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1470" y="620" width="230" height="100" as="geometry" />
+          <mxGeometry x="1470" y="620" width="230" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="I9XYT82SZLcXuWSCUwmC-23" value="GET_VIRTUAL_SERVER, CLOSING, SET_CGI_INTEREST, REMOVE_CGI_INTEREST" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="I9XYT82SZLcXuWSCUwmC-22" vertex="1">
-          <mxGeometry y="26" width="230" height="74" as="geometry" />
+        <mxCell id="I9XYT82SZLcXuWSCUwmC-23" value="GET_VIRTUAL_SERVER, CLOSING, START_CGI,&amp;nbsp; END_CGI" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="I9XYT82SZLcXuWSCUwmC-22" vertex="1">
+          <mxGeometry y="26" width="230" height="44" as="geometry" />
         </mxCell>
         <mxCell id="I9XYT82SZLcXuWSCUwmC-27" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" parent="1" source="I9XYT82SZLcXuWSCUwmC-40" target="I9XYT82SZLcXuWSCUwmC-18" edge="1">
           <mxGeometry width="160" relative="1" as="geometry">
