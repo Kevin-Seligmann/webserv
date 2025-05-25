@@ -1,6 +1,12 @@
 # CGI
 
-Status of the document: CGI will be implemented after other basic functionality. Expanding to implement CGI should not produce significant changes on the rest of the code (Except maybe shared utilities for parsing). As a result, this document is incomplete util more details are defined.
+Important:
+
+To be reviewed to narrow the scope.
+
+Status of the document: 
+
+CGI will be implemented after other basic functionality. Expanding to implement CGI should not produce significant changes on the rest of the code (Except maybe shared utilities for parsing). As a result, this document is incomplete util more details are defined.
 
 ## Scope
 This document resumes RFC3875 (CGI) for this implementation of a web server
