@@ -249,7 +249,7 @@
             <mxPoint x="1957.7" y="-200" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="1a8JrGUghkv8qu4YOcdz-32" value="NetBuffer" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-32" value="RequestNetBuffer" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1980" y="-310" width="280" height="190" as="geometry" />
         </mxCell>
         <mxCell id="1a8JrGUghkv8qu4YOcdz-33" value="&lt;div&gt;- buffer: uint8 []&lt;/div&gt;&lt;div&gt;- start_ptr: uint8 *&lt;/div&gt;&lt;div&gt;- request_line_end: uint8 *&lt;/div&gt;&lt;div&gt;- header_end: uint8 *&lt;/div&gt;&lt;div&gt;- body_end: uint8 *&lt;/div&gt;&lt;div&gt;- chunk_end: uint8 [3] [*] &amp;lt;&amp;lt;line, body, trailer&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;- head: uint8 *&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-32">
@@ -265,6 +265,42 @@
           <mxGeometry width="160" relative="1" as="geometry">
             <mxPoint x="2106" y="84" as="sourcePoint" />
             <mxPoint x="1970" y="-110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-37" value="&lt;div&gt;NetBuffer&lt;/div&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="-622" width="280" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-38" value="&lt;div&gt;- buffer: uint8 []&lt;/div&gt;&lt;div&gt;- start_ptr: uint8 *&lt;/div&gt;&lt;div&gt;- request_line_end: uint8 *&lt;/div&gt;&lt;div&gt;- header_end: uint8 *&lt;/div&gt;&lt;div&gt;- body_end: uint8 *&lt;/div&gt;&lt;div&gt;- chunk_end: uint8 [3] [*] &amp;lt;&amp;lt;line, body, trailer&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;- head: uint8 *&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-37">
+          <mxGeometry y="26" width="280" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-39" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-37">
+          <mxGeometry y="150" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-40" value="+ reset(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-37">
+          <mxGeometry y="158" width="280" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-41" value="" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;" edge="1" parent="1" source="1a8JrGUghkv8qu4YOcdz-32" target="1a8JrGUghkv8qu4YOcdz-37">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="2190" y="-40" as="sourcePoint" />
+            <mxPoint x="2350" y="-40" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-42" value="&lt;div&gt;ResponseNetBuffer&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2481" y="-310" width="280" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-43" value="&lt;div&gt;- buffer: uint8 []&lt;/div&gt;&lt;div&gt;- start_ptr: uint8 *&lt;/div&gt;&lt;div&gt;- request_line_end: uint8 *&lt;/div&gt;&lt;div&gt;- header_end: uint8 *&lt;/div&gt;&lt;div&gt;- body_end: uint8 *&lt;/div&gt;&lt;div&gt;- chunk_end: uint8 [3] [*] &amp;lt;&amp;lt;line, body, trailer&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;- head: uint8 *&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-42">
+          <mxGeometry y="26" width="280" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-44" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-42">
+          <mxGeometry y="150" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-45" value="+ reset(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="1a8JrGUghkv8qu4YOcdz-42">
+          <mxGeometry y="158" width="280" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="1a8JrGUghkv8qu4YOcdz-47" value="" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;" edge="1" parent="1" source="1a8JrGUghkv8qu4YOcdz-42" target="1a8JrGUghkv8qu4YOcdz-37">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="2410" y="-118" as="sourcePoint" />
+            <mxPoint x="2490" y="-160" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>
