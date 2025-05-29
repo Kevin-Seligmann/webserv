@@ -6,6 +6,9 @@
 #include <fstream>
 #include <ctime>
 #include <cstring>
+#include "HTTPRequest.hpp"
+
+class HTTPRequest;
 
 enum LogLevel 
 {
@@ -30,10 +33,14 @@ public:
     void setOutput(LogLevel log_level, std::ostream & out);
 
 
+    std::ostream & operator<<(std::string const & str);
+    std::ostream & operator<<(HTTPRequest const & header);
+
 private:
     static const std::string ERR_PREFIX;
     static const std::string WAR_PREFIX;
     static const std::string INFO_PREFIX;
+    static const std::string DEBUG_PREFIX;
 
     LogLevel _log_level; 
     std::ostream * _information_output;

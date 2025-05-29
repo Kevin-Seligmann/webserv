@@ -3,6 +3,7 @@
 const std::string Logger::ERR_PREFIX = "Error. ";
 const std::string Logger::WAR_PREFIX = "Warning. ";
 const std::string Logger::INFO_PREFIX = "Information. ";
+const std::string Logger::DEBUG_PREFIX = "Debug. \n";
 
 Logger::Logger(LogLevel log_level)
 :_log_level(log_level),
@@ -81,4 +82,18 @@ void Logger::_output_timestamp(std::ostream * os) const
     char *str = ctime(&timestamp);
     str[std::strlen(str) - 1] = 0;
     *os << "[" << str << "] ";
+}
+
+std::ostream & Logger::operator<<(std::string const & str)
+{
+    _output_timestamp(_information_output);
+    *_information_output << DEBUG_PREFIX << str;
+    return *_information_output;
+}
+
+std::ostream & Logger::operator<<(HTTPRequest const & header)
+{
+    _output_timestamp(_information_output);
+    *_information_output << DEBUG_PREFIX << header;
+    return *_information_output;
 }

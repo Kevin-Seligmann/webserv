@@ -2,6 +2,7 @@
 #include <exception>
 
 #include "Logger.hpp"
+#include "HTTPRequest.hpp"
 
 int main()
 {
@@ -11,6 +12,9 @@ int main()
         log.info("Bienvenido a Webserv");
         log.warning("In development");
         log.error("Nothing else done");
+
+        HTTPRequest rq;
+        log << rq;
     }
     catch (std::exception & e)
     {

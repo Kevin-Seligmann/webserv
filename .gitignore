@@ -1,1 +1,4 @@
 .vscode
+webserv
+*.o
+*.d
