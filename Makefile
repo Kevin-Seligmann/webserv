@@ -1,7 +1,7 @@
-VPATH = src src/util
+VPATH = src src/util src/http
 
 # Files
-OBJ = main.o Logger.o
+OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o HTTPHeader.o URI.o
 
 # Target
 NAME = webserv
