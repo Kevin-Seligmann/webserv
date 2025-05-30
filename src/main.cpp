@@ -1,5 +1,6 @@
 #include "../inc/ServersManager.hpp"
 #include "../inc/functions.hpp"
+#include "../inc/colors.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -11,7 +12,9 @@ int main(int ac, char** av) {
     
     if (ac == 1) {
         fakeConfig(parsedConfigFile); // crea fake config para dev
-        std::cout << "Warning: starting server with default config" << std::endl;
+        std::cout << RED << "Warning: starting server with default config" << RESET << std::endl;
+        std::cout << "No configuration file provided" << std::endl;
+        std::cout << "Using default config file: ./conf/default.conf" << std::endl;
 //      useDefaultConfigFile(parsedConfigFile); // pasa parsedConfigFile para actualizarlo
     }
     else if (ac == 2) {
@@ -25,7 +28,7 @@ int main(int ac, char** av) {
     serversInit(ws, parsedConfigFile);
 
     for (int i = 0; i < 17; ++i) {std::cout << "-";} std::cout << std::endl;
-    std::cout << "Servers configured:" << std::endl;
+    std::cout << GRN << "Servers configured:" << RESET << std::endl;
     size_t i = 1;
     std::map<HostPort, std::vector<Servers> >::const_iterator ws_it;
     for (ws_it = ws.serversManager.begin(); ws_it != ws.serversManager.end(); ++ws_it) {
@@ -35,12 +38,12 @@ int main(int ac, char** av) {
             const Servers& srv = *s_it;
             std::ostringstream oss;
             oss << i;
-            std::cout << "Server (" << oss.str() << ")" << std::endl;
+            std::cout << "Server (" << GRN << oss.str() << RESET << ")" << std::endl;
             std::cout << "  HostPort: " << srv.getHostPort() << std::endl;
             std::cout << "  Host: " << srv.getHost() << std::endl;
             std::cout << "  Port: " << srv.getPort() << std::endl;
             std::cout << "  Default: " << (srv.isDefaultServer() ? "yes" : "no") << std::endl;
-            std::cout << "  Name: " << (srv.getServerName().empty() ? "Empty: no_name" : srv.getServerName())  << std::endl;
+            std::cout << "  Name: " << YEL << (srv.getServerName().empty() ? "Empty: no_name" : srv.getServerName()) << RESET << std::endl;
         }
     }
 
