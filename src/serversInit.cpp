@@ -123,8 +123,8 @@ bool serversInit(ServersManager& sm, const ParsedServers& ps) {
 
     for (size_t i = 0; i < ps.size(); ++i) {
         Servers aux_server(ps[i]);
-        HostPort hp(ps[i].host, ps[i].port);
-        sm.addServer(hp, aux_server); // maneja la lógica de default_server
+        HostPort aux_hp(ps[i].host, ps[i].port);
+        sm.addServer(aux_hp, aux_server); // maneja la lógica de default_server
     }
     std::cout << "Success: servers initialized." << std::endl;
     return true;

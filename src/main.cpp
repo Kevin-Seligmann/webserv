@@ -8,22 +8,18 @@ int main(int ac, char** av) {
     (void) av; // casteo solo para dev
 
     ParsedServers parsedConfigFile; // estructura que será receptora del parseo
-    fakeConfig(parsedConfigFile); // crea fake config para dev
-
-
-    // al integrar el parseo se debe cambiar lo anterior por esto o similar...
-    /*
-    if ac == 1 {
+    
+    if (ac == 1) {
+        fakeConfig(parsedConfigFile); // crea fake config para dev
         std::cout << "Warning: starting server with default config" << std::endl;
-        useDefaultConfigFile(parsedConfigFile); // pasa parsedConfigFile para actualizarlo
+//      useDefaultConfigFile(parsedConfigFile); // pasa parsedConfigFile para actualizarlo
     }
-    else if ac == 2 {
+    else if (ac == 2) {
+        // parseConfigFile(av[1], parsedConfigFile); // pasa parsedConfigFile para actualizarlo
         std::cout << "Success: starting server with custom config" << std::endl;
-        parseConfigFile(av[1], parsedConfigFile); // pasa parsedConfigFile para actualizarlo
     }
     else
         std::cout << "Error: too many arguments" << std::endl;
-    */
 
     ServersManager ws;
     serversInit(ws, parsedConfigFile);
@@ -39,11 +35,12 @@ int main(int ac, char** av) {
             const Servers& srv = *s_it;
             std::ostringstream oss;
             oss << i;
-            std::cout << "Server: " << oss.str() << std::endl;
+            std::cout << "Server (" << oss.str() << ")" << std::endl;
+            std::cout << "  HostPort: " << srv.getHostPort() << std::endl;
             std::cout << "  Host: " << srv.getHost() << std::endl;
             std::cout << "  Port: " << srv.getPort() << std::endl;
             std::cout << "  Default: " << (srv.isDefaultServer() ? "yes" : "no") << std::endl;
-            std::cout << "  Name: " << srv.getServerName() << std::endl;
+            std::cout << "  Name: " << (srv.getServerName().empty() ? "Empty: no_name" : srv.getServerName())  << std::endl;
         }
     }
 

@@ -4,21 +4,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include "HostPort.hpp"
 #include "Parsed.hpp"
 #include "Servers.hpp"
 #include "Locations.hpp"
 #include "HttpRequest.hpp"
-
-struct HostPort {
-    std::string host;
-    int         port;
-
-    HostPort(const std::string& host, const int port);
-    ~HostPort();
-
-    bool operator==(const HostPort& other) const;
-    bool operator<(const HostPort& other) const;
-};
 
 struct ServersManager {
     std::map<HostPort, std::vector< Servers > > serversManager;

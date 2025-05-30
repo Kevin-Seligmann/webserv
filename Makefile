@@ -9,9 +9,10 @@ INC_DIR = inc
 
 SRC_FILES = main.cpp \
 			serversInit.cpp \
-			Parsed.cpp \
+			HostPort.cpp \
 			HttpRequest.cpp \
 			Locations.cpp \
+			Parsed.cpp \
 			Servers.cpp \
 			ServersManager.cpp
 

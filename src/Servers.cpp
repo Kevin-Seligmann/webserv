@@ -1,7 +1,8 @@
 #include "../inc/Servers.hpp"
 
 Servers::Servers(const ParsedServer &params, bool default_server)
-    : _host(params.host)
+    : _hostPort(HostPort(params.host, params.port))
+    , _host(params.host)
     , _port(params.port)
     , _server_name(params.serverName)
     , _root(params.root)
@@ -17,6 +18,8 @@ Servers::Servers(const ParsedServer &params, bool default_server)
 
 Servers::~Servers() {}
 
+void Servers::setHostPort(const HostPort &hostPort) { _hostPort.host = hostPort.host; _hostPort.port = hostPort.port; }
+const HostPort& Servers::getHostPort(void) const { return _hostPort; }
 void Servers::setHost(const std::string &host) { _host = host; }
 const std::string& Servers::getHost(void) const { return _host; }
 void Servers::setPort(const int port) { _port = port; }
