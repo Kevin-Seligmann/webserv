@@ -3,30 +3,47 @@
 #include "../inc/colors.hpp"
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
+
+void choseParsingPath(int ac, char **av, ParsedServers& parsedConfig);
+void showServers(ServersManager ws);
 
 int main(int ac, char** av) {
-    (void) ac; // casteo solo para dev
-    (void) av; // casteo solo para dev
 
-    ParsedServers parsedConfigFile; // estructura que será receptora del parseo
-    
+    ParsedServers parsedConfig; // estructura que será receptora del parseo
+    choseParsingPath(ac, av, parsedConfig); // donde hacemos el parse del default o el file que entra
+
+    ServersManager ws;
+    serversInit(ws, parsedConfig);
+
+    showServers(ws);
+
+    return 0;
+}
+
+// SIMPLE ARBOL DE CONDICIONES QUE EVALUA ARGUMENTOS, PARA SACARLO DEL FLUJO DEL MAIN
+void choseParsingPath(int ac, char **av, ParsedServers& parsedConfig) {
+    (void)av;
     if (ac == 1) {
-        fakeConfig(parsedConfigFile); // crea fake config para dev
+        fakeConfig(parsedConfig); // crea fake config para dev
+        // parseDefaultConfigFile(parsedConfig); DESCOMENTAR AL MERGEAR CON EL PARSEO
         std::cout << RED << "Warning: starting server with default config" << RESET << std::endl;
         std::cout << "No configuration file provided" << std::endl;
         std::cout << "Using default config file: ./conf/default.conf" << std::endl;
-//      useDefaultConfigFile(parsedConfigFile); // pasa parsedConfigFile para actualizarlo
     }
     else if (ac == 2) {
-        // parseConfigFile(av[1], parsedConfigFile); // pasa parsedConfigFile para actualizarlo
+        // parseConfigFile(av[1], parsedConfig); // pasa parsedConfig para actualizarlo
         std::cout << "Success: starting server with custom config" << std::endl;
     }
-    else
-        std::cout << "Error: too many arguments" << std::endl;
+    else {
+        std::cout << RED << "Error: too many arguments" << RESET << std::endl;
+        exit (1);
+    }
+}
 
-    ServersManager ws;
-    serversInit(ws, parsedConfigFile);
 
+// SOLO PARA DEBUG Y VALIDAR QUE SE ESTA GUARDANDO OK
+void showServers(ServersManager ws) {
     for (int i = 0; i < 17; ++i) {std::cout << "-";} std::cout << std::endl;
     std::cout << GRN << "Servers configured:" << RESET << std::endl;
     size_t i = 1;
@@ -46,6 +63,4 @@ int main(int ac, char** av) {
             std::cout << "  Name: " << YEL << (srv.getServerName().empty() ? "Empty: no_name" : srv.getServerName()) << RESET << std::endl;
         }
     }
-
-    return 0;
 }
