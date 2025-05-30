@@ -1,64 +1,41 @@
-VPATH = src src/util
+TARGET = webserv
 
-# Files
-OBJ = main.o Logger.o
+CXX = g++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iinc
 
-# Target
-NAME = webserv
-
-# Project
-PROJ = Webserv
-
-# Directories
+SRC_DIR = src
 OBJ_DIR = obj
-
 INC_DIR = inc
 
-OBJ_PATH = $(addprefix $(OBJ_DIR)/, $(OBJ))
+SRC_FILES = main.cpp \
+			ServerValidator.cpp \
+			Parsed.cpp \
 
-DEPS = $(OBJ_PATH:.o=.d)
+SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 
-# Include
-INCLUDES = -I./$(INC_DIR)
+OBJS = $(addprefix $(OBJ_DIR)/, $(SRC_FILES:.cpp=.o))
 
-# Flags -Wall -Wextra -Werror
-FLAGS = -std=c++98
+DEPS = $(addprefix $(OBJ_DIR)/, $(SRC_FILES:.cpp=.d))
 
+all: $(TARGET)
 
-# Compiler
-CC = c++
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
-# Colors
-YELLOW = "\e[33m"
-GREEN = "\e[32m"
-NO_COLOR = "\e[0m"
-
-# Linking
-all: $(OBJ_DIR) $(NAME)
-
-$(NAME): $(OBJ_PATH) Makefile
-	@$(CC) $(FLAGS) $(OBJ_PATH) -o $(NAME)
-	@echo $(YELLOW)$(PROJ) - Creating exec:$(NO_COLOR) $(NAME)
-
-# Compilation
-$(OBJ_DIR)/%.o:%.cpp
-	@$(CC) -MMD $(INCLUDES) $(FLAGS) -c $< -o $@
-	@echo $(YELLOW)$(PROJ) - Compiling object file:$(NO_COLOR) $(notdir $@)
-
-# Utils
--include $(DEPS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR) Makefile
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 $(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)
+
+-include $(DEPS)
 
 clean:
-	@rm -rf $(OBJ_DIR)
-	@echo $(YELLOW)$(PROJ) - Removing:$(NO_COLOR) Object and dependency files
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	@rm -rf $(NAME) $(NAME_B)
-	@echo $(YELLOW)$(PROJ) - Removing:$(NO_COLOR) $(NAME) $(NAME_B)
+	rm -f $(TARGET)
 
 re: fclean all
 
-.PHONY: clean fclean all re $(OBJ_DIR)
+.PHONY: all clean fclean re
