@@ -1,4 +1,4 @@
-VPATH = src src/util src/http
+VPATH = src src/util src/http src/parse
 
 # Files
 OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o HTTPHeader.o URI.o
