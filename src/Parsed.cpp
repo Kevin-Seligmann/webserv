@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/30 14:15:07 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/05/30 19:06:19 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -220,7 +220,7 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 
 	return (servers);
 }
-
+/*
 void printLocationConfig(const ParsedLocations& loc)
 {
 	std::cout << "    Path: " << loc.path << std::endl;
@@ -277,4 +277,4 @@ void printServerConfig(const ParsedServer& config)
 	}
 
 	std::cout << std::endl;
-}
+}*/

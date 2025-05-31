@@ -10,6 +10,7 @@ INC_DIR = inc
 SRC_FILES = main.cpp \
 			ServerValidator.cpp \
 			Parsed.cpp \
+			Utils.cpp
 
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 
