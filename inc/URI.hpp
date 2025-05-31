@@ -13,6 +13,7 @@ struct URI : public HTTPElement
     URI();
     void reset();
     void print(std::ostream & os) const;
+    //void validate() const {std::cout << "Validated URI. ";};
 };
 
 std::ostream & operator<<(std::ostream & os, URI const & uri);

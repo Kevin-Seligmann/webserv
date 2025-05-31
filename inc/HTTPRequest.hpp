@@ -2,22 +2,21 @@
 
 #include <vector>
 #include "HTTPElement.hpp"
-#include "HTTPMethod.hpp"
 #include "HTTPHeader.hpp"
-#include "URI.hpp"
+#include "HTTPBody.hpp"
 #include "Logger.hpp"
+#include "HTTPFirstLine.hpp"
 
 struct HTTPRequest : public HTTPElement
 {
-    HTTPMethod method;
-    std::vector<HTTPHeader> headers; 
-    URI uri;
-    std::string protocol;
-    // Body
+    HTTPFirstLine first_line;
+    HTTPHeader headers; 
+    HTTPBody body;
     
     HTTPRequest();
     void reset();
     void print(std::ostream & os) const;
+    //void validate() const {std::cout << "Validated REQUEST. ";};
 };
 
 std::ostream & operator<<(std::ostream & os, HTTPRequest request);

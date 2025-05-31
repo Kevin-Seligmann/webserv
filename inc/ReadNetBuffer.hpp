@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 #include <stdexcept>
 #include <cstring>
+#include <sys/types.h>
 
 class ReadNetBuffer
 {
@@ -27,7 +28,6 @@ public:
 
 protected:
     void discard_current();
-    ssize_t put_back_length() const;
 
 private:
     static const size_t START_BUFFER_SIZE;
@@ -41,4 +41,6 @@ private:
 
     ReadNetBuffer(ReadNetBuffer &);
     ReadNetBuffer & operator=(ReadNetBuffer &);
+
+    ssize_t put_back_length() const;
 };

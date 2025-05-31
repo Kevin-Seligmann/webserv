@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 #include <stdexcept>
 #include <cstring>
+#include <iostream>
 #include "ReadNetBuffer.hpp"
 
 class HTTPRequestBuffer : public ReadNetBuffer
