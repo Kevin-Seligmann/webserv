@@ -68,51 +68,21 @@ void RequestParser::parse_first_line()
         return ;
     }
     
-    std::string s_method;
-    get_first_line_words(_line, s_method, _request.uri.raw, _request.protocol);
-    _request.method = method::str_to_method(s_method);
+    get_first_line_words();
     _validator.validate_method(_request.method);
     _validator.validate_protocol(_request.protocol);
     _validator.validate_uri(_request.uri);
     _status = HEADERS;
 }
 
-void RequestParser::get_first_line_words(std::string const & line, std::string & method, std::string & uri, std::string & protocol)
+void RequestParser::get_first_line_words()
 {
-    std::string::const_iterator it = line.begin();
+    std::string::const_iterator it = _line.begin();
 
-    it = wss::copy_method(method, it, line.end());
-    if (it == line.end() || *it != ' ')
-    {
-        throw std::runtime_error(
-            "Invalid request: Malformed method\n"
-            "  " + line + "\n"
-            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
-        );
-    }
-
-    it = wss::copy_uri_token(uri, it, line.end());
-    if (it == line.end() || *it != ' ')
-    {
-        throw std::runtime_error(
-            "Invalid request: Malformed URI\n"
-            "  " + line + "\n"
-            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
-        );
-    }
-    
-    it = wss::copy_protocol(protocol, it, line.end());
-    it = wss::skip_ascii_whitespace(it, line.end());
-    if (it != line.end())
-    {
-        throw std::runtime_error(
-            "Invalid request: Malformed protocol\n"
-            "  " + line + "\n"
-            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
-        );
-    }
+    it = get_method(it, _line.end());
+    it = get_uri(it, _line.end());
+    it = get_protocol(it, _line.end());
 }
-
 
 void RequestParser::parse_header_line()
 {
@@ -145,4 +115,44 @@ void RequestParser::parse_body(){_status = DONE;}
 void RequestParser::dump_remainer() const
 {
     Logger::getInstance() << "Buffer remainer:\n" << std::string(_buffer.cbegin(), _buffer.cend()) << "$\n";
+}
+
+void RequestParser::malformed(std::string const & what, std::string::const_iterator place)
+{
+    throw std::runtime_error(
+        "Invalid request: Malformed " + what + ":\n"
+        "   " + _line + "\"\n"
+        "   " + std::string(std::distance((std::string::const_iterator) _line.begin(), place), ' ') + "^"
+    );
+}
+
+std::string::const_iterator RequestParser::get_method(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
+    std::string::const_iterator token_end = wss::skip_http_token(token_start, end);
+    if (token_end == _line.end() || *token_end != ' ')
+        malformed("method", token_end);
+    _request.method = method::str_to_method(std::string(token_start, token_end));
+    return token_end;
+}
+
+std::string::const_iterator RequestParser::get_uri(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
+    std::string::const_iterator token_end = wss::skip_uri_token(token_start, end);
+    if (token_end == _line.end() || *token_end != ' ')
+        malformed("uri", token_end);
+    _request.uri.raw = std::string(token_start, token_end);
+    return token_end;
+}
+
+std::string::const_iterator RequestParser::get_protocol(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
+    std::string::const_iterator token_end = wss::skip_protocol_token(token_start, end);
+    _request.protocol = std::string(token_start, token_end);
+    token_end = wss::skip_ascii_whitespace(token_end, _line.end());
+    if (token_end != _line.end())
+        malformed("first line", token_end);
+    return token_end;
 }

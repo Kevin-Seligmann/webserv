@@ -9,9 +9,6 @@ namespace wss
     void to_upper(std::string &);
     void to_lower(std::string &);
     void trim(std::string &);
-    std::string::const_iterator copy_method(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end);
-    std::string::const_iterator copy_uri_token(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end);
-    std::string::const_iterator copy_protocol(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end);
     std::string::const_iterator skip_ascii_whitespace(std::string::const_iterator begin, std::string::const_iterator end);
     std::string::const_iterator skip_uri_token(std::string::const_iterator begin, std::string::const_iterator end);
     std::string::const_iterator skip_http_token(std::string::const_iterator begin, std::string::const_iterator end);

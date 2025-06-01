@@ -41,6 +41,11 @@ private:
     void parse_first_line();
     void parse_header_line();
     void parse_body();
+    void malformed(std::string const & what, std::string::const_iterator place);
 
-    void get_first_line_words(std::string const & src, std::string & method, std::string & uri, std::string & protocol);
+    std::string::const_iterator get_method(std::string::const_iterator begin, std::string::const_iterator end);
+    std::string::const_iterator get_uri(std::string::const_iterator begin, std::string::const_iterator end);
+    std::string::const_iterator get_protocol(std::string::const_iterator begin, std::string::const_iterator end);
+
+    void get_first_line_words();
 };

@@ -49,27 +49,3 @@ std::string::const_iterator wss::skip_protocol_token(std::string::const_iterator
     while(begin != end && parse::is_protocol_char(*begin)) begin ++;
     return begin;  
 }
-
-std::string::const_iterator wss::copy_method(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end)
-{
-    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
-    std::string::const_iterator token_end = wss::skip_http_token(token_start, end);
-    dst = std::string(token_start, token_end);
-    return token_end;
-}
-
-std::string::const_iterator wss::copy_uri_token(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end)
-{
-    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
-    std::string::const_iterator token_end = wss::skip_uri_token(token_start, end);
-    dst = std::string(token_start, token_end);
-    return token_end;
-}
-
-std::string::const_iterator wss::copy_protocol(std::string & dst, std::string::const_iterator begin, std::string::const_iterator end)
-{
-    std::string::const_iterator token_start = wss::skip_ascii_whitespace(begin, end);
-    std::string::const_iterator token_end = wss::skip_protocol_token(token_start, end);
-    dst = std::string(token_start, token_end);
-    return token_end;
-}
