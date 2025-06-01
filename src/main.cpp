@@ -16,7 +16,7 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET /indeªx.html HTTP/1.1 \r \r \r\n"
+    "GET /index.html HTTP/1.1 \r \r \r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"

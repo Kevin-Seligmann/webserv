@@ -82,13 +82,31 @@ void RequestParser::get_first_line_words(std::string const & line, std::string &
     std::string::const_iterator it = line.begin();
 
     it = wss::copy_method(method, it, line.end());
+    if (it == line.end() || *it != ' ')
+    {
+        throw std::runtime_error(
+            "Invalid request: Malformed method\n"
+            "  " + line + "\n"
+            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
+        );
+    }
+
     it = wss::copy_uri_token(uri, it, line.end());
+    if (it == line.end() || *it != ' ')
+    {
+        throw std::runtime_error(
+            "Invalid request: Malformed URI\n"
+            "  " + line + "\n"
+            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
+        );
+    }
+    
     it = wss::copy_protocol(protocol, it, line.end());
     it = wss::skip_ascii_whitespace(it, line.end());
     if (it != line.end())
     {
         throw std::runtime_error(
-            "Invalid request: Malformed first line\n"
+            "Invalid request: Malformed protocol\n"
             "  " + line + "\n"
             "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
         );
