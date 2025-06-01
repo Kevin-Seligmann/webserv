@@ -94,6 +94,8 @@ authority   = [ userinfo "@" ] host [ ":" port ]; Userinfo presence is an error.
 
 segment       = *pchar
 
+segment-nz    = 1*pchar
+
 host = name or IP; Case insensitive
 
 query       = *( pchar / "/" / "?" ); Terminated by # or end of URI
@@ -115,11 +117,24 @@ URI-reference = URI / relative-ref
 
 relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
 
-relative-part = "//" authority path-abempty
-            / path-absolute
-            / path-noscheme
-            / path-empty
+relative-part = "//" authority path-abempty / path-absolute / path-noscheme / path-empty
 
+
+### Request-line target
+
+request-target = origin-form / absolute-form; No whitespace allowed.
+
+origin-form    = absolute-path [ "?" query ]; 1*( "/" segment )
+
+absolute-form  = absolute-URI; scheme ":" hier-part [ "?" query ]
+
+hier-part = "//" authority path-abempty; *( "/" segment )
+          / path-absolute; "/" [ segment-nz *( "/" segment ) ]
+          / path-rootless; segment-nz *( "/" segment )
+          / path-empty; empty
+
+
+Because all the paths end in "*( "/" segment )", first decide if the "/" is appropiate, then parse rootless.
 
 ## Conf. File
 
