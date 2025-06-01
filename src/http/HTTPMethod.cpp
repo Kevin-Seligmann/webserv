@@ -13,3 +13,17 @@ std::ostream & operator<<(std::ostream & os, HTTPMethod method)
     }
     return os;
 }
+
+HTTPMethod method::str_to_method(std::string const & str)
+{
+    if (str == "GET")
+        return GET;
+    else if (str == "POST")
+        return POST;
+    else if (str == "DELETE")
+        return DELETE;
+    else if (str == "PUT")
+        return PUT;
+    else
+        return NOMETHOD;
+}

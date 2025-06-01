@@ -5,17 +5,21 @@ HTTPRequest::HTTPRequest(){}
 void HTTPRequest::reset()
 {
     body.reset();
-    first_line.reset();
+    uri.reset();
     headers.reset();
+    method = NOMETHOD;
+    protocol = "";
 }
 
 void HTTPRequest::print(std::ostream & os) const
 {
     os 
-    << "REQUEST: " << "\n"
-    << "First line: " << first_line << "\n"
-    << "Headers: " << "\n" << headers
-    << "Body: " << body << "\n"
+    << "\n\n$ ---------- REQUEST BEGIN: " << "\n"
+    << "METHOD: " << method << "\n"
+    << "URI: " << uri.raw << "\n"
+    << "PROTOCOL: " << protocol << "\n"
+    << "HEADERS: " << "\n" << headers
+    << "BODY: " << body << "\n$ ---------- REQUEST END\n\n"
     ;
 }
 
