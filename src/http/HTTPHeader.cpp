@@ -9,7 +9,7 @@ void HTTPHeader::reset()
     _raw = "";
 }
 
-void HTTPHeader::put(std::string const & str)
+void HTTPHeader::put(std::string const & str, std::string const & value)
 {
     _raw += "\t" + str + "\n";
     //std::string::const_iterator it = str.begin();

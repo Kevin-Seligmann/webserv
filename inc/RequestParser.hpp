@@ -9,6 +9,7 @@
 #include "HTTPRequestBuffer.hpp"
 #include "RequestValidator.hpp"
 #include "StringUtil.hpp"
+#include "ParsingUtil.hpp"
 
 enum parsing_status {FIRST_LINE, HEADERS, BODY, DONE};
 
@@ -40,4 +41,6 @@ private:
     void parse_first_line();
     void parse_header_line();
     void parse_body();
+
+    void get_first_line_words(std::string const & src, std::string & method, std::string & uri, std::string & protocol);
 };

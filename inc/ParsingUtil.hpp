@@ -10,4 +10,10 @@ namespace parse
     bool is_delimiter(char c);
     bool is_token_char(char c);
     bool is_token(std::string const &);
+    bool is_whitespace(char c);
+    bool is_uri_char(char c);
+    bool is_unreserved(char c);
+    bool is_sub_delim(char c);
+    bool is_pchar(char c);
+    bool is_protocol_char(char c);
 }

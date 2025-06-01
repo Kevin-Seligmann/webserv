@@ -16,12 +16,12 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET /index.html HTTP/1.1\r\n"
+    "GET /indeªx.html HTTP/1.1 \r \r \r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
     "\n\n"
-    "GET /indexxx.html HTTP/1.1\r\n"
+    "GET /indexxx.html HTTP/1.1    \r\n"
     "Host: www.exampleee.com\r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
     "Accept: texttt/html\n\n"
@@ -54,7 +54,6 @@ void testRequestParser()
         log.error(e.what());
     }
 }
-
 
 int main()
 {

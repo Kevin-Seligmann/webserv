@@ -1,6 +1,6 @@
 #include "RequestParser.hpp"
 
-const std::string RequestParser::ILLEGAL_CHAR = std::string("\0\r", 2);
+const std::string RequestParser::ILLEGAL_CHAR = std::string("\0", 1);
 
 RequestParser::RequestParser(HTTPRequest & request)
 :_request(request), 
@@ -29,7 +29,7 @@ bool RequestParser::illegal(char c) const
 void RequestParser::sanitize(std::string & str) const
 {
     for (std::string::iterator it = str.begin(); it != str.end(); it ++)
-        if (illegal(*it))
+        if (*it == '\r')
             *it = ' ';
 }
 
@@ -68,16 +68,8 @@ void RequestParser::parse_first_line()
         return ;
     }
     
-    sanitize(_line);
-    std::stringstream os(_line);
     std::string s_method;
-
-    os >> s_method >> _request.uri.raw >> _request.protocol;
-    if (os >> _line)
-        throw std::runtime_error("Invalid request: Extra content at first line: " + _line);
-    
-    wss::to_upper(_request.protocol);
-    wss::to_upper(s_method);
+    get_first_line_words(_line, s_method, _request.uri.raw, _request.protocol);
     _request.method = method::str_to_method(s_method);
     _validator.validate_method(_request.method);
     _validator.validate_protocol(_request.protocol);
@@ -85,20 +77,49 @@ void RequestParser::parse_first_line()
     _status = HEADERS;
 }
 
+void RequestParser::get_first_line_words(std::string const & line, std::string & method, std::string & uri, std::string & protocol)
+{
+    std::string::const_iterator it = line.begin();
+
+    it = wss::copy_method(method, it, line.end());
+    it = wss::copy_uri_token(uri, it, line.end());
+    it = wss::copy_protocol(protocol, it, line.end());
+    it = wss::skip_ascii_whitespace(it, line.end());
+    if (it != line.end())
+    {
+        throw std::runtime_error(
+            "Invalid request: Malformed first line\n"
+            "  " + line + "\n"
+            "  " + std::string(std::distance(line.begin(), it), ' ') + "^\n"
+        );
+    }
+}
+
 
 void RequestParser::parse_header_line()
 {
     _processing = _buffer.get_crlf_line(_line);
-    if (_processing)
+    if (!_processing)
+        return ;
+    
+    if (_line.empty())
     {
-        if (_line.empty())
-        {
-            _status = BODY;
-            return ;
-        }
-        sanitize(_line);
-        _request.headers.put(_line);
+        _status = BODY;
+        return ;
     }
+    sanitize(_line);
+    size_t separator_pos = _line.find(':');
+    if (separator_pos == std::string::npos)
+        throw std::runtime_error("Invalid request: Missing ':': " + _line);
+
+    std::string name = _line.substr(0, separator_pos);
+    wss::to_lower(name);
+    if (!parse::is_token(name))
+        throw std::runtime_error("Invalid request: Header name is not a valid token: " + name);
+
+    std::string value = _line.substr(separator_pos + 1, std::string::npos);
+    wss::trim(value);
+    _request.headers.put(name, value);
 }
 
 void RequestParser::parse_body(){_status = DONE;}

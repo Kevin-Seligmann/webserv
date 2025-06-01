@@ -15,7 +15,7 @@ struct HTTPHeader : public HTTPElement
     HTTPHeader();
     void reset();
     void print(std::ostream & os) const;
-    void put(std::string const & str);
+    void put(std::string const & name, std::string const & value);
 };
 
 std::ostream & operator<<(std::ostream & os,  HTTPHeader const & header);
