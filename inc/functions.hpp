@@ -6,5 +6,6 @@
 
 ParsedServers& fakeConfig(ParsedServers& ps);
 bool serversInit(ServersManager& sm, const ParsedServers& ps);
+bool socketsInit(SocketsManager listenSockets, ServersManager webServers);
 
 #endif

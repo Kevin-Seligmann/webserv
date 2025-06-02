@@ -1,4 +1,5 @@
 #include "../inc/ServersManager.hpp"
+#include "../inc/SocketsManager.hpp"
 #include "../inc/functions.hpp"
 #include "../inc/colors.hpp"
 #include <iostream>
@@ -10,13 +11,22 @@ void showServers(ServersManager ws);
 
 int main(int ac, char** av) {
 
-    ParsedServers parsedConfig; // estructura que será receptora del parseo
-    choseParsingPath(ac, av, parsedConfig); // donde hacemos el parse del default o el file que entra
+    // estructura que será receptora del parseo
+    ParsedServers config;
+    // donde hacemos el parse del default o el file que entra
+    choseParsingPath(ac, av, config);
 
-    ServersManager ws;
-    serversInit(ws, parsedConfig);
+    // estructura que tendrá los daros de los servers
+    ServersManager webSevers;
+    // inicialización de estructura con datos de los servers
+    serversInit(webSevers, config);
 
-    showServers(ws);
+    // check de las fases previas
+    showServers(webSevers);
+
+    // estructura para los fd de los sockets
+    SocketsManager listenSockets;
+    socketsInit(listenSockets, webSevers);
 
     return 0;
 }

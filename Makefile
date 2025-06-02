@@ -9,12 +9,14 @@ INC_DIR = inc
 
 SRC_FILES = main.cpp \
 			serversInit.cpp \
+			socketsInit.cpp \
 			HostPort.cpp \
 			HttpRequest.cpp \
 			Locations.cpp \
 			Parsed.cpp \
 			Servers.cpp \
-			ServersManager.cpp
+			ServersManager.cpp \
+			SocketsManager.cpp \
 
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 
