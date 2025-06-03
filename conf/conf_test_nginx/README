@@ -1,0 +1,79 @@
+===== ETAPA 1 - LOS HOSTS =====
+
+# Anade en /etc/hosts nombres de servidores
+# server2 server3 samename
+# sin eso no funciona curl tipo http://server2:8080/
+
+127.0.0.1	localhost server2 server3 samename #irozhkov.42.fr
+
+
+===== ETAPA 2 - SCRIPT POR NGINX =====
+
+# Cambia tu go-nginx.sh a esto o usa el archivo de aqui
+
+LOCAL_CONF=$(pwd)/conf
+LOCAL_HTML1=$(pwd)/html/server1
+LOCAL_HTML2=$(pwd)/html/server2
+LOCAL_HTML3=$(pwd)/html/server3
+CONTAINER_NAME="nginx-test"
+IMAGE="nginx:stable"
+
+docker stop $CONTAINER_NAME 2>/dev/null
+docker rm $CONTAINER_NAME 2>/dev/null
+
+docker run -d -p 8080:80 -p 8081:81 -p 8082:82 \
+  -v $LOCAL_CONF:/etc/nginx/conf.d \
+  -v $LOCAL_HTML1:/usr/share/nginx/html/server1 \
+  -v $LOCAL_HTML2:/usr/share/nginx/html/server2 \
+  -v $LOCAL_HTML3:/usr/share/nginx/html/server3 \
+  --name $CONTAINER_NAME $IMAGE
+
+
+===== ETAPA 3 - LOS TESTS =====
+
+Nombre del archivo: samehostport_default_s2
+Descripcion: Todos los servidores tienen el mismo host:port, no tienen [server_name], pero el servidor 2 tiene la directiva [default_server]. Todos los requests va a servidor 2.
+Status NGINX: OK, WARNING same host/port
+Curl: curl -X GET http://127.0.0.1:8080
+Output: Server 2
+
+
+Nombre del archivo: samehostport_default_s2s3
+Descripcion: Todos los servidores tienen el mismo host:port, no tienen [server_name], pero el servidor 2 y el servidor 3 tienen la directiva [default_server].
+Status NGINX: ERROR
+Curl: no tiene sentido, pero >>> curl -X GET http://127.0.0.1:8080
+Output: none
+
+
+Nombre del archivo: samehostport_difname_default_s2s3
+Descripcion: Todos los servidores tienen el mismo host:port, el servidor 2 y el servidor 3 tienen nombres DIFERENTES [server_name], el servidor 2 y el servidor 3 tienen la directiva [default_server].
+Status NGINX: ERROR
+Curl: no tiene sentido, pero
+	curl -X GET http://127.0.0.1:8080
+	curl -X GET http://server2:8080
+	curl -X GET http://server3:8080
+Output: none
+
+
+Nombre del archivo: samename_difport
+Descripcion: el servidor 2 y el servidor 3 tienen host:port DIFERENTE, pero el servidor 2 y el servidor 3 tienen el MISMO [server_name].
+Status NGINX: OK, no warnings
+Curl_1: curl -X GET http://samename:8081
+Output_1: Server 2
+Curl_2: curl -X GET http://samename:8082
+Output_2: Server 3
+
+
+Nombre del archivo: samename_samehostport_s2s3
+Descripcion: el servidor 2 y el servidor 3 tienen el MISMO host:port y el MISMO nombre [server_name], pero NO HAY [default_server].
+Status NGINX: OK, WARNING same host
+Curl: curl -X GET http://samename:8080
+Output: Servidor 2
+
+
+Nombre del archivo:
+Descripcion: el servidor 2 y el servidor 3 tienen el MISMO host:port y el MISMO nombre [server_name], pero NO HAY [default_server]. IMPORTANTE: cambiamos el orden de servidores - el servidor 3 esta ANTES del servidor 2. Los requests va al servidor 3, porque esta antes del servidor 2!!!
+Status NGINX: OK, WARNING same host
+Curl: curl -X GET http://samename:8080
+Output: Servidor 3
+

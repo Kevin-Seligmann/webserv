@@ -1,0 +1,46 @@
+server {
+    listen 80;
+
+    location / {
+        root /usr/share/nginx/html/server1;
+        index index.html;
+		error_page 405 = @405ejemplo1;
+    }
+
+	location @405ejemplo1 {
+		return 200 'POST recibido en ejemplo1.com\n';
+		add_header Content-Type text/plain;
+	}
+}
+
+server {
+    listen 80 default_server;
+	server_name server2;
+
+    location / {
+        root /usr/share/nginx/html/server2;
+        index index.html;
+		error_page 405 = @405ejemplo2;
+    }
+
+	location @405ejemplo2 {
+		return 200 'POST recibido en ejemplo2.com\n';
+		add_header Content-Type text/plain;
+	}
+}
+
+server {
+    listen 80 default_server;
+	server_name server3;
+
+    location / {
+        root /usr/share/nginx/html/server3;
+        index index.html;
+		error_page 405 = @405ejemplo3;
+    }
+
+	location @405ejemplo3 {
+		return 200 'POST recibido en ejemplo3.com\n';
+		add_header Content-Type text/plain;
+	}
+}
