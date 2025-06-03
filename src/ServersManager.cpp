@@ -5,18 +5,20 @@ ServersManager::ServersManager() {}
 
 ServersManager::~ServersManager() {}
 
-void ServersManager::addServer(const Listen& listen, Servers& server) {
+void ServersManager::addServer(Servers& server) {
 
-    std::map<Listen, std::vector<Servers> >::iterator it = serversManager.find(listen);
+    Listen aux_listen = server.getListens();    
+    std::map<Listen, std::vector<Servers> >::iterator it = serversManager.find(aux_listen);
 
     if (it != serversManager.end()) {
-        server.setDefaultServer(false);
+        aux_listen.is_default = false;
+        server.setListen(aux_listen);
         it->second.push_back(server);
     } 
-    
     else {
-        server.setDefaultServer(true);
-        serversManager[listen] = std::vector<Servers>(1, server);
+        aux_listen.is_default = true;
+        server.setListen(aux_listen);
+        serversManager[aux_listen] = std::vector<Servers>(1, server);
     }
 }
 

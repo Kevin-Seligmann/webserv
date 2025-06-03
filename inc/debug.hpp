@@ -7,6 +7,6 @@
 
 // DEBUG FUNCTIONS
 void showParse(const ParsedServers& config);
-void showServers(ServersManager ws);
+void showServers(const ServersManager& ws);
 
 #endif

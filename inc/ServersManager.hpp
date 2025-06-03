@@ -16,7 +16,7 @@ struct ServersManager {
     ServersManager();
     ~ServersManager();
 
-    void addServer(const Listen& listen, Servers& server);
+    void addServer(Servers& server);
     // const Servers& matchRequestServer(const HttpRequest& req);
 };
 

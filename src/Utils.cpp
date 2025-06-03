@@ -47,7 +47,7 @@ int checkFile(const char* argv)
     return (0);
 }
 
-void printLocationConfig(const ParsedLocations& loc)
+void printLocationConfig(const Locations& loc)
 {
 	std::cout << "    Path: " << loc.path << std::endl;
 	std::cout << "    Root: " << loc.root << std::endl;
@@ -95,7 +95,7 @@ void printServerConfig(const ParsedServer& config)
 	std::cout << YELLOW << "Client Max Body Size: " << RESET << config.client_max_body_size << std::endl;
 
 	std::cout << YELLOW << "Locations:" << RESET << std::endl;
-	for (std::map<std::string, ParsedLocations>::const_iterator it = config.locations.begin();
+	for (std::map<std::string, Locations>::const_iterator it = config.locations.begin();
 		 it != config.locations.end(); ++it)
 	{
 		std::cout << "  Location block for: " << it->first << std::endl;

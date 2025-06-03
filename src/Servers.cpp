@@ -1,48 +1,49 @@
 #include "../inc/Servers.hpp"
 
-Servers::Servers(const ParsedServer &params, bool default_server)
-    : _hostPort(Listen(params.host, params.port))
-    , _host(params.host)
-    , _port(params.port)
-    , _server_name(params.server_name)
+Servers::Servers(const ParsedServer &params)
+    : _listen(params.listens.empty() ? Listen("0.0.0.0", 80) : params.listens[0])
+    , _server_names(params.server_names)
     , _root(params.root)
     , _indexFiles(params.index_files)
     , _errorPages(params.error_pages)
+    , _allow_methods(params.allow_methods)
+    , _autoindex(params.autoindex)
+    , _client_max_body_size(params.client_max_body_size)
     , _locations(params.locations)
-    , _default_server(default_server)
-{
-}
+{}
 
 Servers::Servers(const ParsedServer &params, const Listen &listen)
-    : _hostPort(Listen(listen.host, listen.port, listen.is_default))
-    , _host(listen.host)
-    , _port(listen.port)
-    , _server_name(params.server_names.empty() ? "" : params.server_names[0])
+    : _listen(Listen(listen.host, listen.port, listen.is_default))
+    , _server_names(params.server_names)
     , _root(params.root)
     , _indexFiles(params.index_files)
     , _errorPages(params.error_pages)
+    , _allow_methods(params.allow_methods)
+    , _autoindex(params.autoindex)
+    , _client_max_body_size(params.client_max_body_size)
     , _locations(params.locations)
-    , _default_server(listen.is_default)
-{
-}
+{}
 
 Servers::~Servers() {}
 
-void Servers::setListen(const Listen &listen) { _hostPort.host = listen.host; _hostPort.port = listen.port; }
-const Listen& Servers::getListens(void) const { return _hostPort; }
-void Servers::setHost(const std::string &host) { _host = host; }
-const std::string& Servers::getHost(void) const { return _host; }
-void Servers::setPort(const int port) { _port = port; }
-int Servers::getPort(void) const { return _port; }
-void Servers::setServerName(const std::string &serverName) { _server_name = serverName; }
-const std::string& Servers::getServerName(void) const { return _server_name; }
+void Servers::setListen(const Listen &listen) { _listen = listen; }
+const Listen& Servers::getListens(void) const { return _listen; }
+void Servers::setServerNames(const std::vector<std::string> &serverNames) { _server_names = serverNames; }
+const std::vector<std::string>& Servers::getServerNames(void) const { return _server_names; }
+std::string Servers::getPrimaryServerName(void) const { 
+    return _server_names.empty() ? "" : _server_names[0]; 
+}
 void Servers::setRoot(const std::string &root) { _root = root; }
 const std::string& Servers::getRoot(void) const { return _root; }
 void Servers::setIndexFiles(const std::vector<std::string> &indexFiles) { _indexFiles = indexFiles; }
 const std::vector<std::string>& Servers::getIndexFiles(void) const { return _indexFiles; }
 void Servers::setErrorPages(const std::map<int, std::string> &errorPages) { _errorPages = errorPages; }
 const std::map<int, std::string>& Servers::getErrorPages(void) const { return _errorPages; }
-void Servers::setLocations(const std::map<std::string, ParsedLocations>& locations) { _locations = locations; }
-const std::map<std::string, ParsedLocations>& Servers::getLocations(void) const { return _locations; }
-void Servers::setDefaultServer(bool val) { _default_server = val; }
-bool Servers::isDefaultServer() const { return _default_server; }
+void Servers::setAllowMethods(const std::vector<std::string> &allowMethods) { _allow_methods = allowMethods; }
+const std::vector<std::string>& Servers::getAllowMethods(void) const { return _allow_methods; }
+void Servers::setAutoindex(bool autoindex) { _autoindex = autoindex; }
+bool Servers::getAutoindex(void) const { return _autoindex; }
+void Servers::setClientMaxBodySize(const std::string &clientMaxBodySize) { _client_max_body_size = clientMaxBodySize; }
+const std::string& Servers::getClientMaxBodySize(void) const { return _client_max_body_size; }
+void Servers::setLocations(const std::map<std::string, Locations>& locations) { _locations = locations; }
+const std::map<std::string, Locations>& Servers::getLocations(void) const { return _locations; }

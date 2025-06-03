@@ -39,7 +39,7 @@
 int checkFile(const char* argv);
 
 /* Functions for printing */
-void printLocationConfig(const ParsedLocations& loc);
+void printLocationConfig(const Locations& loc);
 void printServerConfig(const ParsedServer& config);
 
 /* Server initialization functions */

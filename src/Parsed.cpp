@@ -16,22 +16,22 @@
 #include "ServersManager.hpp"
 
 ParsedServer::ParsedServer(
-    const std::string& host,
-    int port,
-    const std::string& serverName,
+    const Listen& listen,
+    const std::vector<std::string>& serverNames,
     const std::string& root,
     const std::vector<std::string>& indexFiles,
     const std::map<int, std::string>& errorPages,
-    const std::map<std::string, ParsedLocations>& locations
+    const std::map<std::string, Locations>& locations
 )
-  : host(host)
-  , port(port)
-  , server_name(serverName)
+  : server_names(serverNames)
   , root(root)
   , index_files(indexFiles)
   , error_pages(errorPages)
+  , autoindex(false)
   , locations(locations)
-{}
+{
+    listens.push_back(listen);
+}
 
 ParsedServer::~ParsedServer() {}
 
@@ -99,9 +99,9 @@ size_t expect(const std::vector<std::string>& tokens, size_t i, const std::strin
 	return (i + 1);
 }
 
-ParsedLocations parseLocation(const std::vector<std::string> &tokens, size_t &i)
+Locations parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
-	ParsedLocations loc;
+	Locations loc;
 	loc.path = tokens[i++];
 	i = expect(tokens, i, "{");
 	while (tokens[i] != "}")
@@ -219,7 +219,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			server.client_max_body_size = tokens[i++];
 		else if (key == "location")
 		{
-			ParsedLocations loc = parseLocation(tokens, i);
+			Locations loc = parseLocation(tokens, i);
 			server.locations[loc.path] = loc;
 		}
 		if (tokens[i] == ";") ++i;
@@ -249,11 +249,9 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 	return (servers);
 }
 
-// ==================== PROCESS FUNCTIONS ====================
-
 // SIMPLE ARBOL DE CONDICIONES QUE EVALUA ARGUMENTOS, PARA SACARLO DEL FLUJO DEL MAIN
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
-    // Validate argument count first
+
     if (argc > 2) {
         std::cerr << std::endl << RED << "ERROR: " << RESET <<
         "This program start with arguments ---> " << YELLOW <<
@@ -266,16 +264,13 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         std::string successMessage;
         
         if (argc == 2) {
-            // Parse custom config file
             configFile = argv[1];
             successMessage = "Success: starting server with custom config";
         } else {
-            // Use default config
             configFile = "conf/default.conf";
             successMessage = "Success: starting server with default config";
         }
         
-        // Open and read config file
         std::ifstream file(configFile.c_str());
         if (!file.is_open()) {
             std::cerr << RED << "ERROR: " << RESET <<
@@ -288,14 +283,12 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         std::string content = buffer.str();
         file.close();
         
-        // Parse configuration
         std::vector<std::string> tokens = tokenize(content);
         parsedConfig = parseConfig(tokens);
         
-        // Validate parsed configuration
         ServerValidator::validate(parsedConfig);
         
-        std::cout << successMessage << std::endl;
+        std::cout << BLUE << successMessage << RESET << std::endl;
         
     } catch (const std::exception& e) {
         std::cerr << RED << "PARSING ERROR: " << RESET << e.what() << std::endl;
