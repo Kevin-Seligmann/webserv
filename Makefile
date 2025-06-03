@@ -8,11 +8,11 @@ OBJ_DIR = obj
 INC_DIR = inc
 
 SRC_FILES = main.cpp \
+			debug.cpp \
 			initServers.cpp \
 			initSockets.cpp \
-			HostPort.cpp \
+			Listen.cpp \
 			HttpRequest.cpp \
-			Locations.cpp \
 			Parsed.cpp \
 			Servers.cpp \
 			ServersManager.cpp \

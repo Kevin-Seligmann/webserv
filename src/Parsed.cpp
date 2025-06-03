@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "Parsed.hpp"
-#include "functions.hpp"
 #include "Utils.hpp"
 #include "ServerValidator.hpp"
 #include "ServersManager.hpp"
@@ -138,9 +137,9 @@ int to_int(const std::string& s)
 	return (result);
 }
 
-ParsedListen parse_listen(const std::vector<std::string>& tokens)
+Listen parse_listen(const std::vector<std::string>& tokens)
 {
-	ParsedListen ld;
+	Listen ld;
 
 	for (size_t i = 0; i < tokens.size(); ++i)
 	{
@@ -154,7 +153,7 @@ ParsedListen parse_listen(const std::vector<std::string>& tokens)
 			size_t colon = token.find(':');
 			if (colon != std::string::npos)
 			{
-				ld.ip = token.substr(0, colon);
+				ld.host = token.substr(0, colon);
 				ld.port = to_int(token.substr(colon + 1));
 			} 
 			else if (std::isdigit(token[0]))
@@ -163,7 +162,7 @@ ParsedListen parse_listen(const std::vector<std::string>& tokens)
 			}
 			else
 			{
-				ld.ip = token;
+				ld.host = token;
 			}
 		}
 	}
@@ -188,7 +187,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 				listen_tokens.push_back(tokens[i++]);
 			}
 			++i;
-			ParsedListen ld = parse_listen(listen_tokens);
+			Listen ld = parse_listen(listen_tokens);
 			server.listens.push_back(ld);
 		}
 		else if (key == "server_name")
@@ -197,6 +196,11 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "root")
 			server.root = tokens[i++];
+		else if (key == "index")
+		{
+			while (tokens[i] != ";")
+				server.index_files.push_back(tokens[i++]);
+		}
 		else if (key == "error_page")
 		{
 			int code = to_int(tokens[i++]);
@@ -301,25 +305,4 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
     return (0);
 }
 
-// SOLO PARA DEBUG Y VALIDAR QUE SE ESTA GUARDANDO OK
-void showServers(ServersManager ws) {
-    for (int i = 0; i < 17; ++i) {std::cout << "-";} std::cout << std::endl;
-    std::cout << GREEN << "Servers configured:" << RESET << std::endl;
-    size_t i = 1;
-    std::map<HostPort, std::vector<Servers> >::const_iterator ws_it;
-    for (ws_it = ws.serversManager.begin(); ws_it != ws.serversManager.end(); ++ws_it) {
-        const std::vector<Servers>& servers_vec = ws_it->second;
-        std::vector<Servers>::const_iterator s_it;
-        for (s_it = servers_vec.begin(); s_it != servers_vec.end(); ++s_it, ++i) {
-            const Servers& srv = *s_it;
-            std::ostringstream oss;
-            oss << i;
-            std::cout << "Server (" << GREEN << oss.str() << RESET << ")" << std::endl;
-            std::cout << "  HostPort: " << srv.getHostPort() << std::endl;
-            std::cout << "  Host: " << srv.getHost() << std::endl;
-            std::cout << "  Port: " << srv.getPort() << std::endl;
-            std::cout << "  Default: " << (srv.isDefaultServer() ? "yes" : "no") << std::endl;
-            std::cout << "  Name: " << YELLOW << (srv.getServerName().empty() ? "Empty: no_name" : srv.getServerName()) << RESET << std::endl;
-        }
-    }
-}
+

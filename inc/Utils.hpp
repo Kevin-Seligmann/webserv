@@ -24,6 +24,8 @@
 # include <vector>
 
 # include "Parsed.hpp"
+# include "ServersManager.hpp"
+# include "SocketsManager.hpp"
 
 // ==================== COLOR DEFINITIONS ====================
 // Unified colors used in the project
@@ -39,5 +41,9 @@ int checkFile(const char* argv);
 /* Functions for printing */
 void printLocationConfig(const ParsedLocations& loc);
 void printServerConfig(const ParsedServer& config);
+
+/* Server initialization functions */
+bool serversInit(ServersManager& sm, const ParsedServers& ps);
+bool socketsInit(SocketsManager listenSockets, ServersManager webServers);
 
 #endif

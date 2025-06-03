@@ -5,19 +5,18 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include "HostPort.hpp"
+#include "Listen.hpp"
 #include "Parsed.hpp"
 #include "Servers.hpp"
-#include "Locations.hpp"
 #include "HttpRequest.hpp"
 
 struct ServersManager {
-    std::map<HostPort, std::vector< Servers > > serversManager;
+    std::map<Listen, std::vector< Servers > > serversManager;
 
     ServersManager();
     ~ServersManager();
 
-    void addServer(const HostPort& hostPort, Servers& server);
+    void addServer(const Listen& listen, Servers& server);
     // const Servers& matchRequestServer(const HttpRequest& req);
 };
 

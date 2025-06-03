@@ -3,15 +3,15 @@
 
 #include <map>
 #include <string>
-#include "HostPort.hpp"
+#include "Listen.hpp"
 
 struct SocketsManager {
-    std::map<HostPort, int> listenSockets;
+    std::map<Listen, int> listenSockets;
 
     SocketsManager();
     ~SocketsManager();
 
-    bool isCreated(const HostPort& hp);
+    bool isCreated(const Listen& pl);
 };
 
 #endif

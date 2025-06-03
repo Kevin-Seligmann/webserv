@@ -24,13 +24,13 @@
 
 struct ListenKey
 {
-	std::string	ip;
+	std::string	host;
 	int			port;
 
 	bool operator<(const ListenKey& other)  const
 	{
-		if (ip != other.ip)
-			return (ip < other.ip);
+		if (host != other.host)
+			return (host < other.host);
 
 		return (port < other.port);
 	}

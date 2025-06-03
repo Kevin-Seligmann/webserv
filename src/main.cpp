@@ -1,28 +1,20 @@
 #include "../inc/ServersManager.hpp"
 #include "../inc/SocketsManager.hpp"
 #include "../inc/Parsed.hpp"
-#include "../inc/functions.hpp"
 #include "../inc/Utils.hpp"
+#include "../inc/debug.hpp"
 #include <iostream>
 
 int main(int argc, char** argv) {
     try {
         ParsedServers config;
-        
-        // Parse configuration file and validate arguments
-        if (parseProcess(argc, argv, config) != 0) {
-            return (1);
-        }
+        if (parseProcess(argc, argv, config) != 0)return (1);
+        showParse(config);
 
-        // estructura que tendrá los datos de los servers
         ServersManager webSevers;
-        // inicialización de estructura con datos de los servers
         serversInit(webSevers, config);
-
-        // check de las fases previas
         showServers(webSevers);
 
-        // estructura para los fd de los sockets
         SocketsManager listenSockets;
         socketsInit(listenSockets, webSevers);
 

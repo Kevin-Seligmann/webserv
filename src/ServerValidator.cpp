@@ -22,9 +22,9 @@ void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 		const ParsedServer &server = servers[s];
 		for (size_t l = 0; l < server.listens.size(); ++l)
 		{
-			const ParsedListen &ld = server.listens[l];
+			const Listen &ld = server.listens[l];
 			ListenKey key;
-			key.ip = ld.ip;
+			key.host = ld.host;
 			key.port = ld.port;
 
 			listen_map[key].push_back(&server);
@@ -51,13 +51,13 @@ void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 		if (servers_list.size() > 1 && allUnnamed)
 		{
 			std::cerr << "WARNING: Multiple unnamed servers on "
-			<< key.ip << ":" << key.port
+			<< key.host << ":" << key.port
 			<< " — routing may be ambiguous.\n";
 		}
 
 		if (default_server_count[key] > 1) {
 			std::cerr << "ERROR: More than one default_server on "
-			<< key.ip << ":" << key.port << ".\n";
+			<< key.host << ":" << key.port << ".\n";
 		}
 	}
 }

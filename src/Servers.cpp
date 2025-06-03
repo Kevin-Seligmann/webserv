@@ -1,7 +1,7 @@
 #include "../inc/Servers.hpp"
 
 Servers::Servers(const ParsedServer &params, bool default_server)
-    : _hostPort(HostPort(params.host, params.port))
+    : _hostPort(Listen(params.host, params.port))
     , _host(params.host)
     , _port(params.port)
     , _server_name(params.server_name)
@@ -13,10 +13,23 @@ Servers::Servers(const ParsedServer &params, bool default_server)
 {
 }
 
+Servers::Servers(const ParsedServer &params, const Listen &listen)
+    : _hostPort(Listen(listen.host, listen.port, listen.is_default))
+    , _host(listen.host)
+    , _port(listen.port)
+    , _server_name(params.server_names.empty() ? "" : params.server_names[0])
+    , _root(params.root)
+    , _indexFiles(params.index_files)
+    , _errorPages(params.error_pages)
+    , _locations(params.locations)
+    , _default_server(listen.is_default)
+{
+}
+
 Servers::~Servers() {}
 
-void Servers::setHostPort(const HostPort &hostPort) { _hostPort.host = hostPort.host; _hostPort.port = hostPort.port; }
-const HostPort& Servers::getHostPort(void) const { return _hostPort; }
+void Servers::setListen(const Listen &listen) { _hostPort.host = listen.host; _hostPort.port = listen.port; }
+const Listen& Servers::getListens(void) const { return _hostPort; }
 void Servers::setHost(const std::string &host) { _host = host; }
 const std::string& Servers::getHost(void) const { return _host; }
 void Servers::setPort(const int port) { _port = port; }

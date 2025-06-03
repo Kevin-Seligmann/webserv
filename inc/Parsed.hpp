@@ -21,26 +21,10 @@
 #include <string>
 #include <vector>
 
+#include "Listen.hpp"
+
 // Forward declarations
 class ServersManager;
-
-struct ParsedListen
-{
-	std::string ip;
-	int port;
-	bool is_default;
-
-	ParsedListen()
-		: ip("0.0.0.0"), port(8080), is_default(false) {}
-
-	std::string to_string() const
-	{
-		std::ostringstream oss;
-		oss << ip << ":" << port;
-		if (is_default) oss << " [default_server]";
-		return oss.str();
-	}
-};
 
 struct ParsedLocations
 {
@@ -95,7 +79,7 @@ struct ParsedLocations
 };
 
 struct ParsedServer {
-	std::vector<ParsedListen> listens;
+	std::vector<Listen> listens;
 	std::string host;
 	int port;
 	std::string server_name;
@@ -131,7 +115,7 @@ size_t expect(const std::vector<std::string>& tokens, size_t i, const std::strin
 
 int to_int(const std::string& s);
 
-ParsedListen parse_listen(const std::vector<std::string>& tokens);
+Listen parse_listen(const std::vector<std::string>& tokens);
 
 ParsedServer parseServer(const std::vector<std::string>& tokens, size_t& i);
 
@@ -139,7 +123,5 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string>& tokens);
 
 // ====== PROCESS ========
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig);
-
-void showServers(ServersManager ws);
 
 #endif

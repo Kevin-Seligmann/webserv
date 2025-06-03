@@ -5,14 +5,18 @@ ServersManager::ServersManager() {}
 
 ServersManager::~ServersManager() {}
 
-void ServersManager::addServer(const HostPort& hostPort, Servers& server) {
-    std::map<HostPort, std::vector<Servers> >::iterator it = serversManager.find(hostPort);
+void ServersManager::addServer(const Listen& listen, Servers& server) {
+
+    std::map<Listen, std::vector<Servers> >::iterator it = serversManager.find(listen);
+
     if (it != serversManager.end()) {
         server.setDefaultServer(false);
         it->second.push_back(server);
-    } else {
+    } 
+    
+    else {
         server.setDefaultServer(true);
-        serversManager[hostPort] = std::vector<Servers>(1, server);
+        serversManager[listen] = std::vector<Servers>(1, server);
     }
 }
 

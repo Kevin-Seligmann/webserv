@@ -5,12 +5,12 @@
 #include <vector>
 #include <map>
 #include "Parsed.hpp"
-#include "HostPort.hpp"
+#include "Listen.hpp"
 
 class Servers {
 
 	private:
-		HostPort					_hostPort;		// objeto HostPort usado como key
+		Listen				_hostPort;		// objeto Listen usado como key
 		std::string         		_host; 			// direccion IP
 		int                 		_port;			// puerto de escuha
 		std::string					_server_name;	// nombre del server
@@ -22,10 +22,11 @@ class Servers {
 
 	public:
 		Servers(const ParsedServer &params, bool default_server = false);
+		Servers(const ParsedServer &params, const Listen &listen);
 		~Servers();
 
-		void setHostPort(const HostPort &hostPort);
-		const HostPort& getHostPort(void) const;
+		void setListen(const Listen &listen);
+		const Listen& getListens(void) const;
 
 		void setHost(const std::string &host);
 		const std::string& getHost(void) const;
