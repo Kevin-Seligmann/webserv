@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/30 19:06:39 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/02 15:26:11 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,4 @@ ParsedListen parse_listen(const std::vector<std::string>& tokens);
 ParsedServer parseServer(const std::vector<std::string>& tokens, size_t& i);
 std::vector<ParsedServer> parseConfig(const std::vector<std::string>& tokens);
 
-//void printLocationConfig(const ParsedLocations& loc);
-//void printServerConfig(const ParsedServer& config);
 #endif

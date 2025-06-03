@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/29 12:09:35 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/31 12:58:22 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/02 18:27:30 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,13 +45,13 @@ int main(int argc, char* argv[])
 		std::string content = buffer.str();
 		std::vector<std::string> tokens = tokenize(content);
 
-/*		std::cout << "\n=== Tokenized file of config ===" << std::endl;
+		std::cout << "\n=== Tokenized file of config ===" << std::endl;
 		std::vector<std::string>::iterator it;
 		for (it = tokens.begin(); it != tokens.end(); ++it)
 		{
 			std::cout << *it << std::endl;
 		}
-*/
+
 		std::vector<ParsedServer> servers = parseConfig(tokens);
 
 		for (size_t i = 0; i < servers.size(); ++i)
@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
 	catch (const  std::exception& e)
 	{
 		std::cerr << "ERROR: " << e.what() << std::endl;
+		return (1);
 	}
 
 	return (0);

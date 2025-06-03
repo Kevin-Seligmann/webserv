@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/30 19:06:19 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/03 13:25:22 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,8 +87,10 @@ ParsedLocations parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		if (key == "root") loc.root = tokens[i++];
 		else if (key == "index") loc.index = tokens[i++];
 		else if (key == "autoindex") loc.autoindex = (tokens[i++] == "true");
-		else if (key == "allow_methods") {
-			while (tokens[i] != ";") loc.allow_methods.push_back(tokens[i++]);
+		else if (key == "allow_methods")
+		{
+			while (tokens[i] != ";")
+				loc.allow_methods.push_back(tokens[i++]);
 		}
 		else if (key == "return") loc.return_path = tokens[i++];
 		else if (key == "allow_upload") loc.allow_upload = (tokens[i++] == "true");
@@ -220,61 +222,3 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 
 	return (servers);
 }
-/*
-void printLocationConfig(const ParsedLocations& loc)
-{
-	std::cout << "    Path: " << loc.path << std::endl;
-	std::cout << "    Root: " << loc.root << std::endl;
-	std::cout << "    Index: " << loc.index << std::endl;
-	std::cout << "    Autoindex: " << (loc.autoindex ? "true" : "false") << std::endl;
-	std::cout << "    Return Path: " << loc.return_path << std::endl;
-	std::cout << "    Allow Upload: " << (loc.allow_upload ? "true" : "false") << std::endl;
-	std::cout << "    Upload Dir: " << loc.upload_dir << std::endl;
-
-	std::cout << "    Allow Methods:" << std::endl;
-	for (size_t i = 0; i < loc.allow_methods.size(); ++i)
-		std::cout << "      - " << loc.allow_methods[i] << std::endl;
-
-	std::cout << "    CGI Handlers:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = loc.cgi.begin(); it != loc.cgi.end(); ++it)
-		std::cout << "      " << it->first << " => " << it->second << std::endl;
-}
-
-void printServerConfig(const ParsedServer& config)
-{
-
-	std::cout << "\n=== ServerConfig ===" << std::endl;
-
-	std::cout << "Listen Directives:" << std::endl;
-	for (size_t i = 0; i < config.listens.size(); ++i)
-		std::cout << "  - " << config.listens[i].to_string() << std::endl;
-
-	std::cout << "Server Names:" << std::endl;
-	for (size_t i = 0; i < config.server_names.size(); ++i)
-		std::cout << "  - " << config.server_names[i] << std::endl;
-
-	std::cout << "Root: " << config.root << std::endl;
-	
-	std::cout << "Error Pages:" << std::endl;
-	for (std::map<int, std::string>::const_iterator it = config.error_pages.begin();
-		 it != config.error_pages.end(); ++it)
-		std::cout << "  " << it->first << " => " << it->second << std::endl;
-
-	std::cout << "Allowed Methods:" << std::endl;
-	for (size_t i = 0; i < config.allow_methods.size(); ++i)
-		std::cout << "  - " << config.allow_methods[i] << std::endl;
-
-	std::cout << "Autoindex: " << (config.autoindex ? "true" : "false") << std::endl;
-
-	std::cout << "Client Max Body Size: " << config.client_max_body_size << std::endl;
-
-	std::cout << "Locations:" << std::endl;
-	for (std::map<std::string, ParsedLocations>::const_iterator it = config.locations.begin();
-		 it != config.locations.end(); ++it)
-	{
-		std::cout << "  Location block for: " << it->first << std::endl;
-		printLocationConfig(it->second);
-	}
-
-	std::cout << std::endl;
-}*/
