@@ -4,16 +4,13 @@ Servers::Servers(const ParsedServer &params, bool default_server)
     : _hostPort(HostPort(params.host, params.port))
     , _host(params.host)
     , _port(params.port)
-    , _server_name(params.serverName)
+    , _server_name(params.server_name)
     , _root(params.root)
-    , _indexFiles(params.indexFiles)
-    , _errorPages(params.errorPages)
-    , _locations()
+    , _indexFiles(params.index_files)
+    , _errorPages(params.error_pages)
+    , _locations(params.locations)
     , _default_server(default_server)
 {
-    for (size_t i = 0; i < params.locations.size(); ++i) {
-        _locations.push_back(Locations(params.locations[i]));
-    }
 }
 
 Servers::~Servers() {}
@@ -32,7 +29,7 @@ void Servers::setIndexFiles(const std::vector<std::string> &indexFiles) { _index
 const std::vector<std::string>& Servers::getIndexFiles(void) const { return _indexFiles; }
 void Servers::setErrorPages(const std::map<int, std::string> &errorPages) { _errorPages = errorPages; }
 const std::map<int, std::string>& Servers::getErrorPages(void) const { return _errorPages; }
-void Servers::setLocations(const std::vector<Locations>& locations) { _locations = locations; }
-const std::vector<Locations>& Servers::getLocations(void) const { return _locations; }
+void Servers::setLocations(const std::map<std::string, ParsedLocations>& locations) { _locations = locations; }
+const std::map<std::string, ParsedLocations>& Servers::getLocations(void) const { return _locations; }
 void Servers::setDefaultServer(bool val) { _default_server = val; }
 bool Servers::isDefaultServer() const { return _default_server; }

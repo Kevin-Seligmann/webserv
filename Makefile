@@ -8,15 +8,17 @@ OBJ_DIR = obj
 INC_DIR = inc
 
 SRC_FILES = main.cpp \
-			serversInit.cpp \
-			socketsInit.cpp \
+			initServers.cpp \
+			initSockets.cpp \
 			HostPort.cpp \
 			HttpRequest.cpp \
 			Locations.cpp \
 			Parsed.cpp \
 			Servers.cpp \
 			ServersManager.cpp \
+			ServerValidator.cpp \
 			SocketsManager.cpp \
+			Utils.cpp
 
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 

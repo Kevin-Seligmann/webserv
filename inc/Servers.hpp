@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "Locations.hpp"
 #include "Parsed.hpp"
 #include "HostPort.hpp"
 
@@ -18,7 +17,7 @@ class Servers {
 		std::string                 _root;			// directorio raiz
 		std::vector<std::string>	_indexFiles;	// index.html etc.
 		std::map<int, std::string>	_errorPages;	// 404.html etc.
-		std::vector<Locations>		_locations;		// instancia de Location
+		std::map<std::string, ParsedLocations>	_locations;		// instancia de Location
 		bool						_default_server; // por defecto false
 
 	public:
@@ -46,12 +45,11 @@ class Servers {
 		void setErrorPages(const std::map<int, std::string> &errorPages);
 		const std::map<int, std::string>& getErrorPages(void) const;
 
-		void setLocations(const std::vector<Locations>& locations);
-		const std::vector<Locations>& getLocations(void) const;
+		void setLocations(const std::map<std::string, ParsedLocations>& locations);
+		const std::map<std::string, ParsedLocations>& getLocations(void) const;
 
 		void setDefaultServer(bool val);
 		bool isDefaultServer() const;
 };
-
 
 #endif
