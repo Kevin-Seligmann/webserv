@@ -6,8 +6,11 @@
 
 struct URI : public HTTPElement
 {
-    std::string raw;
     std::string host;
+    std::string path;
+    std::string query;
+    std::string fragment;
+    std::string schema;
     int port;
 
     URI();

@@ -1,9 +1,14 @@
 #include "Logger.hpp"
 
-const std::string Logger::ERR_PREFIX = "Error. ";
-const std::string Logger::WAR_PREFIX = "Warning. ";
-const std::string Logger::INFO_PREFIX = "Information. ";
-const std::string Logger::DEBUG_PREFIX = "Debug. ";
+const std::string Logger::RED = "\033[1;91m";
+const std::string Logger::GREEN = "\033[1;92m";
+const std::string Logger::YELLOW = "\033[1;93m";
+const std::string Logger::BLUE = "\033[1;94m";
+const std::string Logger::RESET = "\033[0m";
+const std::string Logger::ERR_PREFIX = RED + "Error. " + RESET;
+const std::string Logger::WAR_PREFIX = YELLOW + "Warning. " + RESET;
+const std::string Logger::INFO_PREFIX = BLUE + "Information. " + RESET;
+const std::string Logger::DEBUG_PREFIX = GREEN + "Debug. " + RESET;
 
 Logger::Logger(LogLevel log_level)
 :_log_level(log_level),

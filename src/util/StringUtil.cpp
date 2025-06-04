@@ -49,3 +49,52 @@ std::string::const_iterator wss::skip_protocol_token(std::string::const_iterator
     while(begin != end && parse::is_protocol_char(*begin)) begin ++;
     return begin;  
 }
+
+std::string::const_iterator wss::skip_path_rootless(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while(begin != end && parse::is_pchar(*begin)) begin ++;
+    return skip_absolute_path(begin, end);
+}
+
+std::string::const_iterator wss::skip_absolute_path(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while (begin != end && *begin == '/')
+    {
+        begin ++;
+        while(begin != end && parse::is_pchar(*begin)) begin ++;   
+    }
+    return begin;
+}
+
+ std::string::const_iterator wss::skip_host_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while (begin != end && parse::is_host_char(*begin)) begin ++;
+    return begin;
+}
+
+std::string::const_iterator wss::skip_port_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    begin ++;
+    while (begin != end && parse::is_digit(*begin)) begin ++;
+    return begin;
+}
+
+std::string::const_iterator wss::skip_query_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    begin ++;
+    while (begin != end && parse::is_query_char(*begin)) begin ++;
+    return begin;
+}
+
+std::string::const_iterator wss::skip_fragment_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    begin ++;
+    while (begin != end && parse::is_fragment_char(*begin)) begin ++;
+    return begin;
+}
+
+std::string::const_iterator wss::skip_schema_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while(begin != end && parse::is_alpha(*begin)) begin ++;
+    return begin;
+}

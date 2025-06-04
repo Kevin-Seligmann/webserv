@@ -46,3 +46,24 @@ bool parse::is_token(std::string const & str)
             return false;
     return true;
 }
+
+bool parse::is_host_char(char c)
+{return strchr(".%", c) || is_sub_delim(c) || is_unreserved(c);}
+
+
+bool parse::is_fragment_char(char c)
+{
+    return parse::is_pchar(c) || c == '/' || c == '?';
+}
+
+bool parse::is_query_char(char c)
+{
+    return parse::is_pchar(c) || c == '/' || c == '?';
+}
+
+void parse::first_line_sanitize(std::string & str)
+{
+    for (std::string::iterator it = str.begin(); it != str.end(); it ++)
+        if (*it == '\r')
+            *it = ' ';
+}

@@ -16,4 +16,8 @@ namespace parse
     bool is_sub_delim(char c);
     bool is_pchar(char c);
     bool is_protocol_char(char c);
+    bool is_host_char(char c);
+    bool is_fragment_char(char c);
+    bool is_query_char(char c);
+    void first_line_sanitize(std::string & str);
 }

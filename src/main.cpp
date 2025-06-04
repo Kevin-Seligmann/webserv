@@ -16,7 +16,7 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET /index.html HTTP/1.1   \r\n"
+    "GWETa a:////` H@TT@P/1.1   \r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
@@ -40,6 +40,8 @@ void testRequestParser()
         for (int i = 0; rawRequest[i]; i++)
         {
             parser.append(rawRequest + i, 1);
+            if (parser.error())
+                continue ;
             parser.process();
             if (parser.done())
             {

@@ -18,6 +18,12 @@ enum LogLevel
 class Logger
 {
 public:
+    static const std::string RED;
+    static const std::string GREEN;
+    static const std::string YELLOW;
+    static const std::string BLUE;
+    static const std::string RESET;
+
     Logger(LogLevel log_level);
     ~Logger();
 
