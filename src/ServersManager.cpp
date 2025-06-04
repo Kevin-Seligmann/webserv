@@ -1,6 +1,5 @@
 #include "../inc/ServersManager.hpp"
 
-// ServersManager
 ServersManager::ServersManager() {}
 
 ServersManager::~ServersManager() {}
@@ -14,8 +13,7 @@ void ServersManager::addServer(Servers& server) {
         aux_listen.is_default = false;
         server.setListen(aux_listen);
         it->second.push_back(server);
-    } 
-    else {
+    } else {
         aux_listen.is_default = true;
         server.setListen(aux_listen);
         serversManager[aux_listen] = std::vector<Servers>(1, server);

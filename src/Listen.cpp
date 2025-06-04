@@ -6,13 +6,6 @@ Listen::Listen(const std::string& host, const int port, bool is_default)
 
 Listen::~Listen() {}
 
-std::string Listen::to_string() const {
-    std::ostringstream oss;
-    oss << host << ":" << port;
-    if (is_default) oss << " [default_server]";
-    return oss.str();
-}
-
 bool Listen::operator==(const Listen& other) const {
     return (host == other.host && port == other.port && is_default == other.is_default);
 }
@@ -27,6 +20,13 @@ bool Listen::operator<(const Listen& other) const {
     if (port > other.port)
         return false;
     return is_default < other.is_default;
+}
+
+std::string Listen::to_string() const {
+    std::ostringstream oss;
+    oss << host << ":" << port;
+    if (is_default) oss << " [default_server]";
+    return oss.str();
 }
 
 std::ostream& operator<<(std::ostream& os, const Listen& pl) {

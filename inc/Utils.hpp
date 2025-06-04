@@ -27,13 +27,12 @@
 # include "ServersManager.hpp"
 # include "SocketsManager.hpp"
 
-// ==================== COLOR DEFINITIONS ====================
-// Unified colors used in the project
-# define RED        "\033[1;91m"   // Bright red for errors
-# define GREEN      "\033[1;92m"   // Bright green for success  
-# define YELLOW     "\033[1;93m"   // Bright yellow for warnings/highlights
-# define BLUE       "\033[1;94m"   // Bright blue for info
-# define RESET      "\033[0m"      // Reset to default
+/* Colores para debug y otros */
+# define RED        "\033[1;91m" 
+# define GREEN      "\033[1;92m"  
+# define YELLOW     "\033[1;93m"
+# define BLUE       "\033[1;94m"
+# define RESET      "\033[0m"
 
 /* Check input file function */
 int checkFile(const char* argv);

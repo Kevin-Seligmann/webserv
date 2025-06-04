@@ -25,15 +25,14 @@ class Servers {
 		Servers(const ParsedServer &params, const Listen &listen);
 		~Servers();
 
+		// GETTERS SETTERS
+		
 		void setListen(const Listen &listen);
 		const Listen& getListens(void) const;
 
 		void setServerNames(const std::vector<std::string> &serverNames);
 		const std::vector<std::string>& getServerNames(void) const;
 		
-		// Método helper para obtener el nombre principal (primer elemento)
-		std::string getPrimaryServerName(void) const;
-
 		void setRoot(const std::string &root);
 		const std::string& getRoot(void) const;
 

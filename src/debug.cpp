@@ -12,7 +12,7 @@ void showParse(const ParsedServers& config) {
         
         std::cout << BLUE << "\n--- Server " << (i + 1) << " ---" << RESET << std::endl;
         
-        // Listen directives
+        // Listen 
         std::cout << YELLOW << "Listen Directives:" << RESET << std::endl;
         if (server.listens.empty()) {
             std::cout << "  - " << RED << "Empty (will use default 0.0.0.0:8080)" << RESET << std::endl;
@@ -185,7 +185,7 @@ void showServers(const ServersManager& ws) {
             
             std::cout << BLUE << "\n--- Server " << server_count << " ---" << RESET << std::endl;
             
-            // Listen directive
+        // Listen
             std::cout << YELLOW << "Listen Directive:" << RESET << std::endl;
             const Listen& listen = srv.getListens();
             std::cout << "  - " << listen.to_string();

@@ -12,6 +12,7 @@ SRC_FILES = main.cpp \
 			initServers.cpp \
 			initSockets.cpp \
 			Listen.cpp \
+			Locations.cpp \
 			HttpRequest.cpp \
 			Parsed.cpp \
 			Servers.cpp \

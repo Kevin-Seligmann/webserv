@@ -26,24 +26,30 @@ Servers::Servers(const ParsedServer &params, const Listen &listen)
 
 Servers::~Servers() {}
 
+// SETTER GETTER
 void Servers::setListen(const Listen &listen) { _listen = listen; }
 const Listen& Servers::getListens(void) const { return _listen; }
+
 void Servers::setServerNames(const std::vector<std::string> &serverNames) { _server_names = serverNames; }
 const std::vector<std::string>& Servers::getServerNames(void) const { return _server_names; }
-std::string Servers::getPrimaryServerName(void) const { 
-    return _server_names.empty() ? "" : _server_names[0]; 
-}
+
 void Servers::setRoot(const std::string &root) { _root = root; }
 const std::string& Servers::getRoot(void) const { return _root; }
+
 void Servers::setIndexFiles(const std::vector<std::string> &indexFiles) { _indexFiles = indexFiles; }
 const std::vector<std::string>& Servers::getIndexFiles(void) const { return _indexFiles; }
+
 void Servers::setErrorPages(const std::map<int, std::string> &errorPages) { _errorPages = errorPages; }
 const std::map<int, std::string>& Servers::getErrorPages(void) const { return _errorPages; }
+
 void Servers::setAllowMethods(const std::vector<std::string> &allowMethods) { _allow_methods = allowMethods; }
 const std::vector<std::string>& Servers::getAllowMethods(void) const { return _allow_methods; }
+
 void Servers::setAutoindex(bool autoindex) { _autoindex = autoindex; }
 bool Servers::getAutoindex(void) const { return _autoindex; }
+
 void Servers::setClientMaxBodySize(const std::string &clientMaxBodySize) { _client_max_body_size = clientMaxBodySize; }
 const std::string& Servers::getClientMaxBodySize(void) const { return _client_max_body_size; }
+
 void Servers::setLocations(const std::map<std::string, Locations>& locations) { _locations = locations; }
 const std::map<std::string, Locations>& Servers::getLocations(void) const { return _locations; }

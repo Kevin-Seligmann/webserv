@@ -16,8 +16,12 @@ struct ServersManager {
     ServersManager();
     ~ServersManager();
 
+    // FUNCTIONS
+
     void addServer(Servers& server);
+
     // const Servers& matchRequestServer(const HttpRequest& req);
+    // no está claro que si será necesaria
 };
 
 

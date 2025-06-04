@@ -20,41 +20,28 @@ struct Locations
 	Locations()
 		: autoindex(false), allow_upload(false) {}
 		
-	// Methods that were in the Locations class
-	void setPath(const std::string &path) { this->path = path; }
-	const std::string& getPath(void) const { return path; }
+	// SETTERS GETTERS
 
-	void setValidMethods(const std::vector<std::string> &validMethods) { allow_methods = validMethods; }
-	const std::vector<std::string>& getValidMethods(void) const { return allow_methods; }
+	void setPath(const std::string &path);
+	const std::string& getPath(void) const;
 
-	void setRoot(const std::string &root) { this->root = root; }
-	const std::string& getRoot(void) const { return root; }
+	void setValidMethods(const std::vector<std::string> &validMethods);
+	const std::vector<std::string>& getValidMethods(void) const;
 
-	void setAutoindex(bool autoindex) { this->autoindex = autoindex; }
-	bool getAutoindex(void) const { return autoindex; }
+	void setRoot(const std::string &root);
+	const std::string& getRoot(void) const;
 
-	// CGI helper methods
-	std::string getCgiExtension(void) const {
-		if (!cgi.empty()) {
-			std::map<std::string, std::string>::const_iterator it = cgi.begin();
-			return it->first;
-		}
-		return "";
-	}
-	
-	std::string getCgiPath(void) const {
-		if (!cgi.empty()) {
-			std::map<std::string, std::string>::const_iterator it = cgi.begin();
-			return it->second;
-		}
-		return "";
-	}
+	void setAutoindex(bool autoindex);
+	bool getAutoindex(void) const;
 
-	void setRedir(const std::string &redir) { return_path = redir; }
-	const std::string& getRedir(void) const { return return_path; }
+	std::string getCgiExtension(void) const;
+	std::string getCgiPath(void) const;
 
-	void setUploadDir(const std::string &uploadDir) { upload_dir = uploadDir; }
-	const std::string& getUploadDir(void) const { return upload_dir; }
+	void setRedir(const std::string &redir);
+	const std::string& getRedir(void) const;
+
+	void setUploadDir(const std::string &uploadDir);
+	const std::string& getUploadDir(void) const;
 };
 
 #endif
