@@ -13,7 +13,7 @@
 #include "Parsed.hpp"
 #include "Utils.hpp"
 #include "ServerValidator.hpp"
-#include "ServersManager.hpp"
+#include "VirtualServersManager.hpp"
 
 ParsedServer::ParsedServer(
     const Listen& listen,

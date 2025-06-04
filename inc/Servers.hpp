@@ -28,7 +28,7 @@ class Servers {
 		// GETTERS SETTERS
 		
 		void setListen(const Listen &listen);
-		const Listen& getListens(void) const;
+		const Listen& getListen(void) const;
 
 		void setServerNames(const std::vector<std::string> &serverNames);
 		const std::vector<std::string>& getServerNames(void) const;
@@ -54,5 +54,7 @@ class Servers {
 		void setLocations(const std::map<std::string, Locations>& locations);
 		const std::map<std::string, Locations>& getLocations(void) const;
 };
+
+typedef Servers VirtualServerInfo;
 
 #endif

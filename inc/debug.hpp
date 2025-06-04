@@ -1,7 +1,7 @@
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
-#include "ServersManager.hpp"
+#include "VirtualServersManager.hpp"
 #include "Parsed.hpp"
 #include "Utils.hpp"
 
@@ -9,6 +9,6 @@
 
 void showParse(const ParsedServers& config);
 
-void showServers(const ServersManager& ws);
+void showServers(const VirtualServersManager& ws);
 
 #endif

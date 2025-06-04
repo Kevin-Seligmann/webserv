@@ -5,7 +5,7 @@
 
 // FUNCIÓN PARA DEBUG DE PARSED CONFIG
 void showParse(const ParsedServers& config) {
-    std::cout << GREEN << "\n=== SERVERS CONFIG DEBUG ===" << RESET << std::endl;
+    std::cout << GREEN << "\n=== PARSED CONFIG DEBUG ===" << RESET << std::endl;
     
     for (size_t i = 0; i < config.size(); ++i) {
         const ParsedServer& server = config[i];
@@ -172,22 +172,22 @@ void showParse(const ParsedServers& config) {
 }
 
 // FUNCIÓN PARA DEBUG DE SERVERS MANAGER
-void showServers(const ServersManager& ws) {
+void showServers(const VirtualServersManager& ws) {
     std::cout << GREEN << "\n=== SERVERS MANAGER DEBUG ===" << RESET << std::endl;
 
     size_t server_count = 1;
-    std::map<Listen, std::vector<Servers> >::const_iterator ws_it;
+    VirtualServersManager::VirtualServersMap::const_iterator ws_it;
     for (ws_it = ws.serversManager.begin(); ws_it != ws.serversManager.end(); ++ws_it) {
-        const std::vector<Servers>& servers_vec = ws_it->second;
-        std::vector<Servers>::const_iterator s_it;
+        const VirtualServersManager::VirtualServerGroup& servers_vec = ws_it->second;
+        VirtualServersManager::VirtualServerGroup::const_iterator s_it;
         for (s_it = servers_vec.begin(); s_it != servers_vec.end(); ++s_it, ++server_count) {
-            const Servers& srv = *s_it;
+            const VirtualServerInfo& srv = *s_it;
             
             std::cout << BLUE << "\n--- Server " << server_count << " ---" << RESET << std::endl;
             
         // Listen
             std::cout << YELLOW << "Listen Directive:" << RESET << std::endl;
-            const Listen& listen = srv.getListens();
+            const Listen& listen = srv.getListen();
             std::cout << "  - " << listen.to_string();
             if (listen.is_default) {
                 std::cout << GREEN << " [DEFAULT_SERVER]" << RESET;

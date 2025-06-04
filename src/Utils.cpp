@@ -104,3 +104,13 @@ void printServerConfig(const ParsedServer& config)
 
 	std::cout << std::endl;
 }
+
+/* Logs Utility */
+
+void OKlogsEntry(const std::string& title, const std::string& str) {
+	std::cout << BLUE << title << RESET << str << std::endl;
+}
+
+void ERRORlogsEntry(const std::string& title, const std::string& str) {
+	std::cout << RED << title << RESET << str << std::endl;
+}

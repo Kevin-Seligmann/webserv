@@ -28,7 +28,7 @@ Servers::~Servers() {}
 
 // SETTER GETTER
 void Servers::setListen(const Listen &listen) { _listen = listen; }
-const Listen& Servers::getListens(void) const { return _listen; }
+const Listen& Servers::getListen(void) const { return _listen; }
 
 void Servers::setServerNames(const std::vector<std::string> &serverNames) { _server_names = serverNames; }
 const std::vector<std::string>& Servers::getServerNames(void) const { return _server_names; }

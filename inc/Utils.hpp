@@ -24,8 +24,7 @@
 # include <vector>
 
 # include "Parsed.hpp"
-# include "ServersManager.hpp"
-# include "SocketsManager.hpp"
+# include "VirtualServersManager.hpp"
 
 /* Colores para debug y otros */
 # define RED        "\033[1;91m" 
@@ -42,7 +41,11 @@ void printLocationConfig(const Locations& loc);
 void printServerConfig(const ParsedServer& config);
 
 /* Server initialization functions */
-bool serversInit(ServersManager& sm, const ParsedServers& ps);
-bool socketsInit(SocketsManager listenSockets, ServersManager webServers);
+bool serversInit(VirtualServersManager& sm, const ParsedServers& ps);
+
+
+/* Convert into a logs entry */
+void OKlogsEntry(const std::string& title, const std::string& str);
+void ERRORlogsEntry(const std::string& title, const std::string& str);
 
 #endif

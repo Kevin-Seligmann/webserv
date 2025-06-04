@@ -18,6 +18,8 @@ struct Listen {
     std::string to_string() const;
 };
 
+typedef Listen VirtualServerKey;
+
 std::ostream& operator<<(std::ostream& os, const Listen& pl);
 
 #endif

@@ -17,9 +17,7 @@ bool Listen::operator<(const Listen& other) const {
         return false;
     if (port < other.port)
         return true;
-    if (port > other.port)
-        return false;
-    return is_default < other.is_default;
+    return (port > other.port);
 }
 
 std::string Listen::to_string() const {

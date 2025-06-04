@@ -1,25 +1,45 @@
-#include "../inc/ServersManager.hpp"
+#include "../inc/VirtualServersManager.hpp"
 #include "../inc/Utils.hpp"
 #include <iostream>
 #include <sstream>
 
-bool serversInit(ServersManager& sm, const ParsedServers& ps) {
+bool serversInit(VirtualServersManager& webServers, const ParsedServers& ps) {
+	
+	webServers.loadFromParsedConfig(ps);
+	OKlogsEntry("OK: ", "Virtual servers configuration loaded.");
+	
+	webServers.initializeSockets();
+	OKlogsEntry("OK: ", "Listen sockets initialized.");
+	
+	webServers.bindSockets();
+	OKlogsEntry("OK: ", "Socketsbound to addresses.");
 
-    for (size_t i = 0; i < ps.size(); ++i) {
-        const ParsedServer& config = ps[i];
-        
-        if (config.listens.empty()) {
-            Listen defaultListen;
-            Servers aux_server(config, defaultListen);
-            sm.addServer(aux_server);
-        } else {
-            for (size_t j = 0; j < config.listens.size(); ++j) {
-                const Listen& listen = config.listens[j];
-                Servers aux_server(config, listen);
-                sm.addServer(aux_server);
-            }
-        }
-    }
-    std::cout << BLUE << "Success: servers initialized." << RESET << std::endl;
-    return true;
+	
+
+	// CONTINUE... 
+
+
+	return true;
 }
+
+
+/*
+	// =====================================================================
+	// INFORMACION DE DEBUG
+	// =====================================================================
+	
+	std::cout << YELLOW << "Sockets creados:" << RESET << std::endl;
+	for (std::map<VirtualServerKey, int>::const_iterator it = webServers.serverToSocket.begin(); 
+		 it != webServers.serverToSocket.end(); ++it) {
+		const VirtualServerKey& key = it->first;
+		int fd = it->second;
+		size_t serverCount = webServers.serversManager[key].size();
+		
+		std::cout << "  - " << key.host << ":" << key.port 
+				  << " (fd=" << fd << ")" 
+				  << " [" << serverCount << " servidores virtuales]" << std::endl;
+	}
+	
+	std::cout << GREEN << "SUCCESS: Servidor HTTP multiplex inicializado." << RESET << std::endl;
+	return true;
+}*/
