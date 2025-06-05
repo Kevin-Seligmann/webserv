@@ -32,11 +32,11 @@ void RequestValidator::log_errors() const
     for (std::vector<ParsingError>::const_iterator it = _errors.begin(); it != _errors.end(); it ++)
     {
         if (it->line == "")
-            err += "Invalid request: Malformed " + it->motive;
+            err += "Invalid request: Malformed " + it->motive + "\n";
         else
             err += "Invalid request: Malformed " + it->motive + ":\n"
-                "   " + it->line + "\"\n"
-                "   " + std::string(std::distance(it->line.begin(), it->line.begin() + it->place), ' ') 
+                "\"" + it->line + "\"\n"
+                " " + std::string(std::distance(it->line.begin(), it->line.begin() + it->place), ' ') 
                 + Logger::RED + "^" + Logger::RESET + "\n";
     }
     Logger::getInstance().error(err);
@@ -44,7 +44,7 @@ void RequestValidator::log_errors() const
 
 void RequestValidator::error(std::string const & what)
 {
-    
+    _errors.push_back(ParsingError(what));
 }
 
 void RequestValidator::validate_method(HTTPMethod const & method)
@@ -55,7 +55,7 @@ void RequestValidator::validate_method(HTTPMethod const & method)
 void RequestValidator::validate_protocol(std::string const & protocol)
 {
     if (protocol != "HTTP/1.1")
-        error("Invalid protocol " + protocol);
+        error("protocol \"" + protocol + "\"");
 }
 
 void RequestValidator::validate_uri(URI const & uri)

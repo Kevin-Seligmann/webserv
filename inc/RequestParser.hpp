@@ -44,6 +44,9 @@ private:
     void parse_header_line();
     void parse_body();
 
+    void normalize_path(std::string & str);
+    void replace_percentage(std::string::iterator & it, std::string & str);
+
     void get_method();
     void get_protocol();
     void parse_uri();

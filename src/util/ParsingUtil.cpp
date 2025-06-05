@@ -22,7 +22,7 @@ bool parse::is_sub_delim(char c)
 {return strchr("!$&'()*+,;=", c);}
 
 bool parse::is_protocol_char(char c)
-{return strchr("HTTP./10", c);}
+{return is_digit(c) || is_alpha(c) || c == '/' || c == '.';}
 
 bool parse::is_pchar(char c)
 {return strchr(":@%", c) || is_sub_delim(c) || is_unreserved(c);}
@@ -66,4 +66,17 @@ void parse::first_line_sanitize(std::string & str)
     for (std::string::iterator it = str.begin(); it != str.end(); it ++)
         if (*it == '\r')
             *it = ' ';
+}
+
+bool parse::is_hexa_char(char c)
+{
+    return (is_digit(c) || strchr("ABCDEF", std::toupper(c)));
+}
+
+char parse::hex_to_byte(char c)
+{
+    if (is_digit(c))
+        return c - '0';
+    else
+        return std::toupper(c) - 'A';
 }

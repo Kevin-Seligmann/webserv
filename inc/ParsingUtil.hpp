@@ -20,4 +20,6 @@ namespace parse
     bool is_fragment_char(char c);
     bool is_query_char(char c);
     void first_line_sanitize(std::string & str);
+    bool is_hexa_char(char c);
+    char hex_to_byte(char c);
 }

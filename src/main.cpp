@@ -16,7 +16,7 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GWETa a:////` H@TT@P/1.1   \r\n"
+    "GET /../../..////././/a.b././%20%50c///d./././ef HTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
