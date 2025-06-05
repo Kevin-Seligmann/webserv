@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/04 20:18:18 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/05 12:47:50 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -309,6 +309,8 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         std::string configFile;
         std::string successMessage;
         if (argc == 2) {
+			if (checkFile(argv[1]) == -1)
+				return (1);
             configFile = argv[1];
             successMessage = "Success: starting server with custom config";
         } else {
