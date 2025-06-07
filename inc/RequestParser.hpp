@@ -12,31 +12,41 @@
 #include "RequestValidator.hpp"
 #include "StringUtil.hpp"
 #include "ParsingUtil.hpp"
+#include "ErrorContainer.hpp"
+#include "ElementParser.hpp"
+
+// struct headerType {
+//     char *name;
+//     bool singleton;
+//     void (RequestParser::*parser_f)(std::string const & value);
+// };
 
 enum parsing_status {FIRST_LINE, HEADERS, BODY, DONE};
 
 class RequestParser 
 {
 public:
-    RequestParser(HTTPRequest & request);
+    RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & _element_parser, RequestValidator & validator);
     void append(uint8_t *str, ssize_t size);
     void process();
     bool done() const;
     void new_request();
-    void dump_remainer() const;
-    bool error() const;
-    //void set_validator();
+    void dump_remainder() const;
 
 private:
-    HTTPRequest & _request;
     HTTPRequestBuffer _buffer;
-    parsing_status _status;
-    RequestValidator _validator;
-    std::string::const_iterator _token_start, _token_end;
 
-    bool _processing;
-    std::string _line;
+    HTTPRequest & _request;
+    ErrorContainer & _error_container;
+    ElementParser &  _element_parser;
+    RequestValidator & _validator;
+
+    parsing_status _status;
     int _empty_skip_count;
+    bool _processing;
+
+    std::string::const_iterator _token_start, _token_end;
+    std::string _line;
 
     void percentage_decode(std::string & str);
 
@@ -50,13 +60,18 @@ private:
     void get_method();
     void get_protocol();
     void parse_uri();
-    void get_absolute_path();
+    void get_path();
     void get_hier_part(); 
-    void get_path_absolute();
-    void get_path_rootless_or_empty();
     void get_query();
     void get_fragment();
     void get_schema();
-    bool has_authority();
+    bool has_authority() const;
 
+    void put_header_value(std::string const &  name, std::string const &  value);
+
+    void parse_numeric_value(std::string const &  name, std::string const &  value);
+    void parse_mime_type(std::string const &  name, std::string const &  value);
+    void parse_host_value(std::string const &  name, std::string const &  value);
+    void parse(std::string const &  name,std::string const &  value);
+    void parse_te_value(std::string const &  name, std::string const  &  value);
 };

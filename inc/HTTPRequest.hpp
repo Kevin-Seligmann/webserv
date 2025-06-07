@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "HTTPElement.hpp"
-#include "HTTPHeader.hpp"
+#include "FieldSection.hpp"
 #include "HTTPBody.hpp"
 #include "Logger.hpp"
 
@@ -11,7 +11,7 @@ struct HTTPRequest : public HTTPElement
     URI uri;
     std::string protocol;
     HTTPMethod method;
-    HTTPHeader headers; 
+    FieldSection headers; 
     HTTPBody body;
     
     HTTPRequest();

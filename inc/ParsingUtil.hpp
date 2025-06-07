@@ -19,7 +19,13 @@ namespace parse
     bool is_host_char(char c);
     bool is_fragment_char(char c);
     bool is_query_char(char c);
-    void first_line_sanitize(std::string & str);
+    bool is_ascii_whitespace(char c);
     bool is_hexa_char(char c);
+
+    void first_line_sanitize(std::string & str);
+    void sanitize_header_value(std::string::iterator start, std::string::iterator end);
+
     char hex_to_byte(char c);
+
+
 }

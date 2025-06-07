@@ -7,15 +7,16 @@
 #include <map>
 #include "HTTPElement.hpp"
 
-struct HTTPHeader : public HTTPElement
+struct FieldSection : public HTTPElement
 {
-    std::map<std::string, std::string> fields;
+    std::map<std::string, std::vector<std::string> > fields;
+
     std::string _raw;
 
-    HTTPHeader();
+    FieldSection();
     void reset();
     void print(std::ostream & os) const;
     void put(std::string const & name, std::string const & value);
 };
 
-std::ostream & operator<<(std::ostream & os,  HTTPHeader const & header);
+std::ostream & operator<<(std::ostream & os,  FieldSection const & header);

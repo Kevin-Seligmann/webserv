@@ -61,11 +61,24 @@ bool parse::is_query_char(char c)
     return parse::is_pchar(c) || c == '/' || c == '?';
 }
 
+bool parse::is_ascii_whitespace(char c)
+{
+    return strchr(" \t\v\r\f" , c);
+}
+
+
 void parse::first_line_sanitize(std::string & str)
 {
     for (std::string::iterator it = str.begin(); it != str.end(); it ++)
         if (*it == '\r')
             *it = ' ';
+}
+
+void parse::sanitize_header_value(std::string::iterator start, std::string::iterator end)
+{
+    for (;start != end; start ++)
+        if (parse::is_ascii_whitespace(*start) || *start < 32)
+            *start = ' ';
 }
 
 bool parse::is_hexa_char(char c)

@@ -16,7 +16,7 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET /../../..////././/a.b././%20%50c///d./././ef HTTP/1.1\r\n"
+    "GaE?T /../../..////././/a.b././%20%50c///d./././e[f?a's#fragm?ent HoTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
@@ -33,23 +33,30 @@ void testRequestParser()
     "Qwerty is nice, really";
 
     Logger & log = Logger::getInstance();
+    ErrorContainer error_container;
     HTTPRequest request;
-    RequestParser parser(request);
+    RequestValidator validator(request, error_container);
+    ElementParser element_parser(error_container);
+    RequestParser parser(request, error_container, element_parser, validator);
+
     try 
     {
         for (int i = 0; rawRequest[i]; i++)
         {
             parser.append(rawRequest + i, 1);
-            if (parser.error())
+            if (error_container.error())
                 continue ;
             parser.process();
             if (parser.done())
             {
                 log << request;
+                request.reset();
                 parser.new_request();
             }
         }
-        parser.dump_remainer();        
+        if (error_container.error())
+            error_container.log_all();
+        parser.dump_remainder();        
     }
     catch (std::exception & e)
     {

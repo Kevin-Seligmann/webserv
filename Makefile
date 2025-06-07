@@ -1,9 +1,10 @@
 VPATH = src src/util src/http src/parse src/buffer
 
 # Files
-OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o HTTPHeader.o \
+OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
-	RequestValidator.o ParsingUtil.o StringUtil.o
+	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
+	HTTPError.o ErrorContainer.o
 
 # Target
 NAME = webserv

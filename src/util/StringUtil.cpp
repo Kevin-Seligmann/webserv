@@ -28,8 +28,21 @@ void wss::trim(std::string & s)
 
 std::string::const_iterator wss::skip_ascii_whitespace(std::string::const_iterator begin, std::string::const_iterator end)
 {
-    while(begin != end && strchr(" \t\v\r\f" ,*begin)) begin ++; 
+    while(begin != end && parse::is_ascii_whitespace(*begin)) begin ++; 
     return begin;
+}
+
+std::string::const_iterator wss::skip_whitespace(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while(begin != end && *begin == ' ') begin ++; 
+    return begin;
+}
+
+std::string::const_iterator wss::skip_ascii_whitespace_r(std::string::const_iterator end, std::string::const_iterator begin)
+{
+    end --;
+    while(begin != end && parse::is_ascii_whitespace(*end)) end --; 
+    return end;
 }
 
 std::string::const_iterator wss::skip_http_token(std::string::const_iterator begin, std::string::const_iterator end)
@@ -96,5 +109,57 @@ std::string::const_iterator wss::skip_fragment_token(std::string::const_iterator
 std::string::const_iterator wss::skip_schema_token(std::string::const_iterator begin, std::string::const_iterator end)
 {
     while(begin != end && parse::is_alpha(*begin)) begin ++;
+    return begin;
+}
+
+// S.f if sizeof(s) < n, or it + n >= str.end()
+bool wss::str_equal(std::string::iterator it, size_t n, const char *s)
+{
+    for (int i = 0; i < n; i++)
+        if (*(it + i) != s[i])
+            return false;
+    return true;
+}
+
+// S.f if it + n >= str.end()
+bool wss::str_equal(std::string::iterator it, const char *s)
+{
+    for (int i = 0; s[i]; i++)
+        if (*(it + i) != s[i])
+            return false;
+    return true;
+}
+ 
+void wss::remove_uri_segment(std::string & out)
+{
+    if (out.empty())
+        return;
+
+    std::string::iterator end = out.end() - 1;
+    while (end != out.begin() && *end == '/')
+        end --;
+    while (end != out.begin() && *end != '/')
+        end --;
+    if (end == out.begin() && *end != '/')
+        out.clear();
+    else
+        out = std::string(out.begin(), end);  
+}
+
+std::string::iterator wss::move_uri_segment(std::string & dst, std::string & src, std::string::iterator begin)
+{
+    std::string::iterator end = begin;
+    if (end != src.end() && *end == '/')   
+        end ++;
+    while (end != src.end() && *end != '/')
+        end ++;
+    dst.insert(dst.end(), begin, end);
+    return end;
+}
+
+std::string::const_iterator wss::skip_until(std::string::const_iterator begin, std::string::const_iterator end, std::string const & str)
+{
+    while (begin != end && str.find(*begin) == std::string::npos)
+        begin ++;
     return begin;
 }

@@ -1,17 +1,17 @@
-#include "HTTPHeader.hpp"
+#include "FieldSection.hpp"
 #include "ParsingUtil.hpp"
 #include "StringUtil.hpp"
 
-HTTPHeader::HTTPHeader(){}
+FieldSection::FieldSection(){_raw = "";}
 
-void HTTPHeader::reset()
+void FieldSection::reset()
 {
     _raw = "";
 }
 
-void HTTPHeader::put(std::string const & str, std::string const & value)
+void FieldSection::put(std::string const & str, std::string const & value)
 {
-    _raw += "\t" + str + "\n";
+    _raw += "name: " + str + ", value: " + value;
     //std::string::const_iterator it = str.begin();
     // while (*it != ':')
     //     it ++;
@@ -21,12 +21,12 @@ void HTTPHeader::put(std::string const & str, std::string const & value)
     // wss::to_upper(name);
 }
 
-void HTTPHeader::print(std::ostream & os) const
+void FieldSection::print(std::ostream & os) const
 {
     os << _raw;
 }
 
-std::ostream & operator<<(std::ostream & os,  HTTPHeader const & header)
+std::ostream & operator<<(std::ostream & os,  FieldSection const & header)
 {
     header.print(os);
     return os;
