@@ -42,7 +42,7 @@ std::string::const_iterator wss::skip_ascii_whitespace_r(std::string::const_iter
 {
     end --;
     while(begin != end && parse::is_ascii_whitespace(*end)) end --; 
-    return end;
+    return end + 1;
 }
 
 std::string::const_iterator wss::skip_http_token(std::string::const_iterator begin, std::string::const_iterator end)

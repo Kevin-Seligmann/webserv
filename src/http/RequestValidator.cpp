@@ -17,7 +17,9 @@ void RequestValidator::validate_protocol(std::string const & protocol)
 }
 
 void RequestValidator::validate_uri(URI const & uri)
-{}
+{
+    // If host not present, is an error
+}
 
 void RequestValidator::validate_headers(FieldSection const & hdr)
 {}

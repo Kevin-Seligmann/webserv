@@ -1,5 +1,11 @@
 #include "RequestParser.hpp"
 
+const RequestParser::wsHeaders RequestParser::headers[] = {
+    {"host", &RequestParser::parse_host_field},
+    {"content-length", &RequestParser::parse_host_field},
+    {"", NULL}
+};
+
 RequestParser::RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & element_parser, RequestValidator & validator)
 :_request(request), 
 _error_container(error_container),
@@ -8,6 +14,8 @@ _validator(validator),
 _status(FIRST_LINE),
 _empty_skip_count(0)
 {}
+
+
 
 bool RequestParser::done() const {return _status == DONE;}
 
@@ -91,40 +99,64 @@ void RequestParser::parse_header_line()
     
     if (_line.empty())
     {
+        process_headers();
         _validator.validate_headers(_request.headers);
         _status = BODY;
         return ;
     }
 
-    _token_start = _line.begin();
-    _token_end = wss::skip_http_token(_token_start, _line.end());
-    std::string name(_token_start, _token_end);
-    if (_token_end != _line.end() && *_token_end != ':')
-    {
-        _error_container.put_error("field name, unexpected character", _line, _token_end);
-        while (_token_end != _line.end() && *_token_end != ':')
-            _token_end ++; 
-    }
-    if (_token_end != _line.end())
-        _token_end ++;
+    std::string name, value;
 
-    _token_start = wss::skip_ascii_whitespace(_token_end, _line.end());
+    _token_start = _line.begin();
+    _token_end = wss::skip_until(_line.begin(), _line.end(), ":");
+    if (_token_end == _line.end())
+        return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1);
+    if (_token_end == _token_start)
+        _error_container.put_error("field name, empty");
+    _element_parser.parse_field_name(_token_start, _token_end, _line, name);
+    
+
+    _token_start = wss::skip_ascii_whitespace(_token_end + 1, _line.end());
     if (_token_start != _line.end())
         _token_end = wss::skip_ascii_whitespace_r(_line.end(), _token_start);
-    std::string value(_token_start, _token_end);
-    parse::sanitize_header_value(value.begin(), value.end());
- 
+    _element_parser.parse_field_value(_token_start, _token_end, _line, value);
+    if (name.empty())
+        return ;
+
     put_header_value(name, value);
+}
+
+void RequestParser::parse_host_field(std::string const & value)
+{
+    _token_start = value.begin();
+    _token_end = wss::skip_until(value.begin(), value.end(), ":");
+    _element_parser.parse_host(_token_start, _token_end, value, _request.headers.host);
+    if (_token_end != value.end() && *_token_end == ':')
+    {
+        _token_start = _token_end + 1;
+        _token_end = value.end();
+        _element_parser.parse_port(_token_start, _token_end, value, _request.headers.port);
+    }
+}
+
+void RequestParser::parse_content_length_field(std::string const & value)
+{
+    _token_start = value.begin();
+    _token_end == value.end();
+    _element_parser.parse_content_length_field(_token_start, _token_end, value, _request.headers.content_length);
+}
+
+void RequestParser::process_headers()
+{
+    for (FieldSection::field::iterator it = _request.headers.fields.begin(); it != _request.headers.fields.end(); it ++)
+        for (wsHeaders const * hdr = headers; hdr->parser_f != NULL; hdr ++)
+            if (it->first == hdr->name)
+                for (std::vector<std::string>::const_iterator val = it->second.begin(); val != it->second.end(); val ++)
+                    (this->*hdr->parser_f)(*val);
 }
 
 void RequestParser::put_header_value(std::string const & name, std::string const & value)
 {
-    if (name.empty())
-        _error_container.put_error("field name, empty", _line, _token_end);
-    if (value.empty())
-        _error_container.put_error("field value, empty", _line, _token_end);
-    if (name.empty() || value.empty())
-        return ;
     _request.headers.put(name, value);
 }
 
@@ -149,7 +181,10 @@ void RequestParser::get_hier_part()
 
     // Find host (Until path or end)
     _token_end = wss::skip_until(_token_start, _line.end(), " :?#/");
-    _element_parser.parse_host(_token_start, _token_end, _line, _request.uri.host);
+    if (_token_end == _token_start)
+        _error_container.put_error("host, not found", _line, _token_end);
+    else
+        _element_parser.parse_host(_token_start, _token_end, _line, _request.uri.host);
     _token_start = _token_end;
 
     // Find port
@@ -168,7 +203,7 @@ void RequestParser::get_hier_part()
 void RequestParser::parse_uri()
 {
     // Skip to start of URI
-    if (_token_start == _line.end() && _token_start + 1 == _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
+    if (_token_start != _line.end() && _token_start + 1 != _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
         _error_container.put_warning("URI, extra whitespace", _line, _token_start);
     _token_start = wss::skip_whitespace(_token_start, _line.end());
     if (_token_start == _line.end())
@@ -226,8 +261,8 @@ void RequestParser::get_fragment()
 void RequestParser::get_protocol()
 {
     // Skip to start of Protocol
-    if (_token_start == _line.end() && _token_start + 1 == _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
-        _error_container.put_warning("protocol, extra whitespace", _line, _token_start);
+    if (_token_start != _line.end() && _token_start + 1 != _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
+        _error_container.put_warning("protocol, extra whitespace after uri", _line, _token_start);
     _token_start = wss::skip_whitespace(_token_start, _line.end());
     if (_token_start == _line.end())
         return _error_container.put_error("protocol not found");
@@ -237,9 +272,9 @@ void RequestParser::get_protocol()
 
     if (_token_end == _line.end())
         return ;
+    if (*_token_end == ' ')
+        _error_container.put_warning("request line, extra whitespace after protocol", _line, _token_end);
     _token_end = wss::skip_whitespace(_token_end, _line.end());
     if (_token_end != _line.end())
         _error_container.put_error("request line, extra content", _line, _token_end);
-    else
-        _error_container.put_warning("request line, extra whitespace after protocol");
 } 

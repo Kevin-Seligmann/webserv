@@ -54,6 +54,33 @@ void ElementParser::parse_query(std::string::const_iterator & begin, std::string
     percentage_decode(query);
 }
 
+void ElementParser::parse_field_value(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & value)
+{
+    value = std::string(begin, end);
+
+    while (begin != end)
+    {
+        if (!parse::is_field_value_char(*begin))
+            _error_container.put_error("field value, unexpected character");
+        begin ++;
+    }
+    parse::sanitize_header_value(value.begin(), value.end());
+}
+
+void ElementParser::parse_field_name(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & name)
+{
+    name = std::string(begin, end);
+
+    while (begin != end)
+    {
+        if (!parse::is_token_char(*begin))
+            _error_container.put_error("field value, unexpected character");
+        begin ++;
+    }
+    wss::to_lower(name);
+}
+
+
 void ElementParser::parse_fragment(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & fragment)
 {
     fragment = std::string(begin, end);
@@ -97,6 +124,21 @@ void ElementParser::parse_port(std::string::const_iterator & begin, std::string:
         begin ++;
     }
 }
+
+void ElementParser::parse_content_length_field(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, int & length)
+{
+    length = 0;
+    while (begin != end)
+    {
+        if (!parse::is_digit(*begin))
+            return _error_container.put_error("content-length, unexpected character", source_line, begin);
+        length = length * 10 + *begin - '0';
+        if (length >= 10000000)
+            return _error_container.put_error("content-length, too big (max: 10000000)");
+        begin ++;
+    }
+}
+
 
 void ElementParser::parse_schema(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & schema)
 {

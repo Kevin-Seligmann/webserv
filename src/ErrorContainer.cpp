@@ -2,7 +2,7 @@
 
 bool ErrorContainer::error() const {return !_errors.empty();}
 
-void ErrorContainer::reset(){}
+void ErrorContainer::reset(){_errors.clear(); _warnings.clear();}
 
 void ErrorContainer::put_error(std::string const & what, std::string const & line, std::string::const_iterator place)
 {_errors.push_back(HTTPError(what, line, place));}

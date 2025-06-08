@@ -6,9 +6,8 @@
 #include <fstream>
 #include <ctime>
 #include <cstring>
-#include "HTTPRequest.hpp"
 
-class HTTPRequest;
+struct HTTPRequest;
 
 enum LogLevel 
 {

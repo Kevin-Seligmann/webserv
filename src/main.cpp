@@ -16,19 +16,20 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GaE?T /../../..////././/a.b././%20%50c///d./././e[f?a's#fragm?ent HoTTP/1.1\r\n"
+    "GET http://host/../../..////././/a.b././%20%50c///d./././ef?a's#fragm?ent HTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
     "\n\n"
-    "GET /indexxx.html HTTP/1.1    \r\n"
-    "Host: www.exampleee.com\r\n"
+    " GET  http://helo:8000/index?hola#chau  HTTP/1.1    \r\n"
+    "Host: www.exampleee.com:7070\r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
     "Accept: texttt/html\n\n"
     ""
     "GET / HTTP/1.1\r\n"
     "Host: www..com\r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
+    "Host: www..com\r\n"
     "Accept: texttt/html\n\n"
     "Qwerty is nice, really";
 
@@ -50,13 +51,16 @@ void testRequestParser()
             if (parser.done())
             {
                 log << request;
+                error_container.log_all();      
+                error_container.reset(); 
                 request.reset();
                 parser.new_request();
             }
+            if (error_container.error())
+                error_container.log_all();
         }
-        if (error_container.error())
-            error_container.log_all();
-        parser.dump_remainder();        
+
+        parser.dump_remainder(); 
     }
     catch (std::exception & e)
     {

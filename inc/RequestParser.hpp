@@ -34,6 +34,13 @@ public:
     void dump_remainder() const;
 
 private:
+    struct wsHeaders {
+        std::string name;
+        void (RequestParser::*parser_f)(std::string const & value);
+    };
+
+    static const wsHeaders headers[];
+
     HTTPRequestBuffer _buffer;
 
     HTTPRequest & _request;
@@ -68,10 +75,8 @@ private:
     bool has_authority() const;
 
     void put_header_value(std::string const &  name, std::string const &  value);
+    void process_headers();
 
-    void parse_numeric_value(std::string const &  name, std::string const &  value);
-    void parse_mime_type(std::string const &  name, std::string const &  value);
-    void parse_host_value(std::string const &  name, std::string const &  value);
-    void parse(std::string const &  name,std::string const &  value);
-    void parse_te_value(std::string const &  name, std::string const  &  value);
+    void parse_host_field(std::string const & value);
+    void parse_content_length_field(std::string const & value);
 };

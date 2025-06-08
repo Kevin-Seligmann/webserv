@@ -1,4 +1,5 @@
 #include "Logger.hpp"
+#include "HTTPRequest.hpp"
 
 const std::string Logger::RED = "\033[1;91m";
 const std::string Logger::GREEN = "\033[1;92m";

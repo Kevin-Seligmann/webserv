@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "URI.hpp"
+#include "HTTPRequest.hpp"
 #include "FieldSection.hpp"
 #include "ErrorContainer.hpp"
 #include "ParsingUtil.hpp"
@@ -20,6 +20,9 @@ public:
     void parse_schema(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & schema);
     void parse_fragment(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & query);
     void parse_query(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & fragment);
+    void parse_field_value(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & value);
+    void parse_field_name(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & name);
+    void parse_content_length_field(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, int & length);
 
 private:
     ErrorContainer & _error_container;
