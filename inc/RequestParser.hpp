@@ -26,6 +26,13 @@ enum parsing_status {FIRST_LINE, HEADERS, BODY, DONE};
 class RequestParser 
 {
 public:
+    static const size_t URI_MAX_LENGTH;
+    static const size_t FIRST_LINE_MAX_LENGTH;
+    static const size_t HEADER_LINE_MAX_LENGTH;
+    static const size_t MAX_CONTENT_LENGTH;
+    static const size_t MAX_HEADER_FIELDS;
+    static const size_t MAX_TRAILER_FIELDS;
+
     RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & _element_parser, RequestValidator & validator);
     void append(uint8_t *str, ssize_t size);
     void process();
@@ -51,6 +58,7 @@ private:
     parsing_status _status;
     int _empty_skip_count;
     bool _processing;
+    size_t _header_field_count;
 
     std::string::const_iterator _token_start, _token_end;
     std::string _line;
@@ -74,9 +82,7 @@ private:
     void get_schema();
     bool has_authority() const;
 
-    void put_header_value(std::string const &  name, std::string const &  value);
     void process_headers();
-
     void parse_host_field(std::string const & value);
     void parse_content_length_field(std::string const & value);
 };

@@ -74,7 +74,7 @@ bool parse::is_field_value_char(char c)
 void parse::first_line_sanitize(std::string & str)
 {
     for (std::string::iterator it = str.begin(); it != str.end(); it ++)
-        if (*it == '\r')
+        if (parse::is_ascii_whitespace(*it))
             *it = ' ';
 }
 

@@ -6,7 +6,7 @@
 
 struct HTTPBody : public HTTPElement 
 {
-    std::string raw;
+    std::string content;
 
     HTTPBody();
     void reset();

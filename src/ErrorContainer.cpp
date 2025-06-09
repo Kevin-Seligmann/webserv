@@ -4,17 +4,17 @@ bool ErrorContainer::error() const {return !_errors.empty();}
 
 void ErrorContainer::reset(){_errors.clear(); _warnings.clear();}
 
-void ErrorContainer::put_error(std::string const & what, std::string const & line, std::string::const_iterator place)
-{_errors.push_back(HTTPError(what, line, place));}
+void ErrorContainer::put_error(std::string const & what, std::string const & line, std::string::const_iterator place, HTTPError::ErrorType type)
+{_errors.push_back(HTTPError(what, line, place, type));}
 
-void ErrorContainer::put_error(std::string const & what)
-{_errors.push_back(HTTPError(what));}
+void ErrorContainer::put_error(std::string const & what, HTTPError::ErrorType type)
+{_errors.push_back(HTTPError(what, type));}
 
 void ErrorContainer::put_warning(std::string const & what, std::string const & line, std::string::const_iterator place)
-{_warnings.push_back(HTTPError(what, line, place));}
+{_warnings.push_back(HTTPError(what, line, place, HTTPError::WARNING));}
 
 void ErrorContainer::put_warning(std::string const & what)
-{_warnings.push_back(HTTPError(what));}
+{_warnings.push_back(HTTPError(what, HTTPError::WARNING));}
 
 void ErrorContainer::log_errors() const
 {

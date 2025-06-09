@@ -4,18 +4,13 @@ HTTPBody::HTTPBody(){}
 
 void HTTPBody::reset()
 {
-    raw = "";
+    content = "";
 }
 
-void HTTPBody::put(std::string const & str)
-{
-    raw = str;
-    // validate()
-}
 
 void HTTPBody::print(std::ostream & os) const
 {
-    os << raw;
+    os << content;
 }
 
 std::ostream & operator<<(std::ostream & os,  HTTPBody const & line)

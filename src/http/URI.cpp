@@ -11,6 +11,7 @@ void URI::reset()
     fragment = "";
     port = -1;
     schema = "";
+    length = 0;
 }
 
 void URI::print(std::ostream & os) const

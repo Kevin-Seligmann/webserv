@@ -16,20 +16,22 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET http://host/../../..////././/a.b././%20%50c///d./././ef?a's#fragm?ent HTTP/1.1\r\n"
+    "GET http://www.example.com?a's#fragm?ent  HTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
+    "Content-Length: 7 \r\n"
     "Accept: text/html\r\n"
-    "\n\n"
-    " GET  http://helo:8000/index?hola#chau  HTTP/1.1    \r\n"
-    "Host: www.exampleee.com:7070\r\n"
+    "\r\n"
+    "BODY"
+    "\r\n"
+    " GET /index?hola#chau  HTTP/1.1    \r\n"
+    "Host: www.exampleee.com:8000\r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
     "Accept: texttt/html\n\n"
     ""
     "GET / HTTP/1.1\r\n"
-    "Host: www..com\r\n"
+    "Host:                  \r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
-    "Host: www..com\r\n"
     "Accept: texttt/html\n\n"
     "Qwerty is nice, really";
 
@@ -51,7 +53,9 @@ void testRequestParser()
             if (parser.done())
             {
                 log << request;
-                error_container.log_all();      
+                error_container.log_all();   
+                if(error_container.error())
+                    continue ;   
                 error_container.reset(); 
                 request.reset();
                 parser.new_request();

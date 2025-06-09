@@ -21,7 +21,6 @@ struct FieldSection : public HTTPElement
     void reset();
     void print(std::ostream & os) const;
     void put(std::string const & name, std::string const & value);
-    void process_headers(ErrorContainer & error_container);
 
 };
 

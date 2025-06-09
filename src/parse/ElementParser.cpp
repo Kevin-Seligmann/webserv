@@ -1,18 +1,21 @@
 #include "ElementParser.hpp"
+#include "RequestParser.hpp"
 
 ElementParser::ElementParser(ErrorContainer & error_container)
 :_error_container(error_container){}
 
 void ElementParser::parse_method(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, HTTPMethod & method)
 {
-    method = method::str_to_method(std::string(begin, end));
+    std::string method_str(begin, end);
+    wss::to_upper(method_str);
+    method = method::str_to_method(method_str);
+
     if (method != NOMETHOD)
         return ;
-    _error_container.put_error("method: " + std::string(begin, end));
     while (begin != end)
     {
         if (!parse::is_alpha(*begin))
-            _error_container.put_error("Method, unexpected character", source_line, begin);
+            _error_container.put_error("Method, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
 }
@@ -24,7 +27,7 @@ void ElementParser::parse_protocol(std::string::const_iterator & begin, std::str
     while (begin != end)
     {
         if (!parse::is_protocol_char(*begin))
-            _error_container.put_error("protocol, unexpected character", source_line, begin);
+            _error_container.put_error("protocol, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
 }
@@ -35,7 +38,7 @@ void ElementParser::parse_path(std::string::const_iterator & begin, std::string:
     while (begin != end)
     {
         if (*begin != '/' && !parse::is_pchar(*begin))
-            _error_container.put_error("path, unexpected character", source_line, begin);
+            _error_container.put_error("path, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
     normalize_path(path);
@@ -48,7 +51,7 @@ void ElementParser::parse_query(std::string::const_iterator & begin, std::string
     while (begin != end)
     {
         if (!parse::is_query_char(*begin))
-            _error_container.put_error("query, unexpected character", source_line, begin);
+            _error_container.put_error("query, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
     percentage_decode(query);
@@ -61,7 +64,7 @@ void ElementParser::parse_field_value(std::string::const_iterator & begin, std::
     while (begin != end)
     {
         if (!parse::is_field_value_char(*begin))
-            _error_container.put_error("field value, unexpected character");
+            _error_container.put_error("field value, unexpected character", HTTPError::BAD_REQUEST);
         begin ++;
     }
     parse::sanitize_header_value(value.begin(), value.end());
@@ -74,7 +77,7 @@ void ElementParser::parse_field_name(std::string::const_iterator & begin, std::s
     while (begin != end)
     {
         if (!parse::is_token_char(*begin))
-            _error_container.put_error("field value, unexpected character");
+            _error_container.put_error("field value, unexpected character", HTTPError::BAD_REQUEST);
         begin ++;
     }
     wss::to_lower(name);
@@ -98,16 +101,17 @@ void ElementParser::parse_host(std::string::const_iterator & begin, std::string:
     host = std::string(begin, end);
     if (*begin == '[')
     {
-        _error_container.put_error("host, only IPv4 and regular host supported", source_line, begin);
+        _error_container.put_error("host, only IPv4 and regular host supported", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
     while (begin != end)
     {
         if (!parse::is_host_char(*begin))
-            _error_container.put_error("host, unexpected character", source_line, begin);
+            _error_container.put_error("host, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
     percentage_decode(host);
+    wss::to_lower(host);
 }
 
 void ElementParser::parse_port(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, int & port)
@@ -117,10 +121,10 @@ void ElementParser::parse_port(std::string::const_iterator & begin, std::string:
     while (begin != end)
     {
         if (!parse::is_digit(*begin))
-            return _error_container.put_error("port, unexpected character", source_line, begin);
+            return _error_container.put_error("port, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         port = port * 10 + *begin - '0';
         if (port >= 65535)
-            return _error_container.put_error("port, too big (max: 65535 for TCP)");
+            return _error_container.put_error("port, too big (max: 65535 for TCP)", HTTPError::BAD_REQUEST);
         begin ++;
     }
 }
@@ -131,10 +135,10 @@ void ElementParser::parse_content_length_field(std::string::const_iterator & beg
     while (begin != end)
     {
         if (!parse::is_digit(*begin))
-            return _error_container.put_error("content-length, unexpected character", source_line, begin);
+            return _error_container.put_error("content-length, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         length = length * 10 + *begin - '0';
-        if (length >= 10000000)
-            return _error_container.put_error("content-length, too big (max: 10000000)");
+        if (length >= RequestParser::MAX_CONTENT_LENGTH)
+            return _error_container.put_error("Content-Length header", HTTPError::CONTENT_TOO_LARGE);
         begin ++;
     }
 }
@@ -146,18 +150,16 @@ void ElementParser::parse_schema(std::string::const_iterator & begin, std::strin
     while (begin != end)
     {
         if (!parse::is_alpha(*begin))
-            _error_container.put_error("schema, unexpected character", source_line, begin);
+            _error_container.put_error("schema, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
         begin ++;
     }
+    wss::to_lower(schema);
 }
-
-void ElementParser::parse_field(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, FieldSection & fields)
-{}
 
 void ElementParser::replace_percentage(std::string::iterator & it, std::string & str)
 {
     if (it + 2 >= str.end() || !parse::is_hexa_char(*(it + 1)) || !parse::is_hexa_char(*(it + 2)))
-        return _error_container.put_error("percentage encoding", str, it++);
+        return _error_container.put_error("percentage encoding", str, it++, HTTPError::BAD_REQUEST);
     *it = parse::hex_to_byte(*(it + 1)) * 16 + parse::hex_to_byte(*(it + 2));
     it = str.erase(it + 1, it + 3);
 }

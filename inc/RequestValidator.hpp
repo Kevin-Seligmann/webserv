@@ -12,7 +12,7 @@ public:
 
     void validate_method(HTTPMethod const & method);
     void validate_uri(URI const & uri);
-    void validate_headers(FieldSection const & hdr);
+    void validate_headers(HTTPRequest const & request, FieldSection const & hdr);
     void validate_body(HTTPBody const & body);
     void validate_protocol(std::string const & protocol);
     void validate_request(HTTPRequest const & request);
