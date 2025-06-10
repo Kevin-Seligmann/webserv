@@ -22,6 +22,7 @@
 # include <stdexcept>
 # include <string>
 # include <vector>
+# include <sys/epoll.h>
 
 # include "Parsed.hpp"
 # include "VirtualServersManager.hpp"
@@ -41,8 +42,12 @@ void printLocationConfig(const Locations& loc);
 void printServerConfig(const ParsedServer& config);
 
 /* Server initialization functions */
+// implemented in serversInit.cpp
 bool serversInit(VirtualServersManager& sm, const ParsedServers& ps);
 
+/* Server startup functions */
+// implemented in serversStart.cpp
+bool serversStart(VirtualServersManager& sm);
 
 /* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);

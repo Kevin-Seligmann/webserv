@@ -9,15 +9,15 @@ INC_DIR = inc
 
 SRC_FILES = main.cpp \
 			debug.cpp \
-			initServers.cpp \
+			HttpRequest.cpp \
 			Listen.cpp \
 			Locations.cpp \
-			HttpRequest.cpp \
 			Parsed.cpp \
 			Servers.cpp \
-			VirtualServersManager.cpp \
+			serversInit.cpp \
 			ServerValidator.cpp \
-			Utils.cpp
+			Utils.cpp \
+			VirtualServersManager.cpp
 
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 
