@@ -35,5 +35,5 @@ int main(int argc, char** argv) {
 		std::cerr << RED << "WIRED ERROR: " << RESET << "Unknown exception occurred" << std::endl;
 		return (1);
 	}
-	webServers.cleanupSockets();
+//	webServers.cleanupSockets();
 }
