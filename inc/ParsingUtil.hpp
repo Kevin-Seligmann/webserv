@@ -31,4 +31,5 @@ namespace parse
 
     char hex_to_byte(char c);
 
+    size_t s_to_hex(std::string::const_iterator start, std::string::const_iterator end, size_t max);
 }

@@ -15,22 +15,16 @@ void FieldSection::reset()
 
 void FieldSection::put(std::string const & str, std::string const & value)
 {
-    fields[str].push_back(value);
+    if (fields.find(str) == fields.end())
+        fields[str] = value;
+    else
+        fields[str] += ", " + value;
 }
 
 void FieldSection::print(std::ostream & os) const
 {
-    for (std::map<std::string, std::vector<std::string> >::const_iterator it = fields.begin(); it != fields.end(); it ++)
-    {
-        os << "\t" << it->first << ": " ;
-        for (std::vector<std::string>::const_iterator val = it->second.begin(); val != it->second.end(); val ++)
-        {
-            os << "\"" << *val << "\"";
-            if (val + 1 != it->second.end())
-                os << ", ";
-        }
-        os << std::endl;
-    }
+    for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); it ++)
+        os << "\t" << it->first << ": "  << it->second << std::endl;
     os << "\tHeader parsed data... "
     << " port: " << port
     << " host: " << host

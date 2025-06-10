@@ -16,8 +16,7 @@ struct CommaSeparatedFieldValue
 
 struct FieldSection : public HTTPElement
 {
-    typedef std::map<std::string, std::vector<std::string> > field;
-    field fields;
+    std::map<std::string, std::string > fields;
 
     std::string host;
     int port;

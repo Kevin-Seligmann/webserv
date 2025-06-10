@@ -21,7 +21,7 @@
 //     void (RequestParser::*parser_f)(std::string const & value);
 // };
 
-enum parsing_status {FIRST_LINE, HEADERS, BODY, DONE};
+enum parsing_status {FIRST_LINE, HEADERS, BODY, CHUNKED_SIZE, CHUNKED_BODY, TRAILERS, DONE};
 
 class RequestParser 
 {
@@ -32,6 +32,8 @@ public:
     static const size_t MAX_CONTENT_LENGTH;
     static const size_t MAX_HEADER_FIELDS;
     static const size_t MAX_TRAILER_FIELDS;
+    static const size_t MAX_CHUNK_SIZE;
+    static const size_t CHUNKED_SIZE_LINE_MAX_LENGTH;
 
     RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & _element_parser, RequestValidator & validator);
     void append(uint8_t *str, ssize_t size);
@@ -59,6 +61,8 @@ private:
     int _empty_skip_count;
     bool _processing;
     size_t _header_field_count;
+    size_t _trailer_field_count;
+    size_t _chunk_length;
 
     std::string::const_iterator _token_start, _token_end;
     std::string _line;
@@ -68,6 +72,9 @@ private:
     void parse_first_line();
     void parse_header_line();
     void parse_body();
+    void parse_trailer_line();
+    void parse_chunked_size();
+    void parse_chunked_body();
 
     void normalize_path(std::string & str);
     void replace_percentage(std::string::iterator & it, std::string & str);

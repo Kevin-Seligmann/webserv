@@ -14,10 +14,8 @@ void RequestValidator::validate_method(HTTPMethod const & method)
 
 void RequestValidator::validate_protocol(std::string const & protocol)
 {
-    //if (protocol != "HTTP/1.1")
-    //    error("protocol \"" + protocol + "\"");
-
-    // 505 version not suported
+    if (protocol != "HTTP/1.1")
+       _error_container.put_error("Protocol " + protocol, HTTPError::VERSION_NOT_SUPPORTED);
 }
 
 void RequestValidator::validate_uri(URI const & uri)
@@ -29,7 +27,7 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     // Host header validation
     if (hdr.fields.find("host") == hdr.fields.end())
         _error_container.put_error("The header section must contain a host header field", HTTPError::BAD_REQUEST);
-    else if (hdr.fields.find("host")->second.size() != 1)
+    else if (hdr.fields.find("host")->second.find(',') != std::string::npos)
         _error_container.put_error("The host header must be a singleton", HTTPError::BAD_REQUEST);
     else if (!request.uri.host.empty())
     {
@@ -43,16 +41,20 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     // }
 
     // Validate transfer encodings
+    bool chunked_found = false;
     for (std::vector<CommaSeparatedFieldValue>::const_iterator it = hdr.transfer_encodings.begin(); it != hdr.transfer_encodings.end(); it ++)
     {
         if (it->name != "chunked")
              _error_container.put_error("Transfer-Encoding: " + it->name, HTTPError::NOT_IMPLEMENTED);
-        if (it->name == "chunked")
+        else
         {
+            chunked_found = true;
             if (it + 1 != hdr.transfer_encodings.end())
                 _error_container.put_error("Transfer-Encoding: chunked must be last", HTTPError::BAD_REQUEST);
             if (!it->parameters.empty())
                 _error_container.put_error("Transfer-Encoding: chunked can't have parameters", HTTPError::BAD_REQUEST);
+            if (hdr.fields.find("content-length") != hdr.fields.end())
+                _error_container.put_error("Transfer-Encoding and Content-Length are incompatible", HTTPError::BAD_REQUEST);
         }
     }
 }

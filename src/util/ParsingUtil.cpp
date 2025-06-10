@@ -90,13 +90,6 @@ bool parse::is_hexa_char(char c)
     return (is_digit(c) || strchr("ABCDEF", std::toupper(c)));
 }
 
-char parse::hex_to_byte(char c)
-{
-    if (is_digit(c))
-        return c - '0';
-    else
-        return std::toupper(c) - 'A';
-}
 
 bool parse::is_obs_text_char(char c)
 {
@@ -111,4 +104,28 @@ bool parse::is_qdtext_char(char c)
 bool parse::is_quoted_pair_char(char c)
 {
     return is_vchar(c) || strchr(" \t" , c) || is_obs_text_char(c);
+}
+
+char parse::hex_to_byte(char c)
+{
+    if (is_digit(c))
+        return c - '0';
+    else
+        return std::toupper(c) - 'A' + 10;
+}
+
+// max = 0 is no max. Use a max that would not overflow on size_t boundaries
+size_t parse::s_to_hex(std::string::const_iterator start, std::string::const_iterator end, size_t max)
+{
+    size_t n = 0;
+
+    while (start != end)
+    {
+        size_t val = hex_to_byte(*start);
+        if (max > 0 && n > (max - val) / 16)
+            return max;
+        n = n*16 + val;
+        start ++;
+    }
+    return n;
 }

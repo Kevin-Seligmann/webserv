@@ -15,6 +15,7 @@ public:
         URI_TOO_LONG = 414,
         REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
         NOT_IMPLEMENTED = 501,
+        VERSION_NOT_SUPPORTED = 505,
     };
 
     HTTPError(std::string const & motive, std::string const & line, std::string::const_iterator const & place, ErrorType type);

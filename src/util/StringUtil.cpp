@@ -175,3 +175,9 @@ std::string::const_iterator wss::skip_until_dquoted_string_end(std::string::cons
     return begin;
 }
 
+std::string::const_iterator wss::skip_hexa_token(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while (begin != end && parse::is_hexa_char(*begin))
+        begin ++;
+    return begin;
+}

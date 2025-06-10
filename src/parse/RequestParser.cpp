@@ -13,7 +13,8 @@ const size_t RequestParser::HEADER_LINE_MAX_LENGTH = 8000;
 const size_t RequestParser::MAX_HEADER_FIELDS = 100;
 const size_t RequestParser::MAX_TRAILER_FIELDS = 20;
 const size_t RequestParser::MAX_CONTENT_LENGTH = 8*1024*1024;
-
+const size_t RequestParser::MAX_CHUNK_SIZE = 1*1024 *1024;;
+const size_t RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH = 200;
 
 RequestParser::RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & element_parser, RequestValidator & validator)
 :_request(request), 
@@ -22,27 +23,23 @@ _element_parser(element_parser),
 _validator(validator),
 _status(FIRST_LINE),
 _empty_skip_count(0),
-_header_field_count(0)
+_header_field_count(0),
+_trailer_field_count(0),
+_chunk_length(0)
 {}
 
 bool RequestParser::done() const {return _status == DONE;}
 
-void RequestParser::parse_body()
-{
-    if (_request.headers.content_length <= 0)
-    {
-        _status = DONE;
-        return ;
-    }
-    _processing = _buffer.get_chunk(_request.headers.content_length, _request.body.content);
-    if (!_processing)
-        return ;
-    _status = DONE;
-}
-
 void RequestParser::dump_remainder() const
 {
     Logger::getInstance() << "Buffer remainder:\n" << std::string(_buffer.cbegin(), _buffer.cend()) << "$\n";
+    if (!done())
+    {
+        Logger::getInstance() << "Body not fully read (Chunks are always read on one operation)\n"
+        << "Read body size: " << _request.body.content.size() << ", "
+        << "Content-Length: " << _request.headers.content_length << ", "
+        << "Last Chunk size: " << _chunk_length << std::endl;
+    }
 }
 
 void RequestParser::append(uint8_t *str, ssize_t size) {_buffer.append(str, size);}
@@ -53,6 +50,8 @@ void RequestParser::new_request()
     _status = FIRST_LINE;
     _buffer.new_request();
     _header_field_count = 0;
+    _trailer_field_count = 0;
+    _chunk_length = 0;
 }
 
 void RequestParser::process()
@@ -65,11 +64,15 @@ void RequestParser::process()
             case FIRST_LINE: parse_first_line(); break ;
             case HEADERS: parse_header_line(); break ;
             case BODY: parse_body() ; break ;
+            case CHUNKED_SIZE: parse_chunked_size(); break ;
+            case CHUNKED_BODY: parse_chunked_body(); break ;
+            case TRAILERS: parse_trailer_line(); break ;
             case DONE: throw std::runtime_error("CODE ERROR: Must initialize a new request");
         }
     }
 }
 
+// Main parsig functions
 
 void RequestParser::parse_first_line()
 {
@@ -102,20 +105,6 @@ void RequestParser::parse_first_line()
     _status = HEADERS;
 }
 
-void RequestParser::get_method()
-{
-    _token_start = _line.begin();
-    if (*_token_start == ' ')
-    {
-        _error_container.put_warning("First line, space before method", _line, _token_start);
-        _token_start = wss::skip_whitespace(_line.begin(), _line.end());
-    }
-
-    _token_end = wss::skip_until(_token_start, _line.end(), " ");
-    _element_parser.parse_method(_token_start, _token_end, _line, _request.method);
-    _token_start = _token_end;
-}
-
 void RequestParser::parse_header_line()
 {
     // Basic checks
@@ -128,7 +117,10 @@ void RequestParser::parse_header_line()
     if (_line.empty())
     {
         process_headers();
-        _status = BODY;
+        if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
+            _status = CHUNKED_SIZE;
+        else
+            _status = BODY;
         return ;
     }
 
@@ -155,6 +147,150 @@ void RequestParser::parse_header_line()
 
     _request.headers.put(name, value);
 }
+
+void RequestParser::parse_body()
+{
+    if (_request.headers.content_length <= 0)
+    {
+        _status = DONE;
+        return ;
+    }
+    _processing = _buffer.get_chunk(_request.headers.content_length, _request.body.content);
+    if (!_processing)
+        return ;
+    _status = DONE;
+}
+
+void RequestParser::parse_chunked_size()
+{
+    _processing = _buffer.get_crlf_line(_line);
+    if (_buffer.previous_read_size() >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
+        return _error_container.put_error("line too long (On reading chunk size)", HTTPError::BAD_REQUEST);
+    if (!_processing)
+        return ;
+
+    // Delimit hex token
+    _token_start = _line.begin();
+    _token_end = wss::skip_hexa_token(_token_start, _line.end());
+    if (_token_start == _token_end)
+        return _error_container.put_error("chunk size line must have at least one digit", _line, _token_start, HTTPError::BAD_REQUEST);
+
+    // Get hexa value
+    _chunk_length = parse::s_to_hex(_token_start, _token_end, RequestParser::MAX_CHUNK_SIZE);
+    if (_chunk_length == 0)
+        _status = TRAILERS;
+    else
+        _status = CHUNKED_BODY;
+    if (_chunk_length  >= RequestParser::MAX_CHUNK_SIZE)
+        return _error_container.put_error("chunk size too big", HTTPError::BAD_REQUEST);
+    if (_request.body.content.size() + _chunk_length >= RequestParser::MAX_CONTENT_LENGTH)
+        return _error_container.put_error("chunked body too big", HTTPError::BAD_REQUEST);
+}
+
+void RequestParser::parse_chunked_body()
+{
+    std::string aux;
+
+    _processing = _buffer.get_chunk(_chunk_length, aux);
+    if (!_processing)
+        return ;
+    _request.body.content += aux;
+    _status = CHUNKED_SIZE;
+}
+
+void RequestParser::parse_trailer_line()
+{
+    // Basic checks
+    _processing = _buffer.get_crlf_line(_line);
+    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
+        return _error_container.put_error("Request trailer field", HTTPError::REQUEST_HEADER_FIELDS_TOO_LARGE);
+    if (!_processing)
+        return ;
+    _trailer_field_count ++;
+    if (_line.empty())
+    {
+        _status = DONE;
+        return ;
+    }
+}
+
+
+
+// Secondary parsing functions
+
+void RequestParser::parse_uri()
+{
+    // Skip to start of URI
+    if (_token_start != _line.end() && _token_start + 1 != _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
+        _error_container.put_warning("URI, extra whitespace", _line, _token_start);
+    _token_start = wss::skip_whitespace(_token_start, _line.end());
+    if (_token_start == _line.end())
+        return _error_container.put_error("URI not found", HTTPError::BAD_REQUEST);
+
+    // Check URI length
+    std::string::const_iterator uri_limit = wss::skip_until(_token_start, _token_end, " ");
+    if (std::distance(_token_start, uri_limit) >= RequestParser::URI_MAX_LENGTH)
+    {
+        _token_start = uri_limit;
+        return _error_container.put_error("Request uri", HTTPError::URI_TOO_LONG);
+    }
+
+    // Parse
+    if (_token_start != _line.end() && *_token_start == '/')
+        get_path();
+    else if (_token_start != _line.end())
+    {
+        get_schema();
+        if (has_authority())
+            get_hier_part();
+        else
+            get_path();
+    }
+    if (_token_start != _line.end() && *_token_start == '?')
+        get_query();
+    if (_token_start != _line.end() && *_token_start == '#')
+        get_fragment();
+    // Set default port if not found
+    if (_request.uri.port == -1)
+        _request.uri.port = 80;
+}
+
+void RequestParser::get_hier_part()
+{ 
+    _token_start += 2; // Skip '//'
+
+    // Find and skip userinfo if present
+    _token_end = wss::skip_until(_token_start, _line.end(), "@");
+    if (_token_end != _line.end() && *_token_end == '@')
+    {
+        _error_container.put_error("authority, userinfo '@' is deprecated", _line, _token_end, HTTPError::BAD_REQUEST);
+        _token_start = _token_end + 1;
+    }
+    if (_token_start == _line.end())
+        return _error_container.put_error("host, not found", HTTPError::BAD_REQUEST);
+
+    // Find host (Until path or end)
+    _token_end = wss::skip_until(_token_start, _line.end(), " :?#/");
+    if (_token_end == _token_start)
+        _error_container.put_error("host, not found", _line, _token_end, HTTPError::BAD_REQUEST);
+    else
+        _element_parser.parse_host(_token_start, _token_end, _line, _request.uri.host);
+    _token_start = _token_end;
+
+    // Find port
+    if (_token_end != _line.end() && *_token_end == ':')
+    {
+        _token_start ++;
+        _token_end = wss::skip_until(_token_start, _line.end(), " ?#/");
+        _element_parser.parse_port(_token_start, _token_end, _line, _request.uri.port);
+        _token_start = _token_end;
+    }
+
+    if (_token_end != _line.end() && *_token_end == '/')
+        get_path();
+}
+
+// Header field parsing
 
 void RequestParser::parse_host_field(std::string const & value)
 {
@@ -203,13 +339,14 @@ void RequestParser::parse_transfer_encoding_field(std::string const & value)
     _element_parser.parse_comma_separated_values(_token_start, _token_end, value, _request.headers.transfer_encodings);
 }
 
+// Auxiliary
+
 void RequestParser::process_headers()
 {
-    for (FieldSection::field::iterator it = _request.headers.fields.begin(); it != _request.headers.fields.end(); it ++)
+    for (std::map<std::string, std::string>::iterator it = _request.headers.fields.begin(); it != _request.headers.fields.end(); it ++)
         for (wsHeaders const * hdr = headers; hdr->parser_f != NULL; hdr ++)
             if (it->first == hdr->name)
-                for (std::vector<std::string>::const_iterator val = it->second.begin(); val != it->second.end(); val ++)
-                    (this->*hdr->parser_f)(*val);
+                (this->*hdr->parser_f)(it->second);
     _validator.validate_headers(_request, _request.headers);
 }
 
@@ -218,76 +355,18 @@ bool RequestParser::has_authority() const
     return _token_start + 1 < _line.end() && *_token_start == '/' && *(_token_start + 1) == '/';
 }
 
-void RequestParser::get_hier_part()
-{ 
-    _token_start += 2; // Skip '//'
-
-    // Find and skip userinfo if present
-    _token_end = wss::skip_until(_token_start, _line.end(), "@");
-    if (_token_end != _line.end() && *_token_end == '@')
-    {
-        _error_container.put_error("authority, userinfo '@' is deprecated", _line, _token_end, HTTPError::BAD_REQUEST);
-        _token_start = _token_end + 1;
-    }
-    if (_token_start == _line.end())
-        return _error_container.put_error("host, not found", HTTPError::BAD_REQUEST);
-
-    // Find host (Until path or end)
-    _token_end = wss::skip_until(_token_start, _line.end(), " :?#/");
-    if (_token_end == _token_start)
-        _error_container.put_error("host, not found", _line, _token_end, HTTPError::BAD_REQUEST);
-    else
-        _element_parser.parse_host(_token_start, _token_end, _line, _request.uri.host);
-    _token_start = _token_end;
-
-    // Find port
-    if (_token_end != _line.end() && *_token_end == ':')
-    {
-        _token_start ++;
-        _token_end = wss::skip_until(_token_start, _line.end(), " ?#/");
-        _element_parser.parse_port(_token_start, _token_end, _line, _request.uri.port);
-        _token_start = _token_end;
-    }
-
-    if (_token_end != _line.end() && *_token_end == '/')
-        get_path();
-}
-
-void RequestParser::parse_uri()
+void RequestParser::get_method()
 {
-    // Skip to start of URI
-    if (_token_start != _line.end() && _token_start + 1 != _line.end() && *_token_start == ' ' && *(_token_start + 1) == ' ')
-        _error_container.put_warning("URI, extra whitespace", _line, _token_start);
-    _token_start = wss::skip_whitespace(_token_start, _line.end());
-    if (_token_start == _line.end())
-        return _error_container.put_error("URI not found", HTTPError::BAD_REQUEST);
-
-    // Check URI length
-    std::string::const_iterator uri_limit = wss::skip_until(_token_start, _token_end, " ");
-    if (std::distance(_token_start, uri_limit) >= RequestParser::URI_MAX_LENGTH)
+    _token_start = _line.begin();
+    if (*_token_start == ' ')
     {
-        _token_start = uri_limit;
-        return _error_container.put_error("Request uri", HTTPError::URI_TOO_LONG);
+        _error_container.put_warning("First line, space before method", _line, _token_start);
+        _token_start = wss::skip_whitespace(_line.begin(), _line.end());
     }
 
-    // Parse
-    if (_token_start != _line.end() && *_token_start == '/')
-        get_path();
-    else if (_token_start != _line.end())
-    {
-        get_schema();
-        if (has_authority())
-            get_hier_part();
-        else
-            get_path();
-    }
-    if (_token_start != _line.end() && *_token_start == '?')
-        get_query();
-    if (_token_start != _line.end() && *_token_start == '#')
-        get_fragment();
-    // Set default port if not found
-    if (_request.uri.port == -1)
-        _request.uri.port = 80;
+    _token_end = wss::skip_until(_token_start, _line.end(), " ");
+    _element_parser.parse_method(_token_start, _token_end, _line, _request.method);
+    _token_start = _token_end;
 }
 
 void RequestParser::get_path()
