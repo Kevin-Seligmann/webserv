@@ -19,8 +19,9 @@ void testRequestParser()
     "GET http://www.example.com?a's#fragm?ent  HTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
-    "Content-Length: 7 \r\n"
+    "Content-Length: 7, 7, 7 \r\n"
     "Accept: text/html\r\n"
+    "transfer-encoding: chunked\r\n"
     "\r\n"
     "BODY"
     "\r\n"
@@ -32,6 +33,7 @@ void testRequestParser()
     "GET / HTTP/1.1\r\n"
     "Host:                  \r\n"
     "User-Agent: Mozillaaa/5.0\r\n"
+    "transfer-encoding: chunked\r\n"
     "Accept: texttt/html\n\n"
     "Qwerty is nice, really";
 

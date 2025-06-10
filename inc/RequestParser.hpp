@@ -85,4 +85,5 @@ private:
     void process_headers();
     void parse_host_field(std::string const & value);
     void parse_content_length_field(std::string const & value);
+    void parse_transfer_encoding_field(std::string const & value);
 };

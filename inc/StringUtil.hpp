@@ -28,6 +28,7 @@ namespace wss
     std::string::const_iterator skip_schema_token(std::string::const_iterator begin, std::string::const_iterator end);
     std::string::const_iterator skip_ascii_whitespace_r(std::string::const_iterator end, std::string::const_iterator begin);
     std::string::const_iterator skip_until(std::string::const_iterator begin, std::string::const_iterator end, std::string const & str);
+    std::string::const_iterator skip_until_dquoted_string_end(std::string::const_iterator begin, std::string::const_iterator end);
     std::string::const_iterator skip_whitespace(std::string::const_iterator begin, std::string::const_iterator end);
 
 }

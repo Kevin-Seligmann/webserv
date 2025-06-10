@@ -70,14 +70,14 @@ void ElementParser::parse_field_value(std::string::const_iterator & begin, std::
     parse::sanitize_header_value(value.begin(), value.end());
 }
 
-void ElementParser::parse_field_name(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & name)
+void ElementParser::parse_field_token(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & name)
 {
     name = std::string(begin, end);
 
     while (begin != end)
     {
         if (!parse::is_token_char(*begin))
-            _error_container.put_error("field value, unexpected character", HTTPError::BAD_REQUEST);
+            _error_container.put_error("field token, unexpected character", source_line, end, HTTPError::BAD_REQUEST);
         begin ++;
     }
     wss::to_lower(name);
@@ -141,6 +141,101 @@ void ElementParser::parse_content_length_field(std::string::const_iterator & beg
             return _error_container.put_error("Content-Length header", HTTPError::CONTENT_TOO_LARGE);
         begin ++;
     }
+}
+
+// End and being point to  '"'
+void ElementParser::parse_dquote_string(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::string & str)
+{
+    begin ++;
+    str.reserve(std::distance(begin, end));
+
+    while (begin != end)
+    {
+        if (*begin == '\\')
+        {
+            if (begin + 1 == end || !parse::is_quoted_pair_char(*(begin + 1)))
+                return _error_container.put_error("quoted string, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
+            str.push_back(*(begin + 1));
+            begin += 2;
+        }
+        else 
+        {
+            if (!parse::is_qdtext_char(*begin))
+                return _error_container.put_error("quoted string, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
+            str.push_back(*begin);
+            begin ++;
+        }
+    }
+}
+
+void ElementParser::parse_comma_separated_values(std::string::const_iterator & begin, std::string::const_iterator & end, std::string const & source_line, std::vector<CommaSeparatedFieldValue> & values)
+{
+    while (1)
+    {
+        CommaSeparatedFieldValue csf;
+
+        // Get name
+        end = wss::skip_until(begin, source_line.end(), ",; ");
+        parse_field_token(begin, end, source_line, csf.name);
+        if (csf.name.empty())
+            _error_container.put_error("comma separated field, empty field name", source_line, begin, HTTPError::BAD_REQUEST);
+        
+        // Parse params
+        begin = wss::skip_ascii_whitespace(end, source_line.end());
+        while (begin != source_line.end() && *begin == ';')
+        {
+            std::string param_name, param_value;
+        
+            // Param name
+            begin = wss::skip_ascii_whitespace(begin + 1, source_line.end());
+            end = wss::skip_until(begin, source_line.end(), "= \t");
+            parse_field_token(begin, end, source_line, param_name);
+            if (param_name.empty())
+                _error_container.put_error("comma separated field, empty parameter name", source_line, begin, HTTPError::BAD_REQUEST);
+     
+            // Parse value (Skip to value)
+            begin = wss::skip_ascii_whitespace(end, source_line.end());
+            if (begin != source_line.end() && *begin != '=')
+                return _error_container.put_error("comma separated parameter, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
+            if (begin == source_line.end() || begin + 1 == source_line.end())
+                return _error_container.put_error("comma separated parameter, empty parameter value", source_line, begin, HTTPError::BAD_REQUEST);
+            begin = wss::skip_ascii_whitespace(begin + 1, source_line.end());
+
+            // Parse value
+            if (*begin == '"')
+            {
+                end = wss::skip_until_dquoted_string_end(begin + 1, source_line.end());
+                if (end == source_line.end())
+                    return _error_container.put_error("comma separated parameter, closing dquote missing", source_line, end, HTTPError::BAD_REQUEST);
+                parse_dquote_string(begin, end, source_line, param_value);
+
+                end ++; // Skip the last '"'
+            }
+            else 
+            {
+                end = wss::skip_until(begin, source_line.end(), ", \t");
+                parse_field_token(begin, end, source_line, param_value);
+            }
+            if (param_value.empty())
+                return _error_container.put_error("comma separated parameter, empty parameter value", source_line, begin, HTTPError::BAD_REQUEST);
+
+            // Put value and push begin iterator
+            csf.parameters.push_back(std::pair<std::string, std::string>(param_name, param_value));
+            begin = wss::skip_ascii_whitespace(end, source_line.end());
+        }
+
+        values.push_back(csf);
+    
+        // End of current field
+        if (begin != source_line.end() && *begin == ',')
+        {
+            begin = wss::skip_ascii_whitespace(begin + 1, source_line.end());
+            continue ;
+        }
+        else if (begin != source_line.end())
+            return _error_container.put_error("comma separated field, unexpected character", source_line, begin, HTTPError::BAD_REQUEST);
+        break ;
+    } 
 }
 
 

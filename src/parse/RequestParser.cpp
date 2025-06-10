@@ -3,6 +3,7 @@
 const RequestParser::wsHeaders RequestParser::headers[] = {
     {"host", &RequestParser::parse_host_field},
     {"content-length", &RequestParser::parse_content_length_field},
+    {"transfer-encoding", &RequestParser::parse_transfer_encoding_field},
     {"", NULL}
 };
 
@@ -140,7 +141,7 @@ void RequestParser::parse_header_line()
         return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1, HTTPError::BAD_REQUEST);
     if (_token_end == _token_start)
         _error_container.put_error("field name, empty", HTTPError::BAD_REQUEST);
-    _element_parser.parse_field_name(_token_start, _token_end, _line, name);
+    _element_parser.parse_field_token(_token_start, _token_end, _line, name);
     
     // Parse value
     _token_start = wss::skip_ascii_whitespace(_token_end + 1, _line.end());
@@ -174,7 +175,32 @@ void RequestParser::parse_content_length_field(std::string const & value)
 {
     _token_start = value.begin();
     _token_end = value.end();
-    _element_parser.parse_content_length_field(_token_start, _token_end, value, _request.headers.content_length);
+    if (value.find(",") == std::string::npos)
+        _element_parser.parse_content_length_field(_token_start, _token_end, value, _request.headers.content_length);
+    else 
+    {
+        std::vector<CommaSeparatedFieldValue> csfs;
+        _element_parser.parse_comma_separated_values(_token_start, _token_end, value, csfs);
+        for (std::vector<CommaSeparatedFieldValue>::const_iterator it = csfs.begin(); it != csfs.end(); it ++)
+        {
+            ssize_t prev_value = _request.headers.content_length;
+            _token_start = it->name.begin();
+            _token_end = it->name.end();
+
+            if (!it->parameters.empty())
+                return _error_container.put_error("Content-Length values can't have parameters", HTTPError::BAD_REQUEST);
+            _element_parser.parse_content_length_field(_token_start, _token_end, it->name, _request.headers.content_length);
+            if (prev_value != -1 && prev_value != _request.headers.content_length)
+                return _error_container.put_error("Content-Length has incoherent, different values: " + value, HTTPError::BAD_REQUEST);
+        }
+    }
+}
+
+void RequestParser::parse_transfer_encoding_field(std::string const & value)
+{
+    _token_start = value.begin();
+    _token_end = value.end();
+    _element_parser.parse_comma_separated_values(_token_start, _token_end, value, _request.headers.transfer_encodings);
 }
 
 void RequestParser::process_headers()

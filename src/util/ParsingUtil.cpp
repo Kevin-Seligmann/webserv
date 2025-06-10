@@ -81,7 +81,7 @@ void parse::first_line_sanitize(std::string & str)
 void parse::sanitize_header_value(std::string::iterator start, std::string::iterator end)
 {
     for (;start != end; start ++)
-        if (parse::is_ascii_whitespace(*start) || *start < 32)
+        if (parse::is_ascii_whitespace(*start) || (*start < 32 && *start >= 0))
             *start = ' ';
 }
 
@@ -96,4 +96,19 @@ char parse::hex_to_byte(char c)
         return c - '0';
     else
         return std::toupper(c) - 'A';
+}
+
+bool parse::is_obs_text_char(char c)
+{
+    return  (unsigned char) c >= 0x80 && (unsigned char) c <= 0xff;
+}
+
+bool parse::is_qdtext_char(char c)
+{
+    return  strchr(" \t!" , c) || (c >= 0x23 && c <= 0x5b)  || (c >= 0x5d && c <= 0x7e) || is_obs_text_char(c);
+}
+
+bool parse::is_quoted_pair_char(char c)
+{
+    return is_vchar(c) || strchr(" \t" , c) || is_obs_text_char(c);
 }

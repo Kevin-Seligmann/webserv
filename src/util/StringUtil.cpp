@@ -163,3 +163,15 @@ std::string::const_iterator wss::skip_until(std::string::const_iterator begin, s
         begin ++;
     return begin;
 }
+
+std::string::const_iterator wss::skip_until_dquoted_string_end(std::string::const_iterator begin, std::string::const_iterator end)
+{
+    while (begin != end && *begin != '"')
+    {
+        if (*begin == '\\' && begin + 1 != end)
+            begin ++;
+        begin ++;
+    }
+    return begin;
+}
+
