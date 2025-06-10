@@ -5,18 +5,13 @@
 #include <iostream>
 
 int main(int argc, char** argv) {
+	ParsedServers config;
+	VirtualServersManager webServers;
 	try {
-		ParsedServers config;
 		if (parseProcess(argc, argv, config) != 0) return (1);
 		
-		// el control de error de este bloque se hace mediante try catch por lo que es innecesario(?) el if
-		// revisar desded aqui
-		VirtualServersManager webServers;
-		if (!serversInit(webServers, config)) {
-			std::cerr << RED << "Failed to initialize servers." << RESET << std::endl;
-			return (1);
-		}
-		// hasta aqui
+		serversInit(webServers, config);
+
 			
 		showParse(config);
 		showServers(webServers);
@@ -35,5 +30,5 @@ int main(int argc, char** argv) {
 		std::cerr << RED << "WIRED ERROR: " << RESET << "Unknown exception occurred" << std::endl;
 		return (1);
 	}
-//	webServers.cleanupSockets();
+	webServers.cleanupSockets();
 }
