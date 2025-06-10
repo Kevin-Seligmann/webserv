@@ -14,7 +14,6 @@
 #include <unistd.h> // close()
 #include <cerrno> // errno
 #include <stdexcept>
-#include <sys/epoll.h> // epoll_create1(), epoll_ctl(), epoll_wait()
 
 #include "Listen.hpp"
 #include "Parsed.hpp"
