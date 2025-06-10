@@ -16,17 +16,11 @@ int main(int argc, char** argv) {
 			std::cerr << RED << "Failed to initialize servers." << RESET << std::endl;
 			return (1);
 		}
+		// hasta aqui
 			
 		showParse(config);
 		showServers(webServers);
 		showSockets(webServers);
-			// hasta aqui
-
-		// FASE 3: MAIN EVENT LOOP (FUTURO)
-		// TODO: Implementar event loop con epoll
-		// 1. Crear epoll instance
-		// 2. Registrar listen sockets en epoll usando punteros a VirtualServerKey
-		// 3. Event loop principal para manejar conexiones
 		
 		std::cout << GREEN << "Server ready. Event loop will be implemented next." << RESET << std::endl;
 
