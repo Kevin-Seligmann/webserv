@@ -11,7 +11,6 @@ int main(int argc, char** argv) {
 		if (parseProcess(argc, argv, config) != 0) return (1);
 		
 		serversInit(webServers, config);
-
 			
 		showParse(config);
 		showServers(webServers);
