@@ -6,18 +6,12 @@
 bool serversInit(VirtualServersManager& webServers, const ParsedServers& ps) {
 	
 	webServers.loadFromParsedConfig(ps);
-	OKlogsEntry("OK: ", "Virtual servers configuration loaded.");
 	
 	webServers.initializeSockets();
-	OKlogsEntry("OK: ", "Listen sockets initialized.");
 	
 	webServers.bindSockets();
-	OKlogsEntry("OK: ", "Socketsbound to addresses.");
 
-	
-
-	// CONTINUE... 
-
+	webServers.socketsListen();
 
 	return true;
 }

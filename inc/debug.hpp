@@ -11,4 +11,6 @@ void showParse(const ParsedServers& config);
 
 void showServers(const VirtualServersManager& ws);
 
+void showSockets(const VirtualServersManager& ws);
+
 #endif

@@ -1,6 +1,6 @@
 TARGET = webserv
 
-CXX = g++
+CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iinc
 
 SRC_DIR = src

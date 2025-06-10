@@ -10,9 +10,11 @@
 #include <arpa/inet.h> // inet_addr(), inet_pton()
 #include <fcntl.h> // fcntl()
 #include <cstring> // memset()
+#include <netdb.h> // getaddrinfo(), addrinfo
 #include <unistd.h> // close()
 #include <cerrno> // errno
 #include <stdexcept>
+#include <sys/epoll.h> // epoll_create1(), epoll_ctl(), epoll_wait()
 
 #include "Listen.hpp"
 #include "Parsed.hpp"
@@ -35,13 +37,7 @@ public:
     bool loadFromParsedConfig(const ParsedServers& ps);
     bool initializeSockets(void);
 	bool bindSockets(void);
-
-    // Funciones para manejo de sockets
-/*   bool createListenSocket(const VirtualServerKey& key);
-    void configureSocket(int fd);
-    bool bindAndListen(int fd, const VirtualServerKey& key);
-    bool initAllSockets();
-    */
+    bool socketsListen(void);
     void cleanupSockets();
 };
 
