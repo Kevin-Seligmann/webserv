@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/30 19:06:19 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/05 12:47:50 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,23 +146,69 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 		const std::string& token = tokens[i];
 		if (token == "default_server")
 		{
-			ld.is_default = true;
+			std::cout << YELLOW << "WARNING: " << RESET <<
+			"According to the subject requirements, if two or more servers are configured " <<
+			"with the same host:port, the first one in order is considered the primary. The " <<
+			YELLOW << "[default_server]" << RESET << " directive is " << YELLOW << 
+			"ignored" << RESET << "." << std::endl;
 		}
 		else
 		{
+			size_t brace_open = token.find('[');
+			size_t brace_close = token.find(']');
+			size_t point = token.find('.');
 			size_t colon = token.find(':');
-			if (colon != std::string::npos)
+			if (brace_open != std::string::npos) 
 			{
-				ld.host = token.substr(0, colon);
-				ld.port = to_int(token.substr(colon + 1));
+				std::cout << YELLOW << "WARNING: " << RESET <<
+				"According to the subject requirements, we accept IPv4 host form only. Hosts like " <<
+				YELLOW << "[::] or [::1]" << RESET << " will be " << YELLOW <<
+				"replaced with default host. " << RESET <<
+				"According to subject, if this replace will affect same host:port of other server, " <<
+ 				YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+
+				if (brace_close == std::string::npos) {
+					throw std::runtime_error("Unclosed brackets in listen directive"); }
+				if (brace_close + 1 < token.size() && token[brace_close + 1] == ':') {
+					ld.port = to_int(token.substr(brace_close + 2)); }
+			}
+			else if (colon != std::string::npos)
+			{
+				if (token.substr(0, colon) == "localhost")
+				{
+					std::cout << YELLOW << "WARNING: " << RESET <<
+                "Hosts like " << YELLOW << "localhost" << RESET << " will be " << YELLOW <<
+                "replaced with the real localhost. " << RESET <<
+                "According to subject, if this replace will affect same host:port of other server, " <<
+                YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+                    ld.host = getLoopbackAddress();
+					ld.port = to_int(token.substr(colon + 1));
+				}
+                else if (token.substr(0, colon).size() == 1 && token.substr(0, colon)[0] == '*')
+				{
+					std::cout << YELLOW << "WARNING: " << RESET <<
+                "Hosts like " << YELLOW << "*" << RESET << " will be " << YELLOW <<
+                "replaced with default host. " << RESET <<
+                "According to subject, if this replace will affect same host:port of other server, " <<
+                YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+					ld.port = to_int(token.substr(colon + 1));
+				}
+				else 
+				{
+					ld.host = token.substr(0, colon);
+					ld.port = to_int(token.substr(colon + 1));
+				}
 			} 
-			else if (std::isdigit(token[0]))
+			else if (std::isdigit(token[0]) && point == std::string::npos)
 			{
 				ld.port = to_int(token);
 			}
 			else
 			{
-				ld.host = token;
+				if (token == "localhost") {
+					ld.host = getLoopbackAddress(); }
+				else if (token[0] != '*')
+					ld.host = token;
 			}
 		}
 	}
@@ -262,8 +308,9 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
     try {
         std::string configFile;
         std::string successMessage;
-        
         if (argc == 2) {
+			if (checkFile(argv[1]) == -1)
+				return (1);
             configFile = argv[1];
             successMessage = "Success: starting server with custom config";
         } else {
@@ -284,7 +331,8 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         file.close();
         
         std::vector<std::string> tokens = tokenize(content);
-        parsedConfig = parseConfig(tokens);
+
+		parsedConfig = parseConfig(tokens);
         
         ServerValidator::validate(parsedConfig);
         

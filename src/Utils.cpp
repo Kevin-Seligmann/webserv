@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/31 12:56:04 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/11 13:50:49 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,4 +113,29 @@ void OKlogsEntry(const std::string& title, const std::string& str) {
 
 void ERRORlogsEntry(const std::string& title, const std::string& str) {
 	std::cout << RED << title << RESET << str << std::endl;
+}
+std::string getLoopbackAddress()
+{
+	struct ifaddrs* ifaddr;
+	if (getifaddrs(&ifaddr) == -1)
+		return ("0.0.0.0");
+
+	std::string loopbackIP = "127.0.0.1";
+	for (struct ifaddrs* ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) 
+	{
+		if (!ifa->ifa_addr)
+			continue;
+
+		if (ifa->ifa_addr->sa_family == AF_INET && std::string(ifa->ifa_name) == "lo")
+		{
+			char addrBuf[INET_ADDRSTRLEN];
+			void* addrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+			inet_ntop(AF_INET, addrPtr, addrBuf, INET_ADDRSTRLEN);
+			loopbackIP = std::string(addrBuf);
+			break;
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return (loopbackIP);
 }
