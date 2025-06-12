@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/11 13:50:49 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/12 14:21:11 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,15 +105,45 @@ void printServerConfig(const ParsedServer& config)
 	std::cout << std::endl;
 }
 
-/* Logs Utility */
-
-void OKlogsEntry(const std::string& title, const std::string& str) {
-	std::cout << BLUE << title << RESET << str << std::endl;
+void printParsingMessage(ParsingMessageType type)
+{
+	switch (type)
+	{
+		case DEFAULT_SERVER:
+			std::cout << YELLOW << "INFO: " << RESET <<
+			"According to the subject requirements, if two or more servers are configured " <<
+			"with the same host:port, the first one in order is considered the primary. The " <<
+			YELLOW << "[default_server]" << RESET << " directive is " << YELLOW <<
+			"ignored" << RESET << "." << std::endl;
+			break;
+		case IPV6_HOST:
+			std::cout << YELLOW << "INFO: " << RESET <<
+			"According to the subject requirements, we accept IPv4 host form only. Hosts like " <<
+			YELLOW << "[::] or [::1]" << RESET << " will be " << YELLOW <<
+			"replaced with default host. " << RESET <<
+			"According to subject, if this replace will affect same host:port of other server, " <<
+			YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+			break;
+		case LOCAL_HOST:
+			std::cout << YELLOW << "INFO: " << RESET <<
+			"Hosts like " << YELLOW << "localhost" << RESET << " will be " << YELLOW <<
+			"replaced with the real localhost. " << RESET <<
+			"According to subject, if this replace will affect same host:port of other server, " <<
+			YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+			break;
+		case ASTERIKS_HOST:
+			std::cout << YELLOW << "INFO: " << RESET <<
+			"Hosts like " << YELLOW << "*" << RESET << " will be " << YELLOW <<
+			"replaced with default host. " << RESET <<
+			"According to subject, if this replace will affect same host:port of other server, " <<
+			YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+			break;
+		default:
+			std::cout << YELLOW << "INFO: " << RESET << "Unknown parsing state." << std::endl;
+			break;
+	}
 }
 
-void ERRORlogsEntry(const std::string& title, const std::string& str) {
-	std::cout << RED << title << RESET << str << std::endl;
-}
 std::string getLoopbackAddress()
 {
 	struct ifaddrs* ifaddr;
@@ -139,3 +169,14 @@ std::string getLoopbackAddress()
 	freeifaddrs(ifaddr);
 	return (loopbackIP);
 }
+
+/* Logs Utility */
+
+void OKlogsEntry(const std::string& title, const std::string& str) {
+	std::cout << BLUE << title << RESET << str << std::endl;
+}
+
+void ERRORlogsEntry(const std::string& title, const std::string& str) {
+	std::cout << RED << title << RESET << str << std::endl;
+}
+
