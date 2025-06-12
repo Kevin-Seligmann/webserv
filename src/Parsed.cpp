@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/05 12:47:50 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/12 14:17:10 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,11 +146,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 		const std::string& token = tokens[i];
 		if (token == "default_server")
 		{
-			std::cout << YELLOW << "WARNING: " << RESET <<
-			"According to the subject requirements, if two or more servers are configured " <<
-			"with the same host:port, the first one in order is considered the primary. The " <<
-			YELLOW << "[default_server]" << RESET << " directive is " << YELLOW << 
-			"ignored" << RESET << "." << std::endl;
+			printParsingMessage(DEFAULT_SERVER);
 		}
 		else
 		{
@@ -160,13 +156,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 			size_t colon = token.find(':');
 			if (brace_open != std::string::npos) 
 			{
-				std::cout << YELLOW << "WARNING: " << RESET <<
-				"According to the subject requirements, we accept IPv4 host form only. Hosts like " <<
-				YELLOW << "[::] or [::1]" << RESET << " will be " << YELLOW <<
-				"replaced with default host. " << RESET <<
-				"According to subject, if this replace will affect same host:port of other server, " <<
- 				YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
-
+				printParsingMessage(IPV6_HOST);
 				if (brace_close == std::string::npos) {
 					throw std::runtime_error("Unclosed brackets in listen directive"); }
 				if (brace_close + 1 < token.size() && token[brace_close + 1] == ':') {
@@ -176,21 +166,13 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 			{
 				if (token.substr(0, colon) == "localhost")
 				{
-					std::cout << YELLOW << "WARNING: " << RESET <<
-                "Hosts like " << YELLOW << "localhost" << RESET << " will be " << YELLOW <<
-                "replaced with the real localhost. " << RESET <<
-                "According to subject, if this replace will affect same host:port of other server, " <<
-                YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+					printParsingMessage(LOCAL_HOST);
                     ld.host = getLoopbackAddress();
 					ld.port = to_int(token.substr(colon + 1));
 				}
                 else if (token.substr(0, colon).size() == 1 && token.substr(0, colon)[0] == '*')
 				{
-					std::cout << YELLOW << "WARNING: " << RESET <<
-                "Hosts like " << YELLOW << "*" << RESET << " will be " << YELLOW <<
-                "replaced with default host. " << RESET <<
-                "According to subject, if this replace will affect same host:port of other server, " <<
-                YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
+					printParsingMessage(ASTERIKS_HOST);
 					ld.port = to_int(token.substr(colon + 1));
 				}
 				else 

@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/04 19:29:12 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/12 14:14:47 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,13 @@
 # define BLUE       "\033[1;94m"
 # define RESET      "\033[0m"
 
+enum ParsingMessageType {
+    DEFAULT_SERVER,
+    IPV6_HOST,
+    LOCAL_HOST,
+    ASTERIKS_HOST
+};
+
 /* Check input file function */
 int checkFile(const char* argv);
 
@@ -49,6 +56,7 @@ std::string getLoopbackAddress();
 /* Functions for printing */
 void printLocationConfig(const Locations& loc);
 void printServerConfig(const ParsedServer& config);
+void printParsingMessage(ParsingMessageType type);
 
 /* Server initialization functions */
 bool serversInit(ServersManager& sm, const ParsedServers& ps);
