@@ -353,7 +353,6 @@ void showSockets(const VirtualServersManager& ws) {
             std::cout << BLUE << "  Host: " << RESET << it->first.host << std::endl;
             std::cout << BLUE << "  Port: " << RESET << it->first.port << std::endl;
             std::cout << BLUE << "  Socket FD: " << RESET << it->second << std::endl;
-
             VirtualServersManager::VirtualServersMap::const_iterator mgr_it = ws.serversManager.find(it->first);
             if (mgr_it != ws.serversManager.end() && !mgr_it->second.empty()) {
                 const VirtualServerInfo& srv = mgr_it->second[0];
@@ -367,6 +366,7 @@ void showSockets(const VirtualServersManager& ws) {
                 std::cout << BLUE << "  Server name: " << RED << "no server found for HostPort binded to this socket." << RESET << std::endl;
             }
         }
+        // fcntl() para obtener flags
     }
     
     std::cout << GREEN << "\n=== END SOCKETS DEBUG ===" << RESET << std::endl;

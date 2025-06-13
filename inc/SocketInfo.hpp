@@ -10,18 +10,20 @@ enum SocketType {
 };
 
 struct SocketInfo {
-    SocketType type;
-    union {
-        VirtualServerKey* listen_key; //listen sockets
-        Connection* connection; // client sockets  
-    } data;
+    SocketType          type;
+    Listen::VirtualServerKey    listen_key;
+    Connection*         connection;
     
-    SocketInfo(VirtualServerKey* key) : type(LISTEN_SOCKET) {
-        data.listen_key = key;
+    SocketInfo(const Listen::VirtualServerKey& key) 
+        : type(LISTEN_SOCKET)
+        , listen_key(key)
+        , connection(NULL) {
     }
     
-    SocketInfo(Connection* conn) : type(CLIENT_SOCKET) {
-        data.connection = conn;
+    SocketInfo(Connection* conn) 
+        : type(CLIENT_SOCKET)
+        , listen_key("", 0)
+        , connection(conn) {
     }
 };
 

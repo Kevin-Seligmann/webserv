@@ -20,18 +20,21 @@
 
 class VirtualServersManager {
 public:
-    typedef std::vector<VirtualServerInfo> VirtualServerGroup;
-    typedef std::map<VirtualServerKey, VirtualServerGroup> VirtualServersMap;
-    typedef std::map<VirtualServerKey, int> ServersToSocketsMap;
+    typedef std::vector<Servers::VirtualServerInfo> VirtualServerGroup;
+    typedef std::map<Listen::VirtualServerKey, VirtualServerGroup> VirtualServersMap;
+    typedef std::map<Listen::VirtualServerKey, int> ServersToSocketsMap;
+    private:
     
+private:
     VirtualServersMap serversManager;
     ServersToSocketsMap serversToSockets;
-
+    
+public:
     VirtualServersManager();
     ~VirtualServersManager();
 
     // initialize servers
-    void addServer(VirtualServerInfo& server);
+    void addServer(Servers::VirtualServerInfo& server);
     bool loadFromParsedConfig(const ParsedServers& ps);
     bool initializeSockets(void);
 	bool bindSockets(void);
@@ -40,7 +43,6 @@ public:
 
     // start servers
     bool createEpoll();
-
 };
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include "VirtualServersManager.hpp"
 #include <ctime>
 #include <string> 
 
@@ -17,11 +18,15 @@ enum ConnectionState {
 
 class Connection {
 private:
-	int				_socket_fd;
-	time_t			_last_activity;
-	ConnectionState	_state;
-	std::string		_read_buff; // request
-	std::string		_write_buff; // response
+	int											_socket_fd;
+	time_t										_last_activity;
+	ConnectionState								_state;
+	std::string									_read_buff; // request
+	std::string									_write_buff; // response
+	bool										_response_complete;
+	size_t										_bytes_to_send;
+	size_t										_bytes_sent;
+	VirtualServersManager::VirtualServerGroup*	_server;
 
 public:
 	Connection(int fd);
@@ -45,6 +50,7 @@ public:
 	void clearBuffers();
 
 	void updateActivity();
+	void updateConnectionState();
 	bool isTimedOut(time_t current_time, int timeout_seconds) const;
 
 	void closeConnection();

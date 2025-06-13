@@ -14,12 +14,11 @@ int main(int argc, char** argv) {
 		showParse(config);
 		showServers(webServers);
 		showSockets(webServers);
-		
+
 		std::cout << GREEN << "Server ready. Event loop will be implemented next." << RESET << std::endl;
 		OKlogsEntry("SUCCESS: ", "Servers ready to operate.");
-		main_loop(webServers);
+		event_loop(webServers);
 
-		
 	} catch (const std::runtime_error& e) {
 		std::cerr << RED << "RUNTIME ERROR: " << RESET << e.what() << std::endl;
 		return (1);

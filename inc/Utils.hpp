@@ -22,7 +22,6 @@
 # include <stdexcept>
 # include <string>
 # include <vector>
-# include <sys/epoll.h>
 
 # include "Parsed.hpp"
 # include "VirtualServersManager.hpp"
@@ -47,6 +46,8 @@ bool serversInit(VirtualServersManager& sm, const ParsedServers& ps);
 
 /* Server startup functions */
 // implemented in serversStart.cpp
+bool event_loop(VirtualServersManager &sm);
+
 bool serversStart(VirtualServersManager& sm);
 
 /* Convert into a logs entry */

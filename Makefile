@@ -15,6 +15,7 @@ SRC_FILES = main.cpp \
 			Parsed.cpp \
 			Servers.cpp \
 			serversInit.cpp \
+			serversRun.cpp \
 			ServerValidator.cpp \
 			Utils.cpp \
 			VirtualServersManager.cpp

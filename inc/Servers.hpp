@@ -21,6 +21,8 @@ class Servers {
 		std::map<std::string, Locations>	_locations;
 
 	public:
+		typedef Servers VirtualServerInfo;
+
 		Servers(const ParsedServer &params);
 		Servers(const ParsedServer &params, const Listen &listen);
 		~Servers();
@@ -55,6 +57,5 @@ class Servers {
 		const std::map<std::string, Locations>& getLocations(void) const;
 };
 
-typedef Servers VirtualServerInfo;
 
 #endif
