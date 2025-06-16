@@ -12,7 +12,7 @@ public:
     ReadNetBuffer();
     ~ReadNetBuffer();
 
-    void append(uint8_t *str, ssize_t size);
+    void append(uint8_t const * str, ssize_t size);
     void expand();
     void shrink();
     void put_back();

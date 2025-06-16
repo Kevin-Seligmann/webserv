@@ -36,11 +36,12 @@ public:
     static const size_t CHUNKED_SIZE_LINE_MAX_LENGTH;
 
     RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & _element_parser, RequestValidator & validator);
-    void append(uint8_t *str, ssize_t size);
+    void append(uint8_t const * str, ssize_t size);
     void process();
     bool done() const;
     void new_request();
     void dump_remainder() const;
+    std::string const get_remainder() const;
 
 private:
     struct wsHeaders {

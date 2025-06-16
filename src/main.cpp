@@ -16,7 +16,7 @@ void testLogger()
 void testRequestParser()
 {
     uint8_t rawRequest[] =
-    "GET http://www.example.com?a's#fragm?ent  HTTP/1.1\r\n"
+    "GET http://www.example.com?a's#fragm?ent  HTTP/1.0\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Content-Length: 7, 7, 7 \r\n"

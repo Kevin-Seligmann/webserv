@@ -22,7 +22,7 @@ void ReadNetBuffer::discard_current()
     _prev_start = _start;
 }
 
-void ReadNetBuffer::append(uint8_t *str, ssize_t size)
+void ReadNetBuffer::append(uint8_t const * str, ssize_t size)
 {
     if (this->size() + size > capacity())  
         expand();

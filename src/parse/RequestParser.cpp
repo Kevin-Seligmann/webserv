@@ -42,7 +42,12 @@ void RequestParser::dump_remainder() const
     }
 }
 
-void RequestParser::append(uint8_t *str, ssize_t size) {_buffer.append(str, size);}
+std::string const  RequestParser::get_remainder() const
+{
+    return std::string(_buffer.cbegin(), _buffer.cend());
+}
+
+void RequestParser::append(uint8_t const * str, ssize_t size) {_buffer.append(str, size);}
 
 void RequestParser::new_request()
 {
@@ -79,14 +84,14 @@ void RequestParser::parse_first_line()
     // Basic checks
     _processing = _buffer.get_crlf_line(_line);
     if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
-        return _error_container.put_error("first line too long", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("first line too long", BAD_REQUEST);
     if (!_processing)
         return ;
     if (_line.empty())
     {
         _empty_skip_count ++;
         if (_empty_skip_count > 1)
-            _error_container.put_error("Only one empty line is allowed before request", HTTPError::BAD_REQUEST);
+            _error_container.put_error("Only one empty line is allowed before request", BAD_REQUEST);
         return ;
      }
 
@@ -96,7 +101,7 @@ void RequestParser::parse_first_line()
     parse_uri();
     get_protocol();
     if (wss::skip_whitespace(_token_end, _line.end()) != _line.end())
-        _error_container.put_error("first line, extra content", _line, _token_end, HTTPError::BAD_REQUEST);
+        _error_container.put_error("first line, extra content", _line, _token_end, BAD_REQUEST);
 
     // Validate
     _validator.validate_uri(_request.uri);
@@ -110,7 +115,7 @@ void RequestParser::parse_header_line()
     // Basic checks
     _processing = _buffer.get_crlf_line(_line);
     if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
-        return _error_container.put_error("Request headers", HTTPError::REQUEST_HEADER_FIELDS_TOO_LARGE);
+        return _error_container.put_error("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE);
     if (!_processing)
         return ;
     _header_field_count ++;
@@ -130,9 +135,9 @@ void RequestParser::parse_header_line()
     _token_start = _line.begin();
     _token_end = wss::skip_until(_line.begin(), _line.end(), ":");
     if (_token_end == _line.end())
-        return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1, HTTPError::BAD_REQUEST);
+        return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1, BAD_REQUEST);
     if (_token_end == _token_start)
-        _error_container.put_error("field name, empty", HTTPError::BAD_REQUEST);
+        _error_container.put_error("field name, empty", BAD_REQUEST);
     _element_parser.parse_field_token(_token_start, _token_end, _line, name);
     
     // Parse value
@@ -165,7 +170,7 @@ void RequestParser::parse_chunked_size()
 {
     _processing = _buffer.get_crlf_line(_line);
     if (_buffer.previous_read_size() >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
-        return _error_container.put_error("line too long (On reading chunk size)", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("line too long (On reading chunk size)", BAD_REQUEST);
     if (!_processing)
         return ;
 
@@ -173,7 +178,7 @@ void RequestParser::parse_chunked_size()
     _token_start = _line.begin();
     _token_end = wss::skip_hexa_token(_token_start, _line.end());
     if (_token_start == _token_end)
-        return _error_container.put_error("chunk size line must have at least one digit", _line, _token_start, HTTPError::BAD_REQUEST);
+        return _error_container.put_error("chunk size line must have at least one digit", _line, _token_start, BAD_REQUEST);
 
     // Get hexa value
     _chunk_length = parse::s_to_hex(_token_start, _token_end, RequestParser::MAX_CHUNK_SIZE);
@@ -182,9 +187,9 @@ void RequestParser::parse_chunked_size()
     else
         _status = CHUNKED_BODY;
     if (_chunk_length  >= RequestParser::MAX_CHUNK_SIZE)
-        return _error_container.put_error("chunk size too big", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("chunk size too big", BAD_REQUEST);
     if (_request.body.content.size() + _chunk_length >= RequestParser::MAX_CONTENT_LENGTH)
-        return _error_container.put_error("chunked body too big", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("chunked body too big", BAD_REQUEST);
 }
 
 void RequestParser::parse_chunked_body()
@@ -203,7 +208,7 @@ void RequestParser::parse_trailer_line()
     // Basic checks
     _processing = _buffer.get_crlf_line(_line);
     if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
-        return _error_container.put_error("Request trailer field", HTTPError::REQUEST_HEADER_FIELDS_TOO_LARGE);
+        return _error_container.put_error("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
     if (!_processing)
         return ;
     _trailer_field_count ++;
@@ -225,14 +230,14 @@ void RequestParser::parse_uri()
         _error_container.put_warning("URI, extra whitespace", _line, _token_start);
     _token_start = wss::skip_whitespace(_token_start, _line.end());
     if (_token_start == _line.end())
-        return _error_container.put_error("URI not found", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("URI not found", BAD_REQUEST);
 
     // Check URI length
     std::string::const_iterator uri_limit = wss::skip_until(_token_start, _token_end, " ");
     if (std::distance(_token_start, uri_limit) >= RequestParser::URI_MAX_LENGTH)
     {
         _token_start = uri_limit;
-        return _error_container.put_error("Request uri", HTTPError::URI_TOO_LONG);
+        return _error_container.put_error("Request uri", URI_TOO_LONG);
     }
 
     // Parse
@@ -263,16 +268,16 @@ void RequestParser::get_hier_part()
     _token_end = wss::skip_until(_token_start, _line.end(), "@");
     if (_token_end != _line.end() && *_token_end == '@')
     {
-        _error_container.put_error("authority, userinfo '@' is deprecated", _line, _token_end, HTTPError::BAD_REQUEST);
+        _error_container.put_error("authority, userinfo '@' is deprecated", _line, _token_end, BAD_REQUEST);
         _token_start = _token_end + 1;
     }
     if (_token_start == _line.end())
-        return _error_container.put_error("host, not found", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("host, not found", BAD_REQUEST);
 
     // Find host (Until path or end)
     _token_end = wss::skip_until(_token_start, _line.end(), " :?#/");
     if (_token_end == _token_start)
-        _error_container.put_error("host, not found", _line, _token_end, HTTPError::BAD_REQUEST);
+        _error_container.put_error("host, not found", _line, _token_end, BAD_REQUEST);
     else
         _element_parser.parse_host(_token_start, _token_end, _line, _request.uri.host);
     _token_start = _token_end;
@@ -324,10 +329,10 @@ void RequestParser::parse_content_length_field(std::string const & value)
             _token_end = it->name.end();
 
             if (!it->parameters.empty())
-                return _error_container.put_error("Content-Length values can't have parameters", HTTPError::BAD_REQUEST);
+                return _error_container.put_error("Content-Length values can't have parameters", BAD_REQUEST);
             _element_parser.parse_content_length_field(_token_start, _token_end, it->name, _request.headers.content_length);
             if (prev_value != -1 && prev_value != _request.headers.content_length)
-                return _error_container.put_error("Content-Length has incoherent, different values: " + value, HTTPError::BAD_REQUEST);
+                return _error_container.put_error("Content-Length has incoherent, different values: " + value, BAD_REQUEST);
         }
     }
 }
@@ -381,7 +386,7 @@ void RequestParser::get_schema()
 {
     _token_end = wss::skip_until(_token_start, _line.end(), ":");
     if (_token_end == _line.end())
-        return _error_container.put_error("URI schema, separator ':' not found", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("URI schema, separator ':' not found", BAD_REQUEST);
     _element_parser.parse_schema(_token_start, _token_end, _line, _request.uri.schema);
     _token_start = _token_end + 1;
 }
@@ -409,7 +414,7 @@ void RequestParser::get_protocol()
         _error_container.put_warning("protocol, extra whitespace after uri", _line, _token_start);
     _token_start = wss::skip_whitespace(_token_start, _line.end());
     if (_token_start == _line.end())
-        return _error_container.put_error("protocol not found", HTTPError::BAD_REQUEST);
+        return _error_container.put_error("protocol not found", BAD_REQUEST);
     _token_end = wss::skip_until(_token_start, _line.end(), " ");
 
     // Parse
