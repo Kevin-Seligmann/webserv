@@ -5,7 +5,7 @@
 #include <map>
 
 class HttpRequest {
-public:
+private:
     std::string                         method;
     std::string                         path;
     std::map<std::string, std::string>  headers;
@@ -13,6 +13,12 @@ public:
 
     HttpRequest();
     ~HttpRequest();
+};
+
+class HttpResponse {
+private:
+    std::string                         headers;
+    std::string                         body;
 };
 
 #endif

@@ -3,6 +3,8 @@
 #include "../inc/Connection.hpp"
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/signalfd.h>
+#include <signal.h>
 #include <vector>
 #include <string>
 #include <ctime>
@@ -12,6 +14,49 @@
 #define TIMEOUT_SECONDS 5  // 5 segundos para pruebas
 #define EVENTS_TIMEOUT_MILISECONDS 100
 #define BUFFER_SIZE 8192
+
+// Configuración de señales para integrar con epoll
+
+// Manejar señales recibidas
+static bool handle_signal(int signal_fd, int& server_running) {
+	struct signalfd_siginfo signal_info;
+	ssize_t bytes_read = read(signal_fd, &signal_info, sizeof(signal_info));
+	
+	if (bytes_read != sizeof(signal_info)) {
+		ERRORlogsEntry("ERROR: ", "Failed to read signal info");
+		return false;
+	}
+	
+	switch (signal_info.ssi_signo) {
+		case SIGINT:
+			OKlogsEntry("SIGNAL: ", "Received SIGINT (Ctrl+C) - Graceful shutdown");
+			server_running = 0;
+			break;
+			
+		case SIGTERM:
+			OKlogsEntry("SIGNAL: ", "Received SIGTERM - Graceful shutdown");
+			server_running = 0;
+			break;
+			
+		case SIGPIPE:
+			OKlogsEntry("SIGNAL: ", "Received SIGPIPE - Client disconnected unexpectedly");
+			// SIGPIPE se maneja automáticamente, solo loggeamos
+			break;
+			
+		case SIGCHLD:
+			OKlogsEntry("SIGNAL: ", "Received SIGCHLD - Child process terminated");
+			// Para futuros procesos CGI
+			break;
+			
+		default:
+			std::ostringstream oss;
+			oss << "Received unknown signal: " << signal_info.ssi_signo;
+			OKlogsEntry("SIGNAL: ", oss.str());
+			break;
+	}
+	
+	return true;
+}
 
 void check_timeouts(std::vector<Connection*>& conn, int epoll_fd) {
 	time_t current_time = time(NULL);

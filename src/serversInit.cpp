@@ -15,6 +15,7 @@ bool serversInit(VirtualServersManager& webServers, const ParsedServers& ps) {
 }
 
 bool serversStart(VirtualServersManager& webServers) {
+	(void)webServers;
 	
 	return true;
 }

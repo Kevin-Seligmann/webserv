@@ -43,6 +43,14 @@ public:
 
     // start servers
     bool createEpoll();
+    
+    // server lookup
+    Servers::VirtualServerInfo* getServerForKey(const Listen::VirtualServerKey& key);
+    
+    // socket access
+    ServersToSocketsMap& getServersToSockets() { return serversToSockets; }
+    const ServersToSocketsMap& getServersToSockets() const { return serversToSockets; }
+    const VirtualServersMap& getServersManager() const { return serversManager; }
 };
 
 #endif

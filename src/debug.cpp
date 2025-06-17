@@ -176,12 +176,13 @@ void showServers(const VirtualServersManager& ws) {
     std::cout << GREEN << "\n=== SERVERS MANAGER DEBUG ===" << RESET << std::endl;
 
     size_t server_count = 1;
+    const VirtualServersManager::VirtualServersMap& servers_map = ws.getServersManager();
     VirtualServersManager::VirtualServersMap::const_iterator ws_it;
-    for (ws_it = ws.serversManager.begin(); ws_it != ws.serversManager.end(); ++ws_it) {
+    for (ws_it = servers_map.begin(); ws_it != servers_map.end(); ++ws_it) {
         const VirtualServersManager::VirtualServerGroup& servers_vec = ws_it->second;
         VirtualServersManager::VirtualServerGroup::const_iterator s_it;
         for (s_it = servers_vec.begin(); s_it != servers_vec.end(); ++s_it, ++server_count) {
-            const VirtualServerInfo& srv = *s_it;
+            const Servers::VirtualServerInfo& srv = *s_it;
             
             std::cout << BLUE << "\n--- Server " << server_count << " ---" << RESET << std::endl;
             
@@ -341,21 +342,23 @@ void showServers(const VirtualServersManager& ws) {
 // PARA DEBUG DE SOCKETS
 void showSockets(const VirtualServersManager& ws) {
     std::cout << GREEN << "\n=== SOCKETS DEBUG ===" << RESET << std::endl;
-    if (ws.serversToSockets.empty()) {
+    const VirtualServersManager::ServersToSocketsMap& sockets_map = ws.getServersToSockets();
+    if (sockets_map.empty()) {
         std::cout << RED << "No sockets created." << std::endl;
         return ;
     } else {
 
         size_t i = 1;
-        VirtualServersManager::ServersToSocketsMap::const_iterator it = ws.serversToSockets.begin();
-        for (; it != ws.serversToSockets.end(); ++it) {
+        VirtualServersManager::ServersToSocketsMap::const_iterator it = sockets_map.begin();
+        for (; it != sockets_map.end(); ++it) {
             std::cout << YELLOW << "--- Socket " << i++ << " ---" << RESET << std::endl;
             std::cout << BLUE << "  Host: " << RESET << it->first.host << std::endl;
             std::cout << BLUE << "  Port: " << RESET << it->first.port << std::endl;
             std::cout << BLUE << "  Socket FD: " << RESET << it->second << std::endl;
-            VirtualServersManager::VirtualServersMap::const_iterator mgr_it = ws.serversManager.find(it->first);
-            if (mgr_it != ws.serversManager.end() && !mgr_it->second.empty()) {
-                const VirtualServerInfo& srv = mgr_it->second[0];
+            const VirtualServersManager::VirtualServersMap& servers_map = ws.getServersManager();
+            VirtualServersManager::VirtualServersMap::const_iterator mgr_it = servers_map.find(it->first);
+            if (mgr_it != servers_map.end() && !mgr_it->second.empty()) {
+                const Servers::VirtualServerInfo& srv = mgr_it->second[0];
                 const std::vector<std::string>& names = srv.getServerNames();
                 if (!names.empty()) {
                     std::cout << BLUE << "  Server name: " << RESET << names[0] << std::endl;

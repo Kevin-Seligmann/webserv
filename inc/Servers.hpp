@@ -55,7 +55,8 @@ class Servers {
 
 		void setLocations(const std::map<std::string, Locations>& locations);
 		const std::map<std::string, Locations>& getLocations(void) const;
-};
 
+		static Servers* findServerByKey(const std::string& host, int port);
+};
 
 #endif

@@ -24,7 +24,9 @@
 # include <vector>
 
 # include "Parsed.hpp"
-# include "VirtualServersManager.hpp"
+
+// Forward declaration to avoid circular dependency
+class VirtualServersManager;
 
 /* Colores para debug y otros */
 # define RED        "\033[1;91m" 

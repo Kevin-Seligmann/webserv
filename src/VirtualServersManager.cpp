@@ -7,18 +7,18 @@ VirtualServersManager::~VirtualServersManager() {
 	cleanupSockets();
 }
 
-void VirtualServersManager::addServer(VirtualServerInfo& server) {
+void VirtualServersManager::addServer(Servers::Servers::VirtualServerInfo& server) {
 
-	const VirtualServerKey& listen = server.getListen();
+	const Listen::Listen::VirtualServerKey& listen = server.getListen();
 	VirtualServersMap::iterator it = serversManager.find(listen);
 
 	if (it != serversManager.end()) {
 		if (server.getListen().is_default)
-			server.setListen(VirtualServerKey(listen.host, listen.port, false));
+			server.setListen(Listen::Listen::VirtualServerKey(listen.host, listen.port, false));
 		it->second.push_back(server);
 	} 
 	else {
-		server.setListen(VirtualServerKey(listen.host, listen.port, true));
+		server.setListen(Listen::Listen::VirtualServerKey(listen.host, listen.port, true));
 		serversManager[listen] = VirtualServerGroup(1, server);
 	}
 }
@@ -27,13 +27,13 @@ bool VirtualServersManager::loadFromParsedConfig(const ParsedServers& ps) {
 	for (size_t i = 0; i < ps.size(); ++i) {
 		const ParsedServer& config = ps[i];		
 		if (config.listens.empty()) {
-			VirtualServerKey defaultListen;
-			VirtualServerInfo server(config, defaultListen);
+			Listen::VirtualServerKey defaultListen;
+			Servers::VirtualServerInfo server(config, defaultListen);
 			addServer(server);
 		} else {
 			for (size_t j = 0; j < config.listens.size(); ++j) {
-				const VirtualServerKey& customListen = config.listens[j];
-				VirtualServerInfo server(config, customListen);
+				const Listen::VirtualServerKey& customListen = config.listens[j];
+				Servers::VirtualServerInfo server(config, customListen);
 				addServer(server);
 			}
 		}
@@ -45,7 +45,7 @@ bool VirtualServersManager::loadFromParsedConfig(const ParsedServers& ps) {
 bool VirtualServersManager::initializeSockets(void) {
 	VirtualServersMap::iterator it = serversManager.begin();
 	for (; it != serversManager.end(); ++it) {
-		const VirtualServerKey& key = it->first;
+		const Listen::VirtualServerKey& key = it->first;
 
 		int fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (fd == -1) {
@@ -92,7 +92,7 @@ bool VirtualServersManager::initializeSockets(void) {
 bool VirtualServersManager::bindSockets(void) {
 	ServersToSocketsMap::iterator it = serversToSockets.begin();
 	for (; it != serversToSockets.end(); ++it) {
-		const VirtualServerKey& serverKey = it->first;
+		const Listen::VirtualServerKey& serverKey = it->first;
 		int socketFd = it->second;
 
 		// Prepare address structure for binding
@@ -149,10 +149,18 @@ bool VirtualServersManager::socketsListen(void) {
 }
 
 void VirtualServersManager::cleanupSockets() {
-	for (std::map<VirtualServerKey, int>::iterator it = serversToSockets.begin(); 
+	for (std::map<Listen::VirtualServerKey, int>::iterator it = serversToSockets.begin(); 
 		 it != serversToSockets.end(); ++it) {
 		close(it->second);
 	}
 	serversToSockets.clear();
+}
+
+Servers::VirtualServerInfo* VirtualServersManager::getServerForKey(const Listen::VirtualServerKey& key) {
+	VirtualServersMap::iterator it = serversManager.find(key);
+	if (it != serversManager.end() && !it->second.empty()) {
+		return &(it->second[0]);
+	}
+	return NULL;
 }
 
