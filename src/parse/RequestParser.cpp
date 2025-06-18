@@ -12,8 +12,8 @@ const size_t RequestParser::FIRST_LINE_MAX_LENGTH = 8000;
 const size_t RequestParser::HEADER_LINE_MAX_LENGTH = 8000;
 const size_t RequestParser::MAX_HEADER_FIELDS = 100;
 const size_t RequestParser::MAX_TRAILER_FIELDS = 20;
-const size_t RequestParser::MAX_CONTENT_LENGTH = 8*1024*1024;
-const size_t RequestParser::MAX_CHUNK_SIZE = 1*1024 *1024;;
+const size_t RequestParser::MAX_CONTENT_LENGTH = 1*512*1024;
+const size_t RequestParser::MAX_CHUNK_SIZE = 1*512 *1024;;
 const size_t RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH = 200;
 
 RequestParser::RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & element_parser, RequestValidator & validator)

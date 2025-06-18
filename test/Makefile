@@ -4,8 +4,8 @@ VPATH = ../src ../src/util ../src/http ../src/parse ../src/buffer
 OBJ = Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-	HTTPError.o ErrorContainer.o Status.o \
-	test.o
+	HTTPError.o ErrorContainer.o Status.o RequestManager.o \
+	test.o SysBuffer.o
 
 # Target
 NAME = test
