@@ -201,10 +201,10 @@ bool VirtualServersManager::bindAndListen(int fd, const VirtualServerKey& key) {
 */
 
 void VirtualServersManager::cleanupSockets() {
-	for (std::map<VirtualServerKey, int>::iterator it = serverToSocket.begin(); 
-		 it != serverToSocket.end(); ++it) {
+	for (std::map<VirtualServerKey, int>::iterator it = serversToSockets.begin(); 
+		 it != serversToSockets.end(); ++it) {
 		close(it->second);
 	}
-	serverToSocket.clear();
+	serversToSockets.clear();
 }
 
