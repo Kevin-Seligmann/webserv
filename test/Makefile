@@ -5,7 +5,7 @@ OBJ = Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
 	HTTPError.o ErrorContainer.o Status.o RequestManager.o \
-	test.o SysBuffer.o
+	test.o SysNetBuffer.o SysBufferFactory.o SysFileBuffer.o
 
 # Target
 NAME = test

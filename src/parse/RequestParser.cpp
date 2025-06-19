@@ -62,7 +62,7 @@ void RequestParser::new_request()
 void RequestParser::process()
 {
     _processing = true;
-    while (_processing && _status != DONE)
+    while (_processing && _status != DONE && _error.status() == OK)
     {
         switch (_status)
         {
@@ -77,21 +77,41 @@ void RequestParser::process()
     }
 }
 
-// Main parsig functions
+// Main parsing functions
+
+bool RequestParser::has_first_line()
+{
+    _processing = _buffer.get_crlf_line(_line);
+    if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
+    {
+        _error.set("Request first line lgitength is too long. Max: " + RequestParser::FIRST_LINE_MAX_LENGTH, BAD_REQUEST);
+        return false;
+    }
+    if (!_processing)
+        return false;
+    if (_line.empty())
+    {
+        _empty_skip_count ++;
+        if (_empty_skip_count > 1)
+            _error.set("Only one empty line is allowed before request", BAD_REQUEST);
+        return false;
+     }
+    return true;
+}
 
 void RequestParser::parse_first_line()
 {
     // Basic checks
     _processing = _buffer.get_crlf_line(_line);
     if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
-        return _error_container.put_error("first line too long", BAD_REQUEST);
+        return _error.set("Request first line length is too long. Max: " + RequestParser::FIRST_LINE_MAX_LENGTH, BAD_REQUEST);
     if (!_processing)
         return ;
     if (_line.empty())
     {
         _empty_skip_count ++;
         if (_empty_skip_count > 1)
-            _error_container.put_error("Only one empty line is allowed before request", BAD_REQUEST);
+            _error.set("Only one empty line is allowed before request", BAD_REQUEST);
         return ;
      }
 

@@ -6,7 +6,6 @@
 #include <sstream>
 #include <map>
 #include "HTTPElement.hpp"
-#include "ErrorContainer.hpp"
 
 struct CommaSeparatedFieldValue 
 {

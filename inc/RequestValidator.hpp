@@ -1,14 +1,15 @@
 #pragma once
 
 #include <string>
+#include "Status.hpp"
 #include "URI.hpp"
 #include "HTTPRequest.hpp"
-#include "ErrorContainer.hpp"
+#include "HTTPError.hpp"
 
 class RequestValidator 
 {
 public:
-    RequestValidator(HTTPRequest & request, ErrorContainer & error_container); // And config
+    RequestValidator(HTTPRequest & request); // And config
 
     void validate_method(HTTPMethod const & method);
     void validate_uri(URI const & uri);
@@ -17,7 +18,11 @@ public:
     void validate_protocol(std::string const & protocol);
     void validate_request(HTTPRequest const & request);
 
+    HTTPError const * error();
+
 private:
-    ErrorContainer & _error_container;
+    HTTPError _error;
     HTTPRequest & _request;
+
+    void put_error(std::string const & text, Status status);
 };

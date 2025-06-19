@@ -12,7 +12,7 @@
 #include "RequestValidator.hpp"
 #include "StringUtil.hpp"
 #include "ParsingUtil.hpp"
-#include "ErrorContainer.hpp"
+#include "HTTPError.hpp"
 #include "ElementParser.hpp"
 
 // struct headerType {
@@ -35,7 +35,7 @@ public:
     static const size_t MAX_CHUNK_SIZE;
     static const size_t CHUNKED_SIZE_LINE_MAX_LENGTH;
 
-    RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & _element_parser, RequestValidator & validator);
+    RequestParser(HTTPRequest & request, HTTPError & _error, ElementParser & _element_parser, RequestValidator & validator);
     void append(uint8_t const * str, ssize_t size);
     void process();
     bool done() const;
@@ -54,7 +54,7 @@ private:
     HTTPRequestBuffer _buffer;
 
     HTTPRequest & _request;
-    ErrorContainer & _error_container;
+    HTTPError & _error;
     ElementParser &  _element_parser;
     RequestValidator & _validator;
 
