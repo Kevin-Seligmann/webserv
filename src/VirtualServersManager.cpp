@@ -7,18 +7,18 @@ VirtualServersManager::~VirtualServersManager() {
 	cleanupSockets();
 }
 
-void VirtualServersManager::addServer(VirtualServerInfo& server) {
+void VirtualServersManager::addServer(Servers::Servers::VirtualServerInfo& server) {
 
-	const VirtualServerKey& listen = server.getListen();
+	const Listen::Listen::VirtualServerKey& listen = server.getListen();
 	VirtualServersMap::iterator it = serversManager.find(listen);
 
 	if (it != serversManager.end()) {
 		if (server.getListen().is_default)
-			server.setListen(VirtualServerKey(listen.host, listen.port, false));
+			server.setListen(Listen::Listen::VirtualServerKey(listen.host, listen.port, false));
 		it->second.push_back(server);
 	} 
 	else {
-		server.setListen(VirtualServerKey(listen.host, listen.port, true));
+		server.setListen(Listen::Listen::VirtualServerKey(listen.host, listen.port, true));
 		serversManager[listen] = VirtualServerGroup(1, server);
 	}
 }
@@ -27,40 +27,44 @@ bool VirtualServersManager::loadFromParsedConfig(const ParsedServers& ps) {
 	for (size_t i = 0; i < ps.size(); ++i) {
 		const ParsedServer& config = ps[i];		
 		if (config.listens.empty()) {
-			VirtualServerKey defaultListen;
-			VirtualServerInfo server(config, defaultListen);
+			Listen::VirtualServerKey defaultListen;
+			Servers::VirtualServerInfo server(config, defaultListen);
 			addServer(server);
 		} else {
 			for (size_t j = 0; j < config.listens.size(); ++j) {
-				const VirtualServerKey& customListen = config.listens[j];
-				VirtualServerInfo server(config, customListen);
+				const Listen::VirtualServerKey& customListen = config.listens[j];
+				Servers::VirtualServerInfo server(config, customListen);
 				addServer(server);
 			}
 		}
 	}
+	OKlogsEntry("SUCCESS: ", "Configuration loaded form config file.");
 	return (true);
 }
 
 bool VirtualServersManager::initializeSockets(void) {
+
 	VirtualServersMap::iterator it = serversManager.begin();
+
 	for (; it != serversManager.end(); ++it) {
-		const VirtualServerKey& key = it->first;
+
+		const Listen::VirtualServerKey& key = it->first;
 
 		int fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (fd == -1) {
-			ERRORlogsEntry("ERROR: couldn't create socket. ", strerror(errno));
+			ERRORlogsEntry("ERROR: ", std::string("couldn't create socket: ") + strerror(errno));
 			cleanupSockets();
 			throw std::runtime_error("Failed to create socket");
-			return (false);
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
 
 		int opt = 1;
-		if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt) == -1)) {
-			ERRORlogsEntry("ERROR: couldn't setsockopt SO_REUSEADDR.", strerror(errno));
+		if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+			ERRORlogsEntry("ERROR: ", "couldn't setsockopt SO_REUSEADDR: " + std::string(strerror(errno)));
 			cleanupSockets();
 			close(fd);
 			throw std::runtime_error("Failed to set socket options.");
-			return (false);
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
 
 		int flags = fcntl(fd, F_GETFL, 0);
@@ -69,142 +73,93 @@ bool VirtualServersManager::initializeSockets(void) {
 			cleanupSockets();
 			close(fd);
 			throw std::runtime_error("Failed to get flags.");
-			return (false);
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
 		
 		if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-			ERRORlogsEntry("ERROR: couldn't set socket flags.", strerror(errno));
+			ERRORlogsEntry("ERROR: ", "couldn't set socket flags: " + std::string(strerror(errno)));
 			cleanupSockets();
 			close(fd);
 			throw std::runtime_error("Failed to set flags.");
-			return (false);
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
+			
 		}
-
 		serversToSockets[key] = fd;
-
 	}
+	OKlogsEntry("SUCCESS: ", "Sockets initialized");
 	return (true);
 }
 
 bool VirtualServersManager::bindSockets(void) {
 	ServersToSocketsMap::iterator it = serversToSockets.begin();
 	for (; it != serversToSockets.end(); ++it) {
-		VirtualServerKey serverKey = it->first;
-		int socket = it->second;
+		const Listen::VirtualServerKey& serverKey = it->first;
+		int socketFd = it->second;
 
+		// Prepare address structure for binding
 		struct sockaddr_in server_addr;
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_port = htons(serverKey.port);
+
 		if (serverKey.host == "0.0.0.0" || serverKey.host.empty()) {
 			server_addr.sin_addr.s_addr = INADDR_ANY;
 		} else {
-			server_addr.sin_addr.s_addr = inet_addr(serverKey.host.c_str());
+			struct addrinfo hints, *result;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+
+			int ret = getaddrinfo(serverKey.host.c_str(), NULL, &hints, &result);
+			if (ret != 0) {
+				std::string error_msg = "couldn't complete getaddrinfo for " + serverKey.host + ": " + gai_strerror(ret);
+				ERRORlogsEntry("ERROR: ", error_msg);
+				cleanupSockets();
+				throw std::runtime_error("Invalid host address");
+				return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
+			}
+
+			struct sockaddr_in* addr_in = (struct sockaddr_in*)result->ai_addr;
+			server_addr.sin_addr = addr_in->sin_addr;
+			freeaddrinfo(result);
 		}
 
-
-	}
-
-}
-
-/* 
-bool VirtualServersManager::initAllSockets() {
-	for (VirtualServersMap::iterator it = serversManager.begin(); it != serversManager.end(); ++it) {
-		const VirtualServerKey& key = it->first;
-		if (!createListenSocket(key)) {
-			std::cerr << "Error: Failed to create socket for " << key.host << ":" << key.port << std::endl;
+		if (bind(socketFd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+			ERRORlogsEntry("ERROR: ", "couldn't bind sockets: " + std::string(strerror(errno)));
 			cleanupSockets();
-			return false;
+			throw std::runtime_error(strerror(errno));
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
 	}
-	return true;
+	OKlogsEntry("SUCCESS: ", "Sockets binded.");
+	return (true);
 }
 
-bool VirtualServersManager::createListenSocket(const VirtualServerKey& key) {
-	int fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (fd == -1) {
-		std::cerr << "Error creating socket: " << strerror(errno) << std::endl;
-		return false;
-	}
-
-	configureSocket(fd);
-	
-	if (!bindAndListen(fd, key)) {
-		close(fd);
-		return false;
-	}
-
-	listenSockets[key] = fd;
-	return true;
-}
-
-void VirtualServersManager::configureSocket(int fd) {
-	int opt = 1;
-	
-	// SO_REUSEADDR - Allow reuse of local addresses
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-		std::cerr << "Warning: setsockopt SO_REUSEADDR failed: " << strerror(errno) << std::endl;
-	}
-
-	// SO_REUSEPORT - Allow multiple servers on same port (Linux)
-	#ifdef SO_REUSEPORT
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
-		std::cerr << "Warning: setsockopt SO_REUSEPORT failed: " << strerror(errno) << std::endl;
-	}
-	#endif
-
-	// Set non-blocking
-	int flags = fcntl(fd, F_GETFL, 0);
-	if (flags == -1) {
-		std::cerr << "Warning: fcntl F_GETFL failed: " << strerror(errno) << std::endl;
-		return;
-	}
-	
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-		std::cerr << "Warning: fcntl F_SETFL failed: " << strerror(errno) << std::endl;
-	}
-}
-
-bool VirtualServersManager::bindAndListen(int fd, const VirtualServerKey& key) {
-	struct sockaddr_in addr;
-	std::memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(key.port);
-
-	// Convert host string to in_addr
-	if (key.host == "0.0.0.0" || key.host.empty()) {
-		addr.sin_addr.s_addr = INADDR_ANY;
-	} else {
-		if (inet_pton(AF_INET, key.host.c_str(), &addr.sin_addr) != 1) {
-			std::cerr << "Error: Invalid IP address: " << key.host << std::endl;
-			return false;
+bool VirtualServersManager::socketsListen(void) {
+	VirtualServersManager::ServersToSocketsMap::iterator it = serversToSockets.begin();
+	for (; it != serversToSockets.end(); ++it) {
+		if (listen(it->second, SOMAXCONN) == -1) {
+			ERRORlogsEntry("ERROR: ", "couldn't set listen for " + it->first.host + ": " + strerror(errno));
+			cleanupSockets();
+			throw std::runtime_error(strerror(errno));
+			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
 	}
-
-	// Bind
-	if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-		std::cerr << "Error binding to " << key.host << ":" << key.port 
-				  << " - " << strerror(errno) << std::endl;
-		return false;
-	}
-
-	// Listen
-	if (listen(fd, SOMAXCONN) == -1) {
-		std::cerr << "Error listening on " << key.host << ":" << key.port 
-				  << " - " << strerror(errno) << std::endl;
-		return false;
-	}
-
-	return true;
+	OKlogsEntry("SUCCESS: ", "Sockets set to listen.");
+	return (true);
 }
-
-*/
 
 void VirtualServersManager::cleanupSockets() {
-	for (std::map<VirtualServerKey, int>::iterator it = serversToSockets.begin(); 
-		 it != serversToSockets.end(); ++it) {
+	for (std::map<Listen::VirtualServerKey, int>::iterator it = serversToSockets.begin(); it != serversToSockets.end(); ++it) {
 		close(it->second);
 	}
 	serversToSockets.clear();
 }
 
+Servers::VirtualServerInfo* VirtualServersManager::getServerForKey(const Listen::VirtualServerKey& key) {
+	VirtualServersMap::iterator it = serversManager.find(key);
+	if (it != serversManager.end() && !it->second.empty()) {
+		return &(it->second[0]);
+	}
+	return NULL;
+}

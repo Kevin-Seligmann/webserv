@@ -1,4 +1,5 @@
 #include "../inc/Servers.hpp"
+#include "../inc/Listen.hpp"
 
 Servers::Servers(const ParsedServer &params)
     : _listen(params.listens.empty() ? Listen("0.0.0.0", 80) : params.listens[0])
@@ -53,3 +54,13 @@ const std::string& Servers::getClientMaxBodySize(void) const { return _client_ma
 
 void Servers::setLocations(const std::map<std::string, Locations>& locations) { _locations = locations; }
 const std::map<std::string, Locations>& Servers::getLocations(void) const { return _locations; }
+
+// Static function implementation - placeholder for now
+Servers* Servers::findServerByKey(const std::string& host, int port) {
+    (void)host;
+    (void)port;
+    
+    // TODO: Implement server lookup logic
+    // This will be implemented when needed
+    return NULL;
+}

@@ -10,12 +10,12 @@ struct Locations
 	std::string								path;
 	std::string								root;
 	std::string								index;
-	std::vector<std::string>				allow_methods;
-	bool									autoindex;
 	std::string                             return_path;
-	bool                                    allow_upload;
 	std::string                             upload_dir;
+	std::vector<std::string>				allow_methods;
 	std::map<std::string, std::string>      cgi;
+	bool									autoindex;
+	bool                                    allow_upload;
 
 	Locations()
 		: autoindex(false), allow_upload(false) {}
