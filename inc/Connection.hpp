@@ -1,19 +1,18 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "VirtualServersManager.hpp"
-#include "HttpRequest.hpp"
 #include <ctime>
-#include <string> 
+#include <string>
+
+// Forward declarations
+class Servers;
+class HttpResponse; 
 
 enum ConnectionState {
-	CONN_IDLE,
-	CONN_READING_HEADER,
-	CONN_READING_BODY,
-	CONN_PROCESSING,
+	CONN_READING_REQUEST,
+	CONN_PROCESSING_REQUEST,
 	CONN_WRITING_RESPONSE,
 	CONN_KEEP_ALIVE,
-	CONN_CLOSING,
 	CONN_CLOSED
 };
 
@@ -25,11 +24,12 @@ private:
 	bool										_response_complete;
 	size_t										_bytes_to_send;
 	size_t										_bytes_sent;
-	Servers::VirtualServerInfo*					_server;
+	Servers*									_server;
 	std::string									_read_buff; // request
-	HttpRequest*								_request;
 	std::string									_write_buff; // response
-	HttpResponse*								_response;
+//	HttpResponse*								_response;
+	int											_cgi_read_fd;
+	int											_cgi_process_pid;
 
 public:
 	Connection(int fd);
@@ -53,34 +53,32 @@ public:
 	size_t getBytesSent() const;
 	void setBytesSent(size_t bytes_sent);
 
-	Servers::VirtualServerInfo* getServer() const;
-	void setServer(Servers::VirtualServerInfo* server);
+	Servers* getServer() const;
+	void setServer(Servers* server);
 
 	const std::string& getReadBuffer() const;
 	void appendToReadBuffer(const std::string& data);
-
-	HttpRequest* getHttpRequest() const;
-	void setHttpRequest(HttpRequest* req);
 
 	const std::string& getWriteBuffer() const;
 	void setWriteBuffer(const std::string& data);
 	void appendToWriteBuffer(const std::string& data); // Para streaming de respuestas
 
-	HttpResponse* getHttpResponse() const;
-	void setHttpResponse(HttpResponse);
+//	HttpResponse* getHttpResponse() const;
+//	void setHttpResponse(HttpResponse);
 
 	// manejo de conexion
 	void clearBuffers();
 	void updateActivity();
-	void updateConnectionState();
 	bool isTimedOut(time_t current_time, int timeout_seconds) const;
 	void closeConnection();
 	
-	// manejo de response
-	void startSendingResponse(const std::string& response);
+	// metodos para el bucle de eventos
+	bool isRequestComplete() const;
+	bool hasResponseReady() const;
+	void processRequest();
+	void resetForNextRequest();
 	bool responseSent() const;
 	void updateBytesSent(size_t sent_bytes);
-
 };
 
 #endif

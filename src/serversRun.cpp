@@ -18,19 +18,12 @@ void check_timeouts(std::vector<Connection*>& conn, int epoll_fd) {
 	std::vector<Connection*>::iterator it = conn.begin();
 	while (it != conn.end()) {
 		Connection* current_conn = *it;
-		
-		// Debug: mostrar tiempo transcurrido
-		time_t elapsed = current_time - current_conn->getLastActivity();
-		if (elapsed > 2) {  // Solo mostrar si han pasado más de 2 segundos
-			std::ostringstream debug_oss;
-			debug_oss << "Connection " << current_conn->getSocketFd() << " idle for " << elapsed << " seconds";
-			OKlogsEntry("DEBUG: ", debug_oss.str());
-		}
+	
 		
 		if (current_conn->isTimedOut(current_time, TIMEOUT_SECONDS)) {
 			std::ostringstream debug_oss;
 			debug_oss << "TIMEOUT: Closing connection on socket " << current_conn->getSocketFd();
-			OKlogsEntry("DEBUG: ", debug_oss.str());
+			OKlogsEntry("STATUS: ", debug_oss.str());
 			
 			current_conn->closeConnection();
 			current_conn->clearBuffers();
@@ -73,17 +66,10 @@ bool event_loop(VirtualServersManager& sm) {
 		for (int i = 0; i < count_events; ++i) {
 			SocketInfo* socket_info = (SocketInfo*)events[i].data.ptr;
 			
-			// Debug: imprimir el tipo de socket
-			std::ostringstream debug_oss;
-			debug_oss << "Event " << i << ": socket_info->type = " << socket_info->type;
-			OKlogsEntry("DEBUG: ", debug_oss.str());
-			
 			// es un cliente nuevo
 			if (socket_info->type == LISTEN_SOCKET) {
 				int listen_fd = sm.getServersToSockets()[socket_info->listen_key];
 				struct sockaddr_in client_addr;
-					// client_addr.sin_addr.s_addr -> IP
-					// client_addr.sin_port -> PORT
 				socklen_t client_len = sizeof(client_addr); 
 				
 				int client_fd = accept(listen_fd, (struct sockaddr*)&client_addr, &client_len);
@@ -93,7 +79,7 @@ bool event_loop(VirtualServersManager& sm) {
 				}
 				
 				Connection* new_conn = new Connection(client_fd);
-				Servers::VirtualServerInfo* server = sm.getServerForKey(socket_info->listen_key);
+				Servers* server = sm.getServerForKey(socket_info->listen_key);
 				new_conn->setServer(server);
 				
 				connections.push_back(new_conn);
@@ -137,28 +123,17 @@ bool event_loop(VirtualServersManager& sm) {
 						conn->appendToReadBuffer(data_received);
 						conn->updateActivity();
 						
-						// Procesar estados hasta llegar a uno estable
-						ConnectionState prev_state;
-						int max_transitions = 5; // Límite de seguridad
-						int transitions = 0;
-						do {
-							prev_state = conn->getState();
-							conn->updateConnectionState();
-							transitions++;
-						} while (prev_state != conn->getState() && transitions < max_transitions);
-						
-						if (transitions >= max_transitions) {
-							std::ostringstream debug_oss;
-							debug_oss << "WARNING: Too many state transitions on socket " << conn->getSocketFd();
-							OKlogsEntry("DEBUG: ", debug_oss.str());
-						}
-						
-						// Si tenemos respuesta lista, cambiar a modo escritura
-						if (conn->getState() == CONN_WRITING_RESPONSE && !conn->getWriteBuffer().empty()) {
-							struct epoll_event modify_event;
-							modify_event.events = EPOLLOUT;
-							modify_event.data.ptr = socket_info;
-							epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->getSocketFd(), &modify_event);
+						// Procesar el request si está completo
+						if (conn->isRequestComplete()) {
+							conn->processRequest();
+							
+							// Si hay respuesta lista, cambiar a escritura
+							if (conn->hasResponseReady()) {
+								struct epoll_event modify_event;
+								modify_event.events = EPOLLOUT;
+								modify_event.data.ptr = socket_info;
+								epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->getSocketFd(), &modify_event);
+							}
 						}
 					} else if (bytes_read == 0) {
 						// Cliente cerró la conexión - limpiar inmediatamente
@@ -183,7 +158,7 @@ bool event_loop(VirtualServersManager& sm) {
 				
 				if (events[i].events & EPOLLOUT) {
 					// Socket listo para escribir
-					if (conn->getState() == CONN_WRITING_RESPONSE && !conn->getWriteBuffer().empty()) {
+					if (conn->hasResponseReady()) {
 						const std::string& response = conn->getWriteBuffer();
 						ssize_t bytes_sent = send(conn->getSocketFd(), response.c_str(), response.length(), 0);
 						if (bytes_sent > 0) {
@@ -200,7 +175,7 @@ bool event_loop(VirtualServersManager& sm) {
 								modify_event.data.ptr = socket_info;
 								epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->getSocketFd(), &modify_event);
 								
-								conn->setState(CONN_KEEP_ALIVE);
+								conn->resetForNextRequest();
 							}
 						}
 					}

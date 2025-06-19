@@ -10,7 +10,6 @@ INC_DIR = inc
 SRC_FILES = main.cpp \
 			debug.cpp \
 			Connection.cpp \
-			HttpRequest.cpp \
 			Listen.cpp \
 			Locations.cpp \
 			Parsed.cpp \

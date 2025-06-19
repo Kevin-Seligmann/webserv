@@ -43,19 +43,20 @@ bool VirtualServersManager::loadFromParsedConfig(const ParsedServers& ps) {
 }
 
 bool VirtualServersManager::initializeSockets(void) {
+
 	VirtualServersMap::iterator it = serversManager.begin();
+
 	for (; it != serversManager.end(); ++it) {
+
 		const Listen::VirtualServerKey& key = it->first;
 
 		int fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (fd == -1) {
-			ERRORlogsEntry("ERROR: couldn't create socket. ", strerror(errno));
+			ERRORlogsEntry("ERROR: ", std::string("couldn't create socket: ") + strerror(errno));
 			cleanupSockets();
 			throw std::runtime_error("Failed to create socket");
 			return (false); // código muerto, nunca se ejecuta, solo para posible queja de compilador.
 		}
-
-		// AQUI TIMEOUT?
 
 		int opt = 1;
 		if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
@@ -149,8 +150,7 @@ bool VirtualServersManager::socketsListen(void) {
 }
 
 void VirtualServersManager::cleanupSockets() {
-	for (std::map<Listen::VirtualServerKey, int>::iterator it = serversToSockets.begin(); 
-		 it != serversToSockets.end(); ++it) {
+	for (std::map<Listen::VirtualServerKey, int>::iterator it = serversToSockets.begin(); it != serversToSockets.end(); ++it) {
 		close(it->second);
 	}
 	serversToSockets.clear();
