@@ -17,8 +17,9 @@ int main(int argc, char** argv) {
 		showSockets(webServers);
 		
 		std::cout << GREEN << "Server ready. Event loop will be implemented next." << RESET << std::endl;
+		OKlogsEntry("SUCCESS: ", "Servers ready to operate.");
+		event_loop(webServers);
 
-		return (0);
 	} catch (const std::runtime_error& e) {
 		std::cerr << RED << "RUNTIME ERROR: " << RESET << e.what() << std::endl;
 		return (1);
@@ -30,4 +31,5 @@ int main(int argc, char** argv) {
 		return (1);
 	}
 	webServers.cleanupSockets();
+	return (0);
 }

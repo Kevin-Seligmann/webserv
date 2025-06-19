@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include "Parsed.hpp"
-#include "Listen.hpp"
+#include "Utils.hpp"
 
 class Servers {
 
@@ -21,6 +21,8 @@ class Servers {
 		std::map<std::string, Locations>	_locations;
 
 	public:
+		typedef Servers VirtualServerInfo;
+
 		Servers(const ParsedServer &params);
 		Servers(const ParsedServer &params, const Listen &listen);
 		~Servers();
@@ -53,8 +55,8 @@ class Servers {
 
 		void setLocations(const std::map<std::string, Locations>& locations);
 		const std::map<std::string, Locations>& getLocations(void) const;
-};
 
-typedef Servers VirtualServerInfo;
+		static Servers* findServerByKey(const std::string& host, int port);
+};
 
 #endif

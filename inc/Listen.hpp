@@ -9,6 +9,8 @@ struct Listen {
     int         port;
     bool        is_default;
 
+    typedef Listen VirtualServerKey;
+
     Listen(const std::string& host = "0.0.0.0", const int port = 8080, bool is_default = false);
     ~Listen();
     
@@ -18,7 +20,6 @@ struct Listen {
     std::string to_string() const;
 };
 
-typedef Listen VirtualServerKey;
 
 std::ostream& operator<<(std::ostream& os, const Listen& pl);
 

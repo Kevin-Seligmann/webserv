@@ -4,6 +4,7 @@
 #include "VirtualServersManager.hpp"
 #include "Parsed.hpp"
 #include "Utils.hpp"
+#include "Servers.hpp"
 
 // DEBUG FUNCTIONS
 
