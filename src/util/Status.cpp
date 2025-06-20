@@ -10,7 +10,7 @@ std::string const & status_to_text(Status const & status)
     static const std::string uri_too_long = "URI Too Long (414)";
     static const std::string request_header_too_large = "Request Header Fields Too Large (431)";
     static const std::string not_implemented = "Not Implemented (501)";
-    static const std::string version_not_supported = "Version Not Supported (505)";
+    static const std::string version_not_supported = "HTTP Version Not Supported (505)";
     static const std::string unknown = "UNKNOWN STATUS";
 
     switch (status)

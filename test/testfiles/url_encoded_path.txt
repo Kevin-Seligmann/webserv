@@ -1,0 +1,5 @@
+1
+200
+GET /path%20with%20spaces HTTP/1.1
+Host: example.com
+

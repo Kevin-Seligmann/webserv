@@ -36,7 +36,7 @@ public:
     static const size_t MAX_CHUNK_SIZE;
     static const size_t CHUNKED_SIZE_LINE_MAX_LENGTH;
 
-    RequestParser(HTTPRequest & request, HTTPError & _error, ElementParser & _element_parser, RequestValidator & validator);
+    RequestParser(HTTPRequest & request, HTTPError & _error, ElementParser & _element_parser);
 
     // Request managment
     void append(uint8_t const * str, ssize_t size);
@@ -77,7 +77,6 @@ private:
     HTTPRequest & _request;
     HTTPError & _error;
     ElementParser &  _element_parser;
-    RequestValidator & _validator;
 
     parsing_status _status;
     int _empty_skip_count;

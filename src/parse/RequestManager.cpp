@@ -1,9 +1,9 @@
 #include "RequestManager.hpp"
 
 RequestManager::RequestManager(HTTPRequest & request, SysBufferFactory::sys_buffer_type type, int fd)
-:_validator(_request),
+:_validator(_request, _error),
 _element_parser(_error),
-_request_parser(_request, _error, _element_parser, _validator),
+_request_parser(_request, _error, _element_parser),
 _sys_buffer(SysBufferFactory::get_buffer(type, fd)){}
 
 RequestManager::~RequestManager(){delete _sys_buffer;};
@@ -15,25 +15,31 @@ void RequestManager::process()
 
     while (_error.status() == OK && !request_done())
     {
-        if (_request_parser.get_status() != 0)
-            std::cout << _request_parser.get_status() << std::endl;
-            
         switch (_request_parser.get_status())
         {
             case RequestParser::PRS_FIRST_LINE:
                 parse = _request_parser.test_first_line();
                 if (parse)
+                {
                     _request_parser.parse_first_line();
+                    if (_error.status() == OK) _validator.validate_first_line(_request);
+                }
                 break;
             case RequestParser::PRS_HEADER_LINE:
                 parse = _request_parser.test_header_line();
                 if (parse)
+                {
                     _request_parser.parse_header_line();
+                    if (_error.status() == OK) _validator.validate_headers(_request, _request.headers);
+                }
                 break ;
             case RequestParser::PRS_BODY:
                 parse = _request_parser.test_body();
                 if (parse)
+                {
                     _request_parser.parse_body();
+                    if (_error.status() == OK) _validator.validate_body(_request.body);
+                }
                 break ;
             case RequestParser::PRS_CHUNKED_SIZE:
                 parse = _request_parser.test_chunk_size();
@@ -55,8 +61,6 @@ void RequestManager::process()
                 break ;
             has_read = true;
             ssize_t read_size = _sys_buffer->read(_read_buffer, _READ_BUFFER_SIZE);
-            if (read_size != 0)
-                std::cout << read_size << std::endl;
             if (read_size <= 0)
                 break ;
             _request_parser.append(_read_buffer, read_size);

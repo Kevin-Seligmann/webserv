@@ -16,11 +16,10 @@ const size_t RequestParser::MAX_CONTENT_LENGTH = 1*512*1024;
 const size_t RequestParser::MAX_CHUNK_SIZE = 1*512 *1024;;
 const size_t RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH = 200;
 
-RequestParser::RequestParser(HTTPRequest & request, HTTPError & error, ElementParser & element_parser, RequestValidator & validator)
+RequestParser::RequestParser(HTTPRequest & request, HTTPError & error, ElementParser & element_parser)
 :_request(request), 
 _error(error),
 _element_parser(element_parser),
-_validator(validator),
 _status(PRS_FIRST_LINE),
 _empty_skip_count(0),
 _header_field_count(0),
@@ -127,7 +126,7 @@ bool RequestParser::test_header_line()
             _status = PRS_CHUNKED_SIZE;
         else
             _status = PRS_BODY;
-        return false;
+        return true;
     }
     return _processing;
 }
@@ -177,6 +176,9 @@ void RequestParser::parse_protocol()
 
 void RequestParser::parse_header_line()
 {
+    if (_begin == _end)
+        return ;
+    
     std::string name, value;
     std::string::iterator token_end, token_start = _begin;
     
@@ -197,12 +199,13 @@ void RequestParser::parse_header_line()
     _element_parser.parse_field_value(token_start, token_end, value);
 
     _request.headers.put(name, value);
+
+    process_headers();
 }
 
 void RequestParser::parse_body()
 {
-    std::cout << std::distance(_begin, _end) << std::endl;
-   // _request.body.content = std::string(_begin, _end);
+    _request.body.content = std::string(_begin, _end);
     _status = PRS_DONE;
 }
 
@@ -268,6 +271,8 @@ void RequestParser::parse_uri()
     // Set default port if not found
     if (_request.uri.port == -1)
         _request.uri.port = 80;
+
+    _begin = token_start;
 }
 
 // Secondary parsing functions
@@ -361,7 +366,6 @@ void RequestParser::process_headers()
         for (wsHeaders const * hdr = headers; hdr->parser_f != NULL; hdr ++)
             if (it->first == hdr->name)
                 (this->*hdr->parser_f)(it->second);
-    _validator.validate_headers(_request, _request.headers);
 }
 
 bool RequestParser::has_authority(std::string::iterator & token_start, std::string::iterator & token_end) const

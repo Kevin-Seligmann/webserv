@@ -4,15 +4,15 @@ void RequestValidator::put_error(std::string const & text, Status status)
 {
     if (_error.status() != OK)
     {
-        Logger::getInstance().warning("Found more than one error, will be logged and ignored. " + status::status_to_text(status) + " " + text);
+        Logger::getInstance().warning("Found more than one error, will be logged and ignored. " + status::status_to_text(status) + " " + text + ". Actual: " + _error.to_string());
         return ;
     }
-    _error = HTTPError(text, status);
+    _error.set(text, status);
 }
 
 HTTPError const * RequestValidator::error(){return &_error;}
 
-RequestValidator::RequestValidator(HTTPRequest & request):_request(request){}
+RequestValidator::RequestValidator(HTTPRequest & request, HTTPError & error):_request(request), _error(error){}
 
 
 void RequestValidator::validate_method(HTTPMethod const & method)
@@ -28,20 +28,35 @@ void RequestValidator::validate_protocol(std::string const & protocol)
         return put_error("Invalid protocol: " + protocol + " only HTTP/1.1 supported", VERSION_NOT_SUPPORTED);
 }
 
+    
+void RequestValidator::validate_first_line(HTTPRequest const & request)
+{
+    validate_protocol(request.protocol);
+    if (_error.status() == OK) {validate_uri(request.uri);}
+    if (_error.status() == OK) {validate_method(request.method);}
+}
+
 void RequestValidator::validate_uri(URI const & uri)
 {
+    if (uri.schema != "" && uri.schema != "HTTP")
+        _error.set("Protocol not implemented: " + uri.schema, NOT_IMPLEMENTED);
 }
 
 
 void RequestValidator::validate_headers(HTTPRequest const & request, FieldSection const & hdr)
 {
+    std::map<std::string, std::string>::const_iterator host = hdr.fields.find("host");
+
     // Host header validation
-    if (hdr.fields.find("host") == hdr.fields.end())
+    if (host == hdr.fields.end())
         return put_error("The header section must contain a host header field", BAD_REQUEST);
 
-    if (hdr.fields.find("host")->second.find(',') != std::string::npos)
+    if (host->second.find(',') != std::string::npos)
         return put_error("The host header must be a single value (Comma detected)", BAD_REQUEST);
     
+    if (host != hdr.fields.end() && host->second.empty())
+        return put_error("Host found on header, but the value is empty", BAD_REQUEST);
+
     if (!request.uri.host.empty() && (request.uri.host != hdr.host || request.uri.port != hdr.port))
          return put_error("The authority component on URI has a different host than the headers", BAD_REQUEST);
     // else
