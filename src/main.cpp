@@ -95,6 +95,12 @@ int main(int argc, char** argv) {
 //     RequestValidator validator(request, error_container);
 //     ElementParser element_parser(error_container);
 //     RequestParser parser(request, error_container, element_parser, validator);
+//     Logger & log = Logger::getInstance();
+//     ErrorContainer error_container;
+//     HTTPRequest request;
+//     RequestValidator validator(request, error_container);
+//     ElementParser element_parser(error_container);
+//     RequestParser parser(request, error_container, element_parser, validator);
 
 //     try 
 //     {
@@ -117,7 +123,35 @@ int main(int argc, char** argv) {
 //             if (error_container.error())
 //                 error_container.log_all();
 //         }
+//     try 
+//     {
+//         for (int i = 0; rawRequest[i]; i++)
+//         {
+//             parser.append(rawRequest + i, 1);
+//             if (error_container.error())
+//                 continue ;
+//             parser.process();
+//             if (parser.done())
+//             {
+//                 log << request;
+//                 error_container.log_all();   
+//                 if(error_container.error())
+//                     continue ;   
+//                 error_container.reset(); 
+//                 request.reset();
+//                 parser.new_request();
+//             }
+//             if (error_container.error())
+//                 error_container.log_all();
+//         }
 
+//         parser.dump_remainder(); 
+//     }
+//     catch (std::exception & e)
+//     {
+//         log.error(e.what());
+//     }
+// }
 //         parser.dump_remainder(); 
 //     }
 //     catch (std::exception & e)

@@ -26,10 +26,10 @@ namespace parse
     bool is_quoted_pair_char(char c);
     bool is_obs_text_char(char c);
 
-    void first_line_sanitize(std::string & str);
+    void first_line_sanitize(std::string::iterator begin, std::string::iterator end);
     void sanitize_header_value(std::string::iterator start, std::string::iterator end);
 
     char hex_to_byte(char c);
 
-    size_t s_to_hex(std::string::const_iterator start, std::string::const_iterator end, size_t max);
+    size_t s_to_hex(std::string::iterator start, std::string::iterator end, size_t max);
 }

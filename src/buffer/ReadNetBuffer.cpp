@@ -18,14 +18,16 @@ void ReadNetBuffer::discard_current()
 {
     if (capacity() >= SHRINK_BUFFER_SIZE)
         shrink();
-    _start = _tail;
-    _prev_start = _start;
+    // _start = _tail;
+    //_prev_start = _start;
 }
+
+#include <iostream>
 
 void ReadNetBuffer::append(uint8_t const * str, ssize_t size)
 {
     if (this->size() + size > capacity())  
-        expand();
+        expand(size);
     std::memcpy(_tail, str, size);
     _tail += size;
 }
@@ -41,14 +43,14 @@ void ReadNetBuffer::shrink()
     _end = new_buffer + START_BUFFER_SIZE;
 }
 
-void ReadNetBuffer::expand()
+void ReadNetBuffer::expand(size_t min_size)
 {
-    size_t new_capacity = std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE);
+    size_t new_capacity = std::max<size_t>(std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE), min_size);
     size_t size = this->size();
     size_t put_length = put_back_length();
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
-    std::memcpy(new_buffer, _prev_start, size + put_length);
+    std::memcpy(new_buffer, _buffer, size + put_length);
     delete [] _buffer;
     _buffer = new_buffer;
     _prev_start = new_buffer;
@@ -71,10 +73,10 @@ ssize_t ReadNetBuffer::size() const {return _tail - _start;}
 
 void ReadNetBuffer::put_back(){_start = _prev_start;}
 
-uint8_t * ReadNetBuffer::begin(){return _start;}
+std::string::iterator ReadNetBuffer::begin(){return std::string::iterator((char *) _start);}
 
-uint8_t * ReadNetBuffer::end(){return _tail;}
+std::string::iterator ReadNetBuffer::end(){return std::string::iterator((char *) _tail);}
 
-const uint8_t * ReadNetBuffer::cbegin() const {return _start;}
+std::string::const_iterator ReadNetBuffer::cbegin() const {return std::string::const_iterator((char *) _start);}
 
-const uint8_t * ReadNetBuffer::cend() const{return _tail;}
+std::string::const_iterator ReadNetBuffer::cend() const{return std::string::const_iterator((char *) _tail);}

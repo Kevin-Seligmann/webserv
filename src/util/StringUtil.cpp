@@ -26,50 +26,50 @@ void wss::trim(std::string & s)
     s = std::string(begin, end + 1);
 }
 
-std::string::const_iterator wss::skip_ascii_whitespace(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_ascii_whitespace(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_ascii_whitespace(*begin)) begin ++; 
     return begin;
 }
 
-std::string::const_iterator wss::skip_whitespace(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_whitespace(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && *begin == ' ') begin ++; 
     return begin;
 }
 
-std::string::const_iterator wss::skip_ascii_whitespace_r(std::string::const_iterator end, std::string::const_iterator begin)
+std::string::iterator wss::skip_ascii_whitespace_r(std::string::iterator end, std::string::iterator begin)
 {
     end --;
     while(begin != end && parse::is_ascii_whitespace(*end)) end --; 
     return end + 1;
 }
 
-std::string::const_iterator wss::skip_http_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_http_token(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_token_char(*begin)) begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_uri_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_uri_token(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_uri_char(*begin)) begin ++;
     return begin;  
 }
 
-std::string::const_iterator wss::skip_protocol_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_protocol_token(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_protocol_char(*begin)) begin ++;
     return begin;  
 }
 
-std::string::const_iterator wss::skip_path_rootless(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_path_rootless(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_pchar(*begin)) begin ++;
     return skip_absolute_path(begin, end);
 }
 
-std::string::const_iterator wss::skip_absolute_path(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_absolute_path(std::string::iterator begin, std::string::iterator end)
 {
     while (begin != end && *begin == '/')
     {
@@ -79,34 +79,34 @@ std::string::const_iterator wss::skip_absolute_path(std::string::const_iterator 
     return begin;
 }
 
- std::string::const_iterator wss::skip_host_token(std::string::const_iterator begin, std::string::const_iterator end)
+ std::string::iterator wss::skip_host_token(std::string::iterator begin, std::string::iterator end)
 {
     while (begin != end && parse::is_host_char(*begin)) begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_port_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_port_token(std::string::iterator begin, std::string::iterator end)
 {
     begin ++;
     while (begin != end && parse::is_digit(*begin)) begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_query_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_query_token(std::string::iterator begin, std::string::iterator end)
 {
     begin ++;
     while (begin != end && parse::is_query_char(*begin)) begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_fragment_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_fragment_token(std::string::iterator begin, std::string::iterator end)
 {
     begin ++;
     while (begin != end && parse::is_fragment_char(*begin)) begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_schema_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_schema_token(std::string::iterator begin, std::string::iterator end)
 {
     while(begin != end && parse::is_alpha(*begin)) begin ++;
     return begin;
@@ -157,14 +157,14 @@ std::string::iterator wss::move_uri_segment(std::string & dst, std::string & src
     return end;
 }
 
-std::string::const_iterator wss::skip_until(std::string::const_iterator begin, std::string::const_iterator end, std::string const & str)
+std::string::iterator wss::skip_until(std::string::iterator begin, std::string::iterator end, std::string const & str)
 {
     while (begin != end && str.find(*begin) == std::string::npos)
         begin ++;
     return begin;
 }
 
-std::string::const_iterator wss::skip_until_dquoted_string_end(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_until_dquoted_string_end(std::string::iterator begin, std::string::iterator end)
 {
     while (begin != end && *begin != '"')
     {
@@ -175,7 +175,7 @@ std::string::const_iterator wss::skip_until_dquoted_string_end(std::string::cons
     return begin;
 }
 
-std::string::const_iterator wss::skip_hexa_token(std::string::const_iterator begin, std::string::const_iterator end)
+std::string::iterator wss::skip_hexa_token(std::string::iterator begin, std::string::iterator end)
 {
     while (begin != end && parse::is_hexa_char(*begin))
         begin ++;

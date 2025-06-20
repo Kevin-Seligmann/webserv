@@ -4,15 +4,9 @@ VPATH = src src/util src/http src/parse src/buffer
 OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-	HTTPError.o ErrorContainer.o Status.o RequestManager.o\
-	debug.o \
-	initServers.o \
-	Listen.o \
-	Locations.o \
-	Parsed.o \
-	Servers.o \
-	VirtualServersManager.o \
-	ServerValidator.o \
+	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
+	SysFileBuffer.o SysNetBuffer.o debug.o initServers.o Listen.o \
+	Locations.o Parsed.o Servers.o VirtualServersManager.o ServerValidator.o \
 	Utils.o 
 
 # Target
