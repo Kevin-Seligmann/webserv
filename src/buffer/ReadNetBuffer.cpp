@@ -71,10 +71,10 @@ ssize_t ReadNetBuffer::size() const {return _tail - _start;}
 
 void ReadNetBuffer::put_back(){_start = _prev_start;}
 
-uint8_t * ReadNetBuffer::begin(){return _start;}
+std::string::iterator ReadNetBuffer::begin(){return std::string::iterator((char *) _start);}
 
-uint8_t * ReadNetBuffer::end(){return _tail;}
+std::string::iterator ReadNetBuffer::end(){return std::string::iterator((char *) _tail);}
 
-const uint8_t * ReadNetBuffer::cbegin() const {return _start;}
+std::string::const_iterator ReadNetBuffer::cbegin() const {return std::string::const_iterator((char *) _start);}
 
-const uint8_t * ReadNetBuffer::cend() const{return _tail;}
+std::string::const_iterator ReadNetBuffer::cend() const{return std::string::const_iterator((char *) _tail);}

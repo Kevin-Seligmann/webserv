@@ -16,19 +16,19 @@ const size_t RequestParser::MAX_CONTENT_LENGTH = 1*512*1024;
 const size_t RequestParser::MAX_CHUNK_SIZE = 1*512 *1024;;
 const size_t RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH = 200;
 
-RequestParser::RequestParser(HTTPRequest & request, ErrorContainer & error_container, ElementParser & element_parser, RequestValidator & validator)
+RequestParser::RequestParser(HTTPRequest & request, HTTPError & error, ElementParser & element_parser, RequestValidator & validator)
 :_request(request), 
-_error_container(error_container),
+_error(error),
 _element_parser(element_parser),
 _validator(validator),
-_status(FIRST_LINE),
+_status(PRS_FIRST_LINE),
 _empty_skip_count(0),
 _header_field_count(0),
 _trailer_field_count(0),
 _chunk_length(0)
 {}
 
-bool RequestParser::done() const {return _status == DONE;}
+bool RequestParser::done() const {return _status == PRS_DONE;}
 
 void RequestParser::dump_remainder() const
 {
@@ -52,36 +52,37 @@ void RequestParser::append(uint8_t const * str, ssize_t size) {_buffer.append(st
 void RequestParser::new_request()
 {
     _empty_skip_count = 0;
-    _status = FIRST_LINE;
+    _status = PRS_FIRST_LINE;
     _buffer.new_request();
     _header_field_count = 0;
     _trailer_field_count = 0;
     _chunk_length = 0;
 }
 
-void RequestParser::process()
-{
-    _processing = true;
-    while (_processing && _status != DONE && _error.status() == OK)
-    {
-        switch (_status)
-        {
-            case FIRST_LINE: parse_first_line(); break ;
-            case HEADERS: parse_header_line(); break ;
-            case BODY: parse_body() ; break ;
-            case CHUNKED_SIZE: parse_chunked_size(); break ;
-            case CHUNKED_BODY: parse_chunked_body(); break ;
-            case TRAILERS: parse_trailer_line(); break ;
-            case DONE: throw std::runtime_error("CODE ERROR: Must initialize a new request");
-        }
-    }
-}
+// void RequestParser::process()
+// {
+//     _processing = true;
+//     while (_processing && _status != DONE && _error.status() == OK)
+//     {
+//         switch (_status)
+//         {
+//             case FIRST_LINE: parse_first_line(); break ;
+//             case HEADERS: parse_header_line(); break ;
+//             case BODY: parse_body() ; break ;
+//             case CHUNKED_SIZE: parse_chunked_size(); break ;
+//             case CHUNKED_BODY: parse_chunked_body(); break ;
+//             case TRAILERS: parse_trailer_line(); break ;
+//             case DONE: throw std::runtime_error("CODE ERROR: Must initialize a new request");
+//         }
+//     }
+// }
+
+RequestParser::parsing_status RequestParser::get_parsing_status() const {return _status;}
 
 // Main parsing functions
-
-bool RequestParser::has_first_line()
+bool RequestParser::test_first_line()
 {
-    _processing = _buffer.get_crlf_line(_line);
+    _processing = _buffer.get_crlf_line(_begin, _end);
     if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
     {
         _error.set("Request first line lgitength is too long. Max: " + RequestParser::FIRST_LINE_MAX_LENGTH, BAD_REQUEST);
@@ -96,104 +97,114 @@ bool RequestParser::has_first_line()
             _error.set("Only one empty line is allowed before request", BAD_REQUEST);
         return false;
      }
+    parse::first_line_sanitize(_begin, _end);
     return true;
+}
+
+
+bool RequestParser::test_chunk_size()
+{
+    _processing = _buffer.get_crlf_line(_begin, _end);
+    if (_buffer.previous_read_size() >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
+    {
+        _error.set("Chunk size line too long", BAD_REQUEST);
+        return false;
+    }
+    return _processing;
+}
+
+bool RequestParser::test_chunk_body()
+{
+    return _buffer.get_chunk(_chunk_length, _begin, _end);
+}
+
+bool RequestParser::test_body()
+{
+    return _buffer.get_chunk(_request.headers.content_length, _begin, _end);
+}
+
+bool RequestParser::test_trailer_line()
+{
+    _processing = _buffer.get_crlf_line(_line);
+    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
+    {
+        _error.set("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        return false;
+    }
+    if (!_processing)
+        _processing ;
+    _trailer_field_count ++;
+    if (_line.empty())
+    {
+        _status = PRS_DONE;
+        return false;
+    }
+    return _processing;
+}
+
+bool RequestParser::test_header_line()
+{
+    _processing = _buffer.get_crlf_line(_begin, _end);
+    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
+    {
+        _error.set("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        return false;
+    }
+    if (!_processing)
+        _processing;
+    _header_field_count ++;
+    if (_line.empty())
+    {
+        if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
+            _status = PRS_CHUNKED_SIZE;
+        else
+            _status = PRS_BODY;
+        return false;
+    }
+    return _processing;
 }
 
 void RequestParser::parse_first_line()
 {
-    // Basic checks
-    _processing = _buffer.get_crlf_line(_line);
-    if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
-        return _error.set("Request first line length is too long. Max: " + RequestParser::FIRST_LINE_MAX_LENGTH, BAD_REQUEST);
-    if (!_processing)
-        return ;
-    if (_line.empty())
-    {
-        _empty_skip_count ++;
-        if (_empty_skip_count > 1)
-            _error.set("Only one empty line is allowed before request", BAD_REQUEST);
-        return ;
-     }
-
-    // Parse
-    parse::first_line_sanitize(_line);
-    get_method();
+    parse_method();
     parse_uri();
-    get_protocol();
-    if (wss::skip_whitespace(_token_end, _line.end()) != _line.end())
-        _error_container.put_error("first line, extra content", _line, _token_end, BAD_REQUEST);
-
-    // Validate
-    _validator.validate_uri(_request.uri);
-    _validator.validate_method(_request.method);
-    _validator.validate_protocol(_request.protocol);
-    _status = HEADERS;
+    parse_protocol();
 }
 
 void RequestParser::parse_header_line()
 {
-    // Basic checks
-    _processing = _buffer.get_crlf_line(_line);
-    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
-        return _error_container.put_error("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE);
-    if (!_processing)
-        return ;
-    _header_field_count ++;
-    if (_line.empty())
-    {
-        process_headers();
-        if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
-            _status = CHUNKED_SIZE;
-        else
-            _status = BODY;
-        return ;
-    }
-
     std::string name, value;
 
     // Parse name
-    _token_start = _line.begin();
-    _token_end = wss::skip_until(_line.begin(), _line.end(), ":");
-    if (_token_end == _line.end())
-        return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1, BAD_REQUEST);
-    if (_token_end == _token_start)
-        _error_container.put_error("field name, empty", BAD_REQUEST);
-    _element_parser.parse_field_token(_token_start, _token_end, _line, name);
+    // _token_start = _line.begin();
+    // _token_end = wss::skip_until(_line.begin(), _line.end(), ":");
+    // if (_token_end == _line.end())
+    //     return _error_container.put_error("field name, ':' separator not found", _line, _token_end - 1, BAD_REQUEST);
+    // if (_token_end == _token_start)
+    //     _error_container.put_error("field name, empty", BAD_REQUEST);
+    // _element_parser.parse_field_token(_token_start, _token_end, _line, name);
     
-    // Parse value
-    _token_start = wss::skip_ascii_whitespace(_token_end + 1, _line.end());
-    if (_token_start != _line.end())
-        _token_end = wss::skip_ascii_whitespace_r(_line.end(), _token_start);
-    else
-        _token_end = _line.end();
-    _element_parser.parse_field_value(_token_start, _token_end, _line, value);
-    if (name.empty())
-        return ;
+    // // Parse value
+    // _token_start = wss::skip_ascii_whitespace(_token_end + 1, _line.end());
+    // if (_token_start != _line.end())
+    //     _token_end = wss::skip_ascii_whitespace_r(_line.end(), _token_start);
+    // else
+    //     _token_end = _line.end();
+    // _element_parser.parse_field_value(_token_start, _token_end, _line, value);
+    // if (name.empty())
+    //     return ;
 
-    _request.headers.put(name, value);
+    // _request.headers.put(name, value);
 }
 
 void RequestParser::parse_body()
 {
-    if (_request.headers.content_length <= 0)
-    {
-        _status = DONE;
-        return ;
-    }
-    _processing = _buffer.get_chunk(_request.headers.content_length, _request.body.content);
-    if (!_processing)
-        return ;
-    _status = DONE;
+    _request.body.content = std::string(_begin, _end);
+    _status = PRS_DONE;
 }
 
 void RequestParser::parse_chunked_size()
 {
-    _processing = _buffer.get_crlf_line(_line);
-    if (_buffer.previous_read_size() >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
-        return _error_container.put_error("line too long (On reading chunk size)", BAD_REQUEST);
-    if (!_processing)
-        return ;
-
     // Delimit hex token
     _token_start = _line.begin();
     _token_end = wss::skip_hexa_token(_token_start, _line.end());
@@ -214,35 +225,17 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
-    std::string aux;
-
-    _processing = _buffer.get_chunk(_chunk_length, aux);
-    if (!_processing)
-        return ;
-    _request.body.content += aux;
-    _status = CHUNKED_SIZE;
+    _request.body.content += std::string(_begin, _end);
+    _status = PRS_CHUNKED_SIZE;
 }
 
 void RequestParser::parse_trailer_line()
 {
-    // Basic checks
-    _processing = _buffer.get_crlf_line(_line);
-    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
-        return _error_container.put_error("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
-    if (!_processing)
-        return ;
-    _trailer_field_count ++;
-    if (_line.empty())
-    {
-        _status = DONE;
-        return ;
-    }
 }
 
 
 
 // Secondary parsing functions
-
 void RequestParser::parse_uri()
 {
     // Skip to start of URI
@@ -443,4 +436,7 @@ void RequestParser::get_protocol()
     // Final checks
     if (_token_end != _line.end() && *_token_end == ' ')
         _error_container.put_warning("request line, extra whitespace after protocol", _line, _token_end);
+
+    if (wss::skip_whitespace(_token_end, _line.end()) != _line.end())
+        _error.set("Extra content after protocol", BAD_REQUEST);
 } 

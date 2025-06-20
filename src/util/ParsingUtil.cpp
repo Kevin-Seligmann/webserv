@@ -71,9 +71,9 @@ bool parse::is_field_value_char(char c)
     return is_vchar(c) || c < 0 || c == ' ' || c == '\t';
 }
 
-void parse::first_line_sanitize(std::string & str)
+void parse::first_line_sanitize(std::string::iterator begin, std::string::iterator end)
 {
-    for (std::string::iterator it = str.begin(); it != str.end(); it ++)
+    for (std::string::iterator it = begin; it != end; it ++)
         if (parse::is_ascii_whitespace(*it))
             *it = ' ';
 }
