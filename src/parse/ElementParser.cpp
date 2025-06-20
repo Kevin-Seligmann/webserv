@@ -1,9 +1,10 @@
 #include "ElementParser.hpp"
 #include "RequestParser.hpp"
+#include "HTTPError.hpp"
 
 ElementParser::ElementParser(HTTPError & error):_error(error){}
 
-void ElementParser::parse_method(std::string::const_iterator & begin, std::string::const_iterator & end, HTTPMethod & method)
+void ElementParser::parse_method(std::string::iterator & begin, std::string::iterator & end, HTTPMethod & method)
 {
     std::string method_str(begin, end);
     wss::to_upper(method_str);
@@ -19,7 +20,7 @@ void ElementParser::parse_method(std::string::const_iterator & begin, std::strin
     }
 }
 
-void ElementParser::parse_protocol(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & protocol)
+void ElementParser::parse_protocol(std::string::iterator & begin, std::string::iterator & end, std::string & protocol)
 {
     protocol = std::string(begin, end);
     wss::to_upper(protocol);
@@ -31,7 +32,7 @@ void ElementParser::parse_protocol(std::string::const_iterator & begin, std::str
     }
 }
 
-void ElementParser::parse_path(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & path)
+void ElementParser::parse_path(std::string::iterator & begin, std::string::iterator & end, std::string & path)
 {
     path = std::string(begin, end);
     while (begin != end)
@@ -44,7 +45,7 @@ void ElementParser::parse_path(std::string::const_iterator & begin, std::string:
     percentage_decode(path);
 }
 
-void ElementParser::parse_query(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & query)
+void ElementParser::parse_query(std::string::iterator & begin, std::string::iterator & end, std::string & query)
 {
     query = std::string(begin, end);
     while (begin != end)
@@ -56,7 +57,7 @@ void ElementParser::parse_query(std::string::const_iterator & begin, std::string
     percentage_decode(query);
 }
 
-void ElementParser::parse_field_value(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & value)
+void ElementParser::parse_field_value(std::string::iterator & begin, std::string::iterator & end, std::string & value)
 {
     value = std::string(begin, end);
 
@@ -69,7 +70,7 @@ void ElementParser::parse_field_value(std::string::const_iterator & begin, std::
     parse::sanitize_header_value(value.begin(), value.end());
 }
 
-void ElementParser::parse_field_token(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & name)
+void ElementParser::parse_field_token(std::string::iterator & begin, std::string::iterator & end, std::string & name)
 {
     name = std::string(begin, end);
 
@@ -83,7 +84,7 @@ void ElementParser::parse_field_token(std::string::const_iterator & begin, std::
 }
 
 
-void ElementParser::parse_fragment(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & fragment)
+void ElementParser::parse_fragment(std::string::iterator & begin, std::string::iterator & end, std::string & fragment)
 {
     fragment = std::string(begin, end);
     while (begin != end)
@@ -94,7 +95,7 @@ void ElementParser::parse_fragment(std::string::const_iterator & begin, std::str
     }
 }
 
-void ElementParser::parse_host(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & host)
+void ElementParser::parse_host(std::string::iterator & begin, std::string::iterator & end, std::string & host)
 {
     host = std::string(begin, end);
     if (*begin == '[')
@@ -112,7 +113,7 @@ void ElementParser::parse_host(std::string::const_iterator & begin, std::string:
     wss::to_lower(host);
 }
 
-void ElementParser::parse_port(std::string::const_iterator & begin, std::string::const_iterator & end, int & port)
+void ElementParser::parse_port(std::string::iterator & begin, std::string::iterator & end, int & port)
 {
     port = 0;
 
@@ -127,7 +128,7 @@ void ElementParser::parse_port(std::string::const_iterator & begin, std::string:
     }
 }
 
-void ElementParser::parse_content_length_field(std::string::const_iterator & begin, std::string::const_iterator & end, int & length)
+void ElementParser::parse_content_length_field(std::string::iterator & begin, std::string::iterator & end, int & length)
 {
     length = 0;
     while (begin != end)
@@ -142,7 +143,7 @@ void ElementParser::parse_content_length_field(std::string::const_iterator & beg
 }
 
 // End and being point to  '"'
-void ElementParser::parse_dquote_string(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & str)
+void ElementParser::parse_dquote_string(std::string::iterator & begin, std::string::iterator & end, std::string & str)
 {
     begin ++;
     str.reserve(std::distance(begin, end));
@@ -166,12 +167,12 @@ void ElementParser::parse_dquote_string(std::string::const_iterator & begin, std
     }
 }
 
-void ElementParser::parse_comma_separated_values(std::string::const_iterator & begin, std::string::const_iterator & end, std::vector<CommaSeparatedFieldValue> & values)
+void ElementParser::parse_comma_separated_values(std::string::iterator & begin, std::string::iterator & end, std::vector<CommaSeparatedFieldValue> & values)
 {
     while (1)
     {
         CommaSeparatedFieldValue csf;
-        std::string::const_iterator head;
+        std::string::iterator head;
 
         // Get name
         head = wss::skip_until(begin, end, ",; ");
@@ -238,7 +239,7 @@ void ElementParser::parse_comma_separated_values(std::string::const_iterator & b
 }
 
 
-void ElementParser::parse_schema(std::string::const_iterator & begin, std::string::const_iterator & end, std::string & schema)
+void ElementParser::parse_schema(std::string::iterator & begin, std::string::iterator & end, std::string & schema)
 {
     schema = std::string(begin, end);
     while (begin != end)

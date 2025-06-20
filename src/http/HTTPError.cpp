@@ -10,4 +10,4 @@ void HTTPError::log() const {Logger::getInstance().error(status::status_to_text(
 
 std::string const HTTPError::to_string() const {return status::status_to_text(_status) + ": "   + _motive;}
 
-void HTTPError::set(std::string const & motive, Status status){_motive = motive, _status = status;}
+void HTTPError::set(std::string const & motive, Status status){_motive = motive; _status = status;}

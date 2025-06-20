@@ -23,9 +23,7 @@ struct RequestParseTest
     Status obtained_status;
 
     // Test name and description
-    std::string name;
+    std::string filename;
 
-    RequestParseTest(const char * input, Status status, std::string const & test_name)
-        :input_string(input), expected_status(status), obtained_status(NO_STATUS), name(test_name)
-        {}
+    RequestParseTest(std::string const & filename):filename(filename){}
 };

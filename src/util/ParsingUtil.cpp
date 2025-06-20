@@ -115,7 +115,7 @@ char parse::hex_to_byte(char c)
 }
 
 // max = 0 is no max. Use a max that would not overflow on size_t boundaries
-size_t parse::s_to_hex(std::string::const_iterator start, std::string::const_iterator end, size_t max)
+size_t parse::s_to_hex(std::string::iterator start, std::string::iterator end, size_t max)
 {
     size_t n = 0;
 

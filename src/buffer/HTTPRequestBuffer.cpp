@@ -11,6 +11,8 @@ bool HTTPRequestBuffer::get_crlf_line(std::string::iterator & _begin, std::strin
     std::string::iterator start = begin();
     std::string::iterator ptr = start + _offset;
 
+    if (ptr == end())
+        return false;
     for (; ptr != end(); ++ptr) 
     {
         if (*ptr == '\n') 
@@ -20,7 +22,7 @@ bool HTTPRequestBuffer::get_crlf_line(std::string::iterator & _begin, std::strin
                 _begin = start;
                 _end = ptr - 1;
             }
-            else 
+            else
             {
                 _begin = start;
                 _end = ptr;

@@ -1,11 +1,11 @@
 VPATH = ../src ../src/util ../src/http ../src/parse ../src/buffer
 
 # Files
-OBJ = Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
+OBJ =  test.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-	HTTPError.o ErrorContainer.o Status.o RequestManager.o \
-	test.o SysNetBuffer.o SysBufferFactory.o SysFileBuffer.o
+	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
+	SysFileBuffer.o SysNetBuffer.o 
 
 # Target
 NAME = test
@@ -26,7 +26,7 @@ DEPS = $(OBJ_PATH:.o=.d)
 INCLUDES = -I./$(INC_DIR)
 
 # Flags -Wall -Wextra -Werror
-FLAGS = -std=c++98
+FLAGS = -std=c++98 -g
 
 
 # Compiler
