@@ -1,7 +1,7 @@
-#include "../inc/VirtualServersManager.hpp"
-#include "../inc/Parsed.hpp"
-#include "../inc/Utils.hpp"
-#include "../inc/debug.hpp"
+#include "VirtualServersManager.hpp"
+#include "Parsed.hpp"
+#include "Utils.hpp"
+#include "debug.hpp"
 #include <iostream>
 
 int main(int argc, char** argv) {
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 }
 
 
-// #include <iostream>
+// #include <iostream>make
 // #include <exception>
 
 // #include "Logger.hpp"

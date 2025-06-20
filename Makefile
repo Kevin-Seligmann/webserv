@@ -5,9 +5,9 @@ OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
 	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
-	SysFileBuffer.o SysNetBuffer.o debug.o initServers.o Listen.o \
+	SysFileBuffer.o SysNetBuffer.o debug.o serversInit.o Listen.o \
 	Locations.o Parsed.o Servers.o VirtualServersManager.o ServerValidator.o \
-	Utils.o 
+	Utils.o serversRun.o Connection.o  \
 
 # Target
 NAME = webserv
