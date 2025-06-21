@@ -1,0 +1,5 @@
+1
+200
+GET /path?query=value&foo=bar#tea HTTP/1.1
+Host: example.com
+

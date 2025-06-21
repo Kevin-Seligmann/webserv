@@ -22,11 +22,14 @@ namespace parse
     bool is_ascii_whitespace(char c);
     bool is_hexa_char(char c);
     bool is_field_value_char(char c);
+    bool is_qdtext_char(char c);
+    bool is_quoted_pair_char(char c);
+    bool is_obs_text_char(char c);
 
-    void first_line_sanitize(std::string & str);
+    void first_line_sanitize(std::string::iterator begin, std::string::iterator end);
     void sanitize_header_value(std::string::iterator start, std::string::iterator end);
 
     char hex_to_byte(char c);
 
-
+    size_t s_to_hex(std::string::iterator start, std::string::iterator end, size_t max);
 }

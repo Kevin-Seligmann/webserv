@@ -12,11 +12,12 @@ struct URI : public HTTPElement
     std::string fragment;
     std::string schema;
     int port;
+    
+    size_t length;
 
     URI();
     void reset();
     void print(std::ostream & os) const;
-    //void validate() const {std::cout << "Validated URI. ";};
 };
 
 std::ostream & operator<<(std::ostream & os, URI const & uri);

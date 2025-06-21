@@ -71,17 +71,17 @@ bool parse::is_field_value_char(char c)
     return is_vchar(c) || c < 0 || c == ' ' || c == '\t';
 }
 
-void parse::first_line_sanitize(std::string & str)
+void parse::first_line_sanitize(std::string::iterator begin, std::string::iterator end)
 {
-    for (std::string::iterator it = str.begin(); it != str.end(); it ++)
-        if (*it == '\r')
+    for (std::string::iterator it = begin; it != end; it ++)
+        if (parse::is_ascii_whitespace(*it))
             *it = ' ';
 }
 
 void parse::sanitize_header_value(std::string::iterator start, std::string::iterator end)
 {
     for (;start != end; start ++)
-        if (parse::is_ascii_whitespace(*start) || *start < 32)
+        if (parse::is_ascii_whitespace(*start) || (*start < 32 && *start >= 0))
             *start = ' ';
 }
 
@@ -90,10 +90,42 @@ bool parse::is_hexa_char(char c)
     return (is_digit(c) || strchr("ABCDEF", std::toupper(c)));
 }
 
+
+bool parse::is_obs_text_char(char c)
+{
+    return  (unsigned char) c >= 0x80 && (unsigned char) c <= 0xff;
+}
+
+bool parse::is_qdtext_char(char c)
+{
+    return  strchr(" \t!" , c) || (c >= 0x23 && c <= 0x5b)  || (c >= 0x5d && c <= 0x7e) || is_obs_text_char(c);
+}
+
+bool parse::is_quoted_pair_char(char c)
+{
+    return is_vchar(c) || strchr(" \t" , c) || is_obs_text_char(c);
+}
+
 char parse::hex_to_byte(char c)
 {
     if (is_digit(c))
         return c - '0';
     else
-        return std::toupper(c) - 'A';
+        return std::toupper(c) - 'A' + 10;
+}
+
+// max = 0 is no max. Use a max that would not overflow on size_t boundaries
+size_t parse::s_to_hex(std::string::iterator start, std::string::iterator end, size_t max)
+{
+    size_t n = 0;
+
+    while (start != end)
+    {
+        size_t val = hex_to_byte(*start);
+        if (max > 0 && n > (max - val) / 16)
+            return max;
+        n = n*16 + val;
+        start ++;
+    }
+    return n;
 }

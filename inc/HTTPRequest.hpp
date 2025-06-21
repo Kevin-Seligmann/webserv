@@ -15,6 +15,7 @@ struct HTTPRequest : public HTTPElement
     HTTPBody body;
     
     HTTPRequest();
+    std::string to_string();
     void reset();
     void print(std::ostream & os) const;
 };

@@ -12,19 +12,19 @@ public:
     ReadNetBuffer();
     ~ReadNetBuffer();
 
-    void append(uint8_t *str, ssize_t size);
-    void expand();
+    void append(uint8_t const * str, ssize_t size);
+    void expand(size_t min_size);
     void shrink();
-    void put_back();
+   // void put_back();
     void consume_bytes(ssize_t n);
 
     ssize_t capacity() const;
     ssize_t size() const;
     
-    uint8_t * begin();
-    uint8_t * end();
-    const uint8_t * cbegin() const;
-    const uint8_t * cend() const;
+    std::string::iterator begin();
+    std::string::iterator end();
+    std::string::const_iterator cbegin() const;
+    std::string::const_iterator cend() const;
 
 protected:
     void discard_current();
@@ -42,5 +42,5 @@ private:
     ReadNetBuffer(ReadNetBuffer &);
     ReadNetBuffer & operator=(ReadNetBuffer &);
 
-    ssize_t put_back_length() const;
+   // ssize_t put_back_length() const;
 };
