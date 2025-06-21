@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:14:39 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/18 16:47:49 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/21 19:38:54 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,9 +40,7 @@ CGI::CGI(const HTTPRequest& req)
 	env["SERVER_PROTOCOL"] = req.protocol;
 	env["SERVER_SOFTWARE"] = "webserver"; // este variable es obligatorio, pero no influye a script call
 
-	req_body_get = "";
-	req_body_post = "name=Alice&age=25&lang=ru"; // TODO CGIUtils::getRequestBody()
-
+	req_body = req.body.raw;
 }
 
 CGI::~CGI() {}
@@ -100,23 +98,15 @@ void CGI::runCGI()
 		!setPipeFlags(cgi_pipe[0]) || !setPipeFlags(cgi_pipe[1]))
 		exit(1);*/
 
+
+	std::cout << "----------------->" << req_body << std::endl;
+
 	ssize_t n;
 
-	if (env["REQUEST_METHOD"] == "POST" && !req_body_post.empty())
-    {
-        n = write(req_pipe[1], req_body_post.c_str(), req_body_post.size());
-        if (n == -1)
-        {
-            perror("write failed to CGI stdin");
-        }
-    }
-	else
+	n = write(req_pipe[1], req_body.c_str(), req_body.size());
+	if (n == -1)
 	{
-		n = write(req_pipe[1], req_body_get.c_str(), req_body_get.size());
-		if (n == -1)
-		{
-			perror("write failed to CGI stdin");
-		}
+		perror("write failed to CGI stdin");
 	}
 
 	pid = fork();
@@ -149,17 +139,12 @@ void CGI::runCGI()
 	if (cgi_pipe[0] < 0)
 		exit(1);
 
-	if (fcntl(fd, F_GETFD) == -1)
+	if (fcntl(cgi_pipe[0], F_GETFD) == -1)
 		exit(1);
 
-	char buf[1024];
-    ssize_t l = read(cgi_pipe[0], buf, sizeof(buf) - 1);
-    if (l > 0) {
-        buf[l] = '\0';
-        std::cout << "CGI Output:\n" << buf << std::endl;
-    } else {
-        perror("read");
-    }
+	readCGIOut(cgi_pipe[0]);
+
+	std::cout << ">>>>>>>>>> " << resp << std::endl;
 
     close(cgi_pipe[0]);
 
@@ -183,5 +168,5 @@ void CGI::readCGIOut(int fd)
 		resp += buf;
 	}
 
-	close(fd);
+//	close(fd);
 }

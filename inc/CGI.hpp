@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/18 16:42:08 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/21 19:33:33 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,7 @@ struct CGI
 {
 	std::map<std::string, std::string> env;
 	std::map<std::string, std::string> cgi_map;
-	std::string req_body_get;
-	std::string req_body_post;
+	std::string req_body;
 
 	int req_pipe[2];
 	int cgi_pipe[2];
@@ -47,6 +46,7 @@ struct CGI
 	std::string findHeaderIgnoreCase(const HTTPRequest& req_headers, const std::string& headerToFind);
 	bool setPipeFlags(int fd);
 	void runCGI();
+	void readCGIOut(int fd);
 };
 
 #endif

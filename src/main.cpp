@@ -37,14 +37,14 @@ void testRequestParser()
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
-    "\r\n";
-/*	"POST /cgi-bin/submit.cgi HTTP/1.1\r\n"
+    "\r\n"
+	"POST /cgi-bin/submit.cgi HTTP/1.1\r\n"
     "Host: submit.example.com\r\n"
     "Content-Type: application/x-www-form-urlencoded\r\n"
     "Content-Length: 27\r\n"
 	"\r\n"
-    "username=test&password=1234"
-	"Qwerty is nice, really";*/
+    "username=test&password=1234";
+/*	"Qwerty is nice, really";*/
 
     Logger & log = Logger::getInstance();
     ErrorContainer error_container;
