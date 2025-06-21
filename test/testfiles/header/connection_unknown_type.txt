@@ -1,0 +1,6 @@
+1
+501
+GET / HTTP/1.1
+Host: example.org
+Connection: close, determine
+

@@ -1,0 +1,7 @@
+1
+200
+GET / HTTP/1.1
+host: example.com:80
+cookie:   a=1; b=2; elephant=animal; cookie=food; httpcookie="nofood"; linux=so; laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarrrrrgeeeeeee=loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong; test=ok; status=200; sid=1; pid=1231asd; c=3    
+
+
