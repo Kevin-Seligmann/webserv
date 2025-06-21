@@ -13,6 +13,14 @@
 
 void create_test_suite(const std::string & path, std::vector<std::string> & tests)
 {
+    struct stat st;
+    stat(path.c_str(), &st);
+    if (!S_ISDIR(st.st_mode))
+    {
+        tests.push_back(path);
+        return ;
+    }
+
     DIR *dir;
     struct dirent *ent;
 
@@ -35,7 +43,7 @@ void create_test_suite(const std::string & path, std::vector<std::string> & test
     closedir(dir);
 }
 
-void print_request(char * c, size_t bytes)
+void print_request(const char * c, size_t bytes)
 {
     int max = 100, i;
 
@@ -65,6 +73,7 @@ void print_request(char * c, size_t bytes)
 
 void run_request_parsing_test(std::string filename)
 {
+    std::string msg;
     char buffer[10000];
     char c;
     int f = open(filename.c_str(), O_RDONLY);
@@ -110,13 +119,15 @@ void run_request_parsing_test(std::string filename)
     while (requests_done < num_requests)
     {
         manager.process();
-        if (manager.gerError().status() != OK || manager.request_done())
         if  (manager.gerError().status() != OK)
             break ;
         if (manager.request_done())
         {
             requests_done ++;
-            std::cout << request;
+            msg = request.to_string();
+            if (msg.size() > 100)
+                msg = msg.substr(0, 100) + "...\n";
+            std::cout << msg;
             manager.new_request();
         }
     }
@@ -126,12 +137,19 @@ void run_request_parsing_test(std::string filename)
     else
         std::cout << Logger::RED << "FAIL. " << Logger::RESET;
 
-    std::cout << "Got " << Logger::BLUE << status::status_to_text((Status) manager.gerError().status() )  << Logger::RESET << " Expected " << Logger::BLUE << status::status_to_text((Status) expected_status) << Logger::RESET << "\n" << std::endl;
+    msg = manager.gerError().msg();
+    if (msg.size() > 100)
+        msg = msg.substr(0, 100) + "...";
+
+    std::cout 
+    << "File: " << basename 
+    << ". Expected " << Logger::BLUE << status::status_to_text((Status) expected_status) << Logger::RESET 
+    << " Got " << Logger::BLUE << status::status_to_text((Status) manager.gerError().status() ) 
+    << ": " << Logger::RESET << msg << "\n" << std::endl;
 }
 
 void test_request_parsing(std::string src)
 {
-    std::cout << src << std::endl;
     std::vector<std::string> tests;
     create_test_suite(src, tests);
 

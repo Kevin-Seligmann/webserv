@@ -49,6 +49,7 @@ bool RequestParser::test_first_line()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
     {
+        std::cout << _buffer.previous_read_size() << std::endl;
         _error.set("Request first line length is too long", BAD_REQUEST);
         return false;
     }
@@ -77,7 +78,7 @@ bool RequestParser::test_chunk_size()
 
 bool RequestParser::test_chunk_body()
 {
-    return _buffer.get_chunk(_chunk_length, _begin, _end);
+    return _buffer.get_chunk_with_crlf(_chunk_length, _begin, _end);
 }
 
 bool RequestParser::test_body()
@@ -93,9 +94,14 @@ bool RequestParser::test_body()
 bool RequestParser::test_trailer_line()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
+    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH)
     {
-        _error.set("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        _error.set("Request trailer field line length", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        return false;
+    }
+    if (_trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
+    {
+        _error.set("Request trailer field quantity", REQUEST_HEADER_FIELDS_TOO_LARGE);
         return false;
     }
     if (!_processing)
@@ -232,7 +238,12 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
-    _request.body.content += std::string(_begin, _end);
+    if (*(_begin + _chunk_length) == '\n')
+        _request.body.content += std::string(_begin, _end - 1);
+    else if (*(_begin + _chunk_length) == '\r' && *(_begin + _chunk_length + 1) == '\n')
+        _request.body.content += std::string(_begin, _end - 2);
+    else
+        return _error.set("Chunked body doesn't end with CRLF/LF", BAD_REQUEST);
     _status = PRS_CHUNKED_SIZE;
 }
 

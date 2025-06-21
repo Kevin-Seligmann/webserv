@@ -1,3 +1,4 @@
+#include <sstream>
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest(){}
@@ -9,6 +10,14 @@ void HTTPRequest::reset()
     headers.reset();
     method = NOMETHOD;
     protocol = "";
+}
+
+std::string HTTPRequest::to_string()
+{
+    std::stringstream ss;
+
+    print(ss);
+    return ss.str();
 }
 
 void HTTPRequest::print(std::ostream & os) const

@@ -1,5 +1,0 @@
-1
-400
-GET
-Host: example.com
-

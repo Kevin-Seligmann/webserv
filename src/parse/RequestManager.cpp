@@ -52,7 +52,7 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_chunked_body();
                 break ;            
-            case RequestParser::PRS_TRAILER_LINE:_request_parser.test_trailer_line(); break ;
+            case RequestParser::PRS_TRAILER_LINE: parse = _request_parser.test_trailer_line(); break ;
             case RequestParser::PRS_DONE: parse = false; break ;  
             default: throw new std::runtime_error("Code error reading Request Parser status");
         }
