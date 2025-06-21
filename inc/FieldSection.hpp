@@ -21,12 +21,14 @@ struct FieldSection : public HTTPElement
     int port;
     int content_length;
     std::vector<CommaSeparatedFieldValue> transfer_encodings;
+    std::vector<CommaSeparatedFieldValue> connections;
+    std::map<std::string, std::string> cookies;
 
     FieldSection();
     void reset();
     void print(std::ostream & os) const;
     void put(std::string const & name, std::string const & value);
-
+    void put_cookie(std::string::iterator name_start, std::string::iterator name_end, std::string::iterator value_start, std::string::iterator value_end);
 };
 
 std::ostream & operator<<(std::ostream & os,  FieldSection const & header);

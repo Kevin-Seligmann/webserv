@@ -25,6 +25,7 @@ namespace parse
     bool is_qdtext_char(char c);
     bool is_quoted_pair_char(char c);
     bool is_obs_text_char(char c);
+    bool is_cookie_char(char c);
 
     void first_line_sanitize(std::string::iterator begin, std::string::iterator end);
     void sanitize_header_value(std::string::iterator start, std::string::iterator end);

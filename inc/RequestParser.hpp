@@ -105,4 +105,8 @@ private:
     void parse_host_field(std::string & value);
     void parse_content_length_field(std::string & value);
     void parse_transfer_encoding_field(std::string & value);
+    void parse_connection_field(std::string & value);
+    void parse_expect_field(std::string & value);
+    void parse_content_type_field(std::string & value);
+    void parse_cookie_field(std::string & value);
 };

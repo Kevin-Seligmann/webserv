@@ -51,7 +51,7 @@ void RequestValidator::validate_first_line(HTTPRequest const & request)
 */
 void RequestValidator::validate_uri(URI const & uri)
 {
-    if (uri.schema != "" && uri.schema != "HTTP")
+    if (uri.schema != "" && uri.schema != "http")
         _error.set("Protocol not implemented: " + uri.schema, NOT_IMPLEMENTED);
 }
 
@@ -95,6 +95,15 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
             if (hdr.fields.find("content-length") != hdr.fields.end())
                 return put_error("Transfer-Encoding and Content-Length are incompatible", BAD_REQUEST);
         }
+    }
+
+    // Validate Connection
+    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = hdr.connections.begin(); it != hdr.connections.end(); it ++)
+    {
+        if (it->name != "close")
+            return put_error("Connection value not implemented " + it->name, NOT_IMPLEMENTED);
+        if (it->parameters.size() > 0)
+            return put_error("Connection: close doesn't accept parameters", BAD_REQUEST);
     }
 }
 

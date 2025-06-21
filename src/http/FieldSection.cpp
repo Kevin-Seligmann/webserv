@@ -11,6 +11,8 @@ void FieldSection::reset()
     content_length = -1;
     fields.clear();
     transfer_encodings.clear();
+    connections.clear();
+    cookies.clear();
 }
 
 void FieldSection::put(std::string const & str, std::string const & value)
@@ -45,7 +47,25 @@ void FieldSection::print(std::ostream & os) const
                 os << ", ";
         }
     }
+    if (cookies.size() > 0)
+    {
+        os << "\n\tCookies: ";
+        for (std::map<std::string, std::string>::const_iterator it = cookies.begin(); it != cookies.end(); it ++)
+        {
+            os << it->first << "=" << it->second;
+            std::map<std::string, std::string>::const_iterator next = it;
+            next ++;
+            if (next != cookies.end())
+                os << "; ";
+        }
+    }
     os << std::endl;
+}
+
+
+void FieldSection::put_cookie(std::string::iterator name_start, std::string::iterator name_end, std::string::iterator value_start, std::string::iterator value_end)
+{
+    cookies[std::string(name_start, name_end)] = std::string(value_start, value_end);   
 }
 
 std::ostream & operator<<(std::ostream & os,  FieldSection const & header)
