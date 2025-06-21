@@ -4,7 +4,8 @@ RequestManager::RequestManager(HTTPRequest & request, SysBufferFactory::sys_buff
 :_validator(_request, _error),
 _element_parser(_error),
 _request_parser(_request, _error, _element_parser),
-_sys_buffer(SysBufferFactory::get_buffer(type, fd)){}
+_sys_buffer(SysBufferFactory::get_buffer(type, fd)),
+_request(request){}
 
 RequestManager::~RequestManager(){delete _sys_buffer;};
 

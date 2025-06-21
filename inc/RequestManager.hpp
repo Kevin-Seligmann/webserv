@@ -26,7 +26,7 @@ private:
     static const size_t _READ_BUFFER_SIZE = 2000;
 
     SysBuffer * _sys_buffer;
-    HTTPRequest _request;
+    HTTPRequest & _request;
     HTTPError _error;
     RequestValidator _validator;
     ElementParser _element_parser;

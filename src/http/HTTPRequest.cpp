@@ -14,13 +14,11 @@ void HTTPRequest::reset()
 void HTTPRequest::print(std::ostream & os) const
 {
     os 
-    << "\n\n$ ---------- REQUEST BEGIN: " << "\n"
     << "METHOD: " << method << "\n"
     << "URI: " << uri << "\n"
     << "PROTOCOL: " << protocol << "\n"
     << "HEADERS: " << "\n" << headers
-    << "BODY: " << body << "\n$ ---------- REQUEST END\n\n"
-    ;
+    << "BODY: " << body << "\n";
 }
 
 std::ostream & operator<<(std::ostream & os, HTTPRequest request)

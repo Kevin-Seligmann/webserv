@@ -28,21 +28,23 @@ void FieldSection::print(std::ostream & os) const
     os << "\tHeader parsed data... "
     << " port: " << port
     << " host: " << host
-    << " content-length: " << content_length
-    << "\n\ttransfer-encodings: ";
-    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
+    << " content-length: " << content_length;
+    if (transfer_encodings.size() > 0)
     {
-        os << it->name << " ";
-        for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)
+        os << "\n\ttransfer-encodings: ";
+        for (std::vector<CommaSeparatedFieldValue>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
         {
-            os << "param: " << params->first << "=" << params->second;
-            if (params + 1 != it->parameters.end())
-                os << "; ";
+            os << it->name << " ";
+            for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)
+            {
+                os << "param: " << params->first << "=" << params->second;
+                if (params + 1 != it->parameters.end())
+                    os << "; ";
+            }
+            if (it + 1 != transfer_encodings.end())
+                os << ", ";
         }
-        if (it + 1 != transfer_encodings.end())
-            os << ", ";
     }
-
     os << std::endl;
 }
 

@@ -17,12 +17,12 @@ void URI::reset()
 void URI::print(std::ostream & os) const
 {
     os << "\n"
-    << "\tSCHEMA: " << schema << "\n"
-    << "\tHOST: " << host << "\n"
-    << "\tPORT: " << port << "\n"
-    << "\tPATH: " << path << "\n"
-    << "\tQUERY: " << query << "\n"
-    << "\tFRAGMENT: " << fragment
+    << "\tSCHEMA: " << schema << ", "
+    << "HOST: " << host << ", "
+    << "PORT: " << port << ", "
+    << "PATH: " << path << ", "
+    << "QUERY: " << query << ", "
+    << "FRAGMENT: " << fragment
     ;
 }
 
