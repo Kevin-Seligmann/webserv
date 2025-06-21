@@ -49,7 +49,6 @@ bool RequestParser::test_first_line()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
     {
-        std::cout << _buffer.previous_read_size() << std::endl;
         _error.set("Request first line length is too long", BAD_REQUEST);
         return false;
     }
@@ -78,7 +77,7 @@ bool RequestParser::test_chunk_size()
 
 bool RequestParser::test_chunk_body()
 {
-    return _buffer.get_chunk_with_crlf(_chunk_length, _begin, _end);
+    return _buffer.get_chunk(_chunk_length, _begin, _end);
 }
 
 bool RequestParser::test_body()
@@ -128,6 +127,9 @@ bool RequestParser::test_header_line()
     _header_field_count ++;
     if (_begin == _end)
     {
+        process_headers();
+        if (_error.status() != OK)
+            return false;
         if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
             _status = PRS_CHUNKED_SIZE;
         else
@@ -205,8 +207,6 @@ void RequestParser::parse_header_line()
     _element_parser.parse_field_value(token_start, token_end, value);
 
     _request.headers.put(name, value);
-
-    process_headers();
 }
 
 void RequestParser::parse_body()
@@ -238,12 +238,7 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
-    if (*(_begin + _chunk_length) == '\n')
-        _request.body.content += std::string(_begin, _end - 1);
-    else if (*(_begin + _chunk_length) == '\r' && *(_begin + _chunk_length + 1) == '\n')
-        _request.body.content += std::string(_begin, _end - 2);
-    else
-        return _error.set("Chunked body doesn't end with CRLF/LF", BAD_REQUEST);
+    _request.body.content += std::string(_begin, _end);
     _status = PRS_CHUNKED_SIZE;
 }
 

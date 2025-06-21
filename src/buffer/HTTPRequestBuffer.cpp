@@ -94,15 +94,19 @@ bool HTTPRequestBuffer::get_chunk_with_crlf(ssize_t chunk_size, std::string::ite
         _last_read_size = size();
         return false;
     }
-    if (*(_begin + size()) == '\n')
+    if (*(begin() + chunk_size) == '\n')
     {
         _begin = begin();
         _end = begin() + chunk_size + 1;
         consume_bytes(chunk_size + 1);
         _last_read_size = chunk_size + 1;
+        return true;
     }
     else if (size() <= chunk_size + 1)
+    {
+        _last_read_size = chunk_size + 1;
         return false;
+    }
     _begin = begin();
     _end = begin() + chunk_size + 2;
     consume_bytes(chunk_size + 2);

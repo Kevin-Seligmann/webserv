@@ -29,10 +29,12 @@ void RequestManager::process()
             case RequestParser::PRS_HEADER_LINE:
                 parse = _request_parser.test_header_line();
                 if (parse)
-                {
                     _request_parser.parse_header_line();
-                    if (_error.status() == OK) _validator.validate_headers(_request, _request.headers);
-                }
+                if (_error.status() == OK && _request_parser.get_status() != RequestParser::PRS_HEADER_LINE)
+                {
+                    _validator.validate_headers(_request, _request.headers);
+                    std::cout << _request_parser.get_status() << std::endl;
+                };
                 break ;
             case RequestParser::PRS_BODY:
                 parse = _request_parser.test_body();
@@ -47,7 +49,7 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_chunked_size();
                 break ;
-            case RequestParser::PRS_CHUNKED_BODY:
+            case RequestParser::PRS_CHUNKED_BODY: // TODO: Validate body?
                 parse = _request_parser.test_chunk_body();
                 if (parse)
                     _request_parser.parse_chunked_body();

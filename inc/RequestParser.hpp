@@ -59,6 +59,8 @@ public:
     bool test_body();
     bool test_trailer_line();
     bool test_header_line();
+    
+    void process_headers();
 
     // Debug
     void dump_remainder() const;
@@ -100,7 +102,6 @@ private:
     void get_schema(std::string::iterator & token_begin, std::string::iterator & token_end);
     bool has_authority(std::string::iterator & token_begin, std::string::iterator & token_end) const;
 
-    void process_headers();
     void parse_host_field(std::string & value);
     void parse_content_length_field(std::string & value);
     void parse_transfer_encoding_field(std::string & value);
