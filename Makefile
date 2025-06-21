@@ -1,10 +1,10 @@
-VPATH = src src/util src/http src/parse src/buffer
+VPATH = src src/util src/http src/parse src/buffer src/cgi
 
 # Files
 OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-	HTTPError.o ErrorContainer.o
+	HTTPError.o ErrorContainer.o CGI.o CGIUtils.o
 
 # Target
 NAME = webserv

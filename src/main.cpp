@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "HTTPRequest.hpp"
+#include "CGI.hpp"
 
 void testLogger()
 {
@@ -21,10 +22,10 @@ void testRequestParser()
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
     "\n\n"*/
-    "GET http://helo:8000/index?hola#chau HTTP/1.1\r\n"
+/*    "GET http://helo:8000/index?hola#chau HTTP/1.1\r\n"
     "Host: www.exampleee.com:7070\r\n"
     "User-Agent: Mozilla/5.0\r\n"
-    "Accept: text/html\n\n"
+    "Accept: text/html\n\n"*/
 /*    ""
     "GET / HTTP/1.1\r\n"
     "Host: www..com\r\n"
@@ -32,18 +33,18 @@ void testRequestParser()
     "Host: www..com\r\n"
     "Accept: texttt/html\n\n"
 	""*/
-    "GET /cgi-bin/script.cgi?name=chatgpt&lang=ru HTTP/1.1\r\n"
+    "GET /cgi-bin/hello.py?name=ilya&lang=ru HTTP/1.1\r\n"
     "Host: www.example.com\r\n"
     "User-Agent: Mozilla/5.0\r\n"
     "Accept: text/html\r\n"
-    "\r\n"
-	"POST /cgi-bin/submit.cgi HTTP/1.1\r\n"
+    "\r\n";
+/*	"POST /cgi-bin/submit.cgi HTTP/1.1\r\n"
     "Host: submit.example.com\r\n"
     "Content-Type: application/x-www-form-urlencoded\r\n"
     "Content-Length: 27\r\n"
 	"\r\n"
     "username=test&password=1234"
-	"Qwerty is nice, really";
+	"Qwerty is nice, really";*/
 
     Logger & log = Logger::getInstance();
     ErrorContainer error_container;
@@ -65,6 +66,10 @@ void testRequestParser()
             if (parser.done())
             {
                 log << request;
+
+				CGI cgi_test(request);
+				cgi_test.runCGI();
+
                 error_container.log_all();      
                 error_container.reset(); 
                 request.reset();
