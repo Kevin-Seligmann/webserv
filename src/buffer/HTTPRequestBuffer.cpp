@@ -11,7 +11,6 @@ bool HTTPRequestBuffer::get_crlf_line(std::string::iterator & _begin, std::strin
     std::string::iterator start = begin();
     std::string::iterator ptr = start + _offset;
 
-
     for (; ptr != end(); ++ptr) 
     {
         if (*ptr == '\n') 
@@ -85,6 +84,33 @@ bool HTTPRequestBuffer::get_chunk(ssize_t chunk_size, std::string::iterator & _b
     _end = begin() + chunk_size;
     consume_bytes(chunk_size);
     _last_read_size = chunk_size;
+    return true;
+}
+
+bool HTTPRequestBuffer::get_chunk_with_crlf(ssize_t chunk_size, std::string::iterator & _begin, std::string::iterator & _end)
+{
+    if (size() <= chunk_size)
+    {
+        _last_read_size = size();
+        return false;
+    }
+    if (*(begin() + chunk_size) == '\n')
+    {
+        _begin = begin();
+        _end = begin() + chunk_size + 1;
+        consume_bytes(chunk_size + 1);
+        _last_read_size = chunk_size + 1;
+        return true;
+    }
+    else if (size() <= chunk_size + 1)
+    {
+        _last_read_size = chunk_size + 1;
+        return false;
+    }
+    _begin = begin();
+    _end = begin() + chunk_size + 2;
+    consume_bytes(chunk_size + 2);
+    _last_read_size = chunk_size + 2;
     return true;
 }
 

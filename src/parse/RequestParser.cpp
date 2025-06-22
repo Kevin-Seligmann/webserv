@@ -4,6 +4,10 @@ const RequestParser::wsHeaders RequestParser::headers[] = {
     {"host", &RequestParser::parse_host_field},
     {"content-length", &RequestParser::parse_content_length_field},
     {"transfer-encoding", &RequestParser::parse_transfer_encoding_field},
+    {"connection", &RequestParser::parse_connection_field},
+    {"expect", &RequestParser::parse_expect_field},
+    {"cookie", &RequestParser::parse_cookie_field},
+    {"content-type", &RequestParser::parse_content_type_field},
     {"", NULL}
 };
 
@@ -191,6 +195,8 @@ void RequestParser::parse_header_line()
         return _error.set("Field name is empty", BAD_REQUEST);
     _element_parser.parse_field_token(_begin, token_end, name);
     
+    if (name == "*" || name == "close")
+        return _error.set("Header field name " + name + " is reserved", BAD_REQUEST);
     // Parse value
     token_start = wss::skip_ascii_whitespace(token_end + 1, _end);
     if (token_start != _end)
@@ -357,6 +363,73 @@ void RequestParser::parse_transfer_encoding_field(std::string & value)
     std::string::iterator token_start = value.begin();
     std::string::iterator token_end = value.end();
     _element_parser.parse_comma_separated_values(token_start, token_end, _request.headers.transfer_encodings);
+}
+
+void RequestParser::parse_connection_field(std::string & value)
+{
+    std::string::iterator token_start = value.begin();
+    std::string::iterator token_end = value.end();
+    _element_parser.parse_comma_separated_values(token_start, token_end, _request.headers.connections);
+}
+
+void RequestParser::parse_expect_field(std::string & value)
+{
+}
+
+void RequestParser::parse_content_type_field(std::string & value)
+{
+}
+
+void RequestParser::parse_cookie_field(std::string & value)
+{
+    std::string::iterator head = value.begin();
+    std::string::iterator name_start, name_end, value_start, value_end;
+    bool dquote;
+
+    while (head != value.end())
+    {
+        // Reset tokens
+        name_start = head;
+        name_end = head;
+
+        // Parse name
+        while (name_end != value.end() && parse::is_token_char(*name_end))
+            name_end ++;
+        if (name_start == name_end)
+            return _error.set("Cookie name, empty", BAD_REQUEST);
+        if (name_end == value.end() || *name_end != '=')
+            return _error.set("Cookie name, '=' not found/unexpected character", BAD_REQUEST);
+       
+        // Parse value
+        value_start = name_end + 1;
+        if (value_start != value.end() && *value_start == '"')
+        {
+            value_start ++;
+            dquote = true;
+        }
+        else
+            dquote = false;
+
+        head = value_start;
+        while (head != value.end() && parse::is_cookie_char(*head))
+            head ++;
+        if (dquote && (head == value.end() || *head != '"'))
+            return _error.set("Cookie value, unclosed quote/unexpected character", BAD_REQUEST);
+        value_end = head;
+        _request.headers.put_cookie(name_start, name_end, value_start, value_end);
+        if (dquote)
+            head ++;
+    
+        // Skip (";" SP). If any found, it's a different cookie. Else, last.
+        if (head == value.end())
+            return ;
+        if (*head != ';')
+            return _error.set("Cookie, unexpected character", BAD_REQUEST);
+        head ++;
+        if (head == value.end() || *head != ' ')
+            return _error.set("Cookie, unexpected character", BAD_REQUEST);
+        head ++;
+    }
 }
 
 // Auxiliary

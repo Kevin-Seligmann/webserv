@@ -1,3 +1,4 @@
+#include <sstream>
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest(){}
@@ -11,16 +12,22 @@ void HTTPRequest::reset()
     protocol = "";
 }
 
+std::string HTTPRequest::to_string()
+{
+    std::stringstream ss;
+
+    print(ss);
+    return ss.str();
+}
+
 void HTTPRequest::print(std::ostream & os) const
 {
     os 
-    << "\n\n$ ---------- REQUEST BEGIN: " << "\n"
     << "METHOD: " << method << "\n"
     << "URI: " << uri << "\n"
     << "PROTOCOL: " << protocol << "\n"
     << "HEADERS: " << "\n" << headers
-    << "BODY: " << body << "\n$ ---------- REQUEST END\n\n"
-    ;
+    << "BODY: " << body << "\n";
 }
 
 std::ostream & operator<<(std::ostream & os, HTTPRequest request)

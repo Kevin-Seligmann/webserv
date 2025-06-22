@@ -4,7 +4,8 @@ RequestManager::RequestManager(HTTPRequest & request, SysBufferFactory::sys_buff
 :_validator(_request, _error),
 _element_parser(_error),
 _request_parser(_request, _error, _element_parser),
-_sys_buffer(SysBufferFactory::get_buffer(type, fd)){}
+_sys_buffer(SysBufferFactory::get_buffer(type, fd)),
+_request(request){}
 
 RequestManager::~RequestManager(){delete _sys_buffer;};
 
@@ -28,10 +29,12 @@ void RequestManager::process()
             case RequestParser::PRS_HEADER_LINE:
                 parse = _request_parser.test_header_line();
                 if (parse)
-                {
                     _request_parser.parse_header_line();
-                    if (_error.status() == OK) _validator.validate_headers(_request, _request.headers);
-                }
+                if (_error.status() == OK && _request_parser.get_status() != RequestParser::PRS_HEADER_LINE)
+                {
+                    _validator.validate_headers(_request, _request.headers);
+                    std::cout << _request_parser.get_status() << std::endl;
+                };
                 break ;
             case RequestParser::PRS_BODY:
                 parse = _request_parser.test_body();
@@ -46,12 +49,12 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_chunked_size();
                 break ;
-            case RequestParser::PRS_CHUNKED_BODY:
+            case RequestParser::PRS_CHUNKED_BODY: // TODO: Validate body?
                 parse = _request_parser.test_chunk_body();
                 if (parse)
                     _request_parser.parse_chunked_body();
                 break ;            
-            case RequestParser::PRS_TRAILER_LINE:_request_parser.test_trailer_line(); break ;
+            case RequestParser::PRS_TRAILER_LINE: parse = _request_parser.test_trailer_line(); break ;
             case RequestParser::PRS_DONE: parse = false; break ;  
             default: throw new std::runtime_error("Code error reading Request Parser status");
         }

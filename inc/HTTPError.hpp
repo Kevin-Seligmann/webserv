@@ -13,6 +13,8 @@ public:
 
     void log() const;
     Status status() const;
+    std::string const & msg() const;
+
     void set(std::string const & motive, Status _status);
     std::string const to_string() const;
 
