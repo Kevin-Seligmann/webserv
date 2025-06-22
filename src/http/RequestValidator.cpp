@@ -83,7 +83,6 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     // Validate transfer encodings
     for (std::vector<CommaSeparatedFieldValue>::const_iterator it = hdr.transfer_encodings.begin(); it != hdr.transfer_encodings.end(); it ++)
     {
-        std::cout << "name: " << it->name << std::endl;
         if (it->name != "chunked")
              return put_error("Not implemented Transfer-Encoding: " + it->name, NOT_IMPLEMENTED);
         else
