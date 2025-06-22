@@ -1,0 +1,6 @@
+1
+400
+GET / HTTP/1.1
+Host: Example.com
+Content-Type: te?xt/html;
+
