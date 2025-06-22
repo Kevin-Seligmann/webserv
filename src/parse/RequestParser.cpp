@@ -360,24 +360,94 @@ void RequestParser::parse_content_length_field(std::string & value)
 
 void RequestParser::parse_transfer_encoding_field(std::string & value)
 {
-    std::string::iterator token_start = value.begin();
-    std::string::iterator token_end = value.end();
-    _element_parser.parse_comma_separated_values(token_start, token_end, _request.headers.transfer_encodings);
+    parse_list(value.begin(), value.end(), &RequestParser::parse_transfer_encoding_element);
 }
 
 void RequestParser::parse_connection_field(std::string & value)
 {
-    std::string::iterator token_start = value.begin();
-    std::string::iterator token_end = value.end();
-    _element_parser.parse_comma_separated_values(token_start, token_end, _request.headers.connections);
+    parse_list(value.begin(), value.end(), &RequestParser::parse_connection_element);
 }
 
 void RequestParser::parse_expect_field(std::string & value)
 {
+    parse_list(value.begin(), value.end(), &RequestParser::parse_expect_element);
+}
+
+/*
+    parameters      = *( OWS ";" OWS [ parameter ] )
+    parameter       = parameter-name "=" parameter-value
+    parameter-name  = token
+    parameter-value = ( token / quoted-string )
+
+    1. See if parameter exists
+    2. Skip OWS;OWS - If not error
+    3. Parse token=
+    4. Parse token/quotedstring
+*/
+void RequestParser::parse_parameters(std::string::iterator begin, std::string::iterator end, std::vector<std::pair<std::string, std::string> > & parameters)
+{
+    std::string::iterator value_end, value_start, name_end, name_start, head;
+
+    while (begin != end && _error.status() == OK) // 1
+    {
+        // 2
+        head = wss::skip_ascii_whitespace(begin, end);
+        if (head == end || *head != ';')
+            return _error.set("Parameters, expected ; separator", BAD_REQUEST);
+        head = wss::skip_ascii_whitespace(head + 1, end);
+
+        // 3
+        name_start = head;
+        name_end = wss::skip_http_token(name_start, end);
+        if (name_end == name_start || name_end == end || *name_end != '=')
+            return _error.set("Parameters, name must be non empty and precede a '='", BAD_REQUEST);
+        
+        // 4
+        head = name_end + 1;
+        if (head == end)
+            return _error.set("Parameters, value not found", BAD_REQUEST);
+        if (head != end && *head == '"')
+        {
+            std::string val;
+            std::string::iterator dquote_end = wss::skip_until_dquoted_string_end(head + 1, end);
+            if (dquote_end == end || *dquote_end != '"')
+                return _error.set("Parameters, closing dquote missing", BAD_REQUEST);
+            _element_parser.parse_dquote_string(head, dquote_end, val); // Head and end points to ", updates head to last " 
+            parameters.push_back(std::make_pair(std::string(name_start, name_end), val));
+            head = dquote_end + 1;
+        }
+        else 
+        {
+            value_start = head;
+            value_end = wss::skip_http_token(value_start, end);
+            parameters.push_back(std::make_pair(std::string(name_start, name_end), std::string(value_start, value_end)));
+            head = value_end;
+        }
+        begin = head;
+    }
 }
 
 void RequestParser::parse_content_type_field(std::string & value)
 {
+    std::string::iterator head = value.begin();
+
+    while (head != value.end() && parse::is_token_char(*head))
+        head ++;
+    _request.headers.content_type.type = std::string(value.begin(), head);
+
+    if (head == value.end() || *head != '/')
+        return _error.set("Media-type, expected subtype separator '/'", BAD_REQUEST);
+    head ++;
+
+    std::string::iterator begin = head;
+    while (head != value.end() && parse::is_token_char(*head))
+        head ++;
+    _request.headers.content_type.subtype = std::string(begin, head);
+
+    if (_request.headers.content_type.type == "" || _request.headers.content_type.subtype == "")
+        return _error.set("Media-Type, empty type or subtype", BAD_REQUEST);
+    
+    parse_parameters(head, value.end(), _request.headers.content_type.parameters);
 }
 
 void RequestParser::parse_cookie_field(std::string & value)
@@ -492,6 +562,144 @@ void RequestParser::dump_remainder() const
         << "Last Chunk size: " << _chunk_length << std::endl;
     }
 }
+
+
+void parse_dquote_string()
+{
+
+}
+
+/*
+    #element => [ element ] *( OWS "," OWS [ element ] )
+
+    LOOP:
+    1. Check if element - If, parse.
+    2. If end, return
+    2. Skip WS
+    3. "," or error
+    4. Skip WS
+
+    element_parser should return an iterator after it last element or put an error.
+*/
+void RequestParser::parse_list (
+    std::string::iterator token_start,    
+    std::string::iterator token_end, 
+    std::string::iterator (RequestParser::*element_parser)(std::string::iterator token_start, std::string::iterator token_end))
+{
+    std::string::iterator head = token_start;
+    while (head != token_end)
+    {
+        if (*head != ' ' && *head != ',' && *head != '\t')
+            head = (this->*element_parser)(token_start, token_end);
+        if (head == token_end || _error.status() != OK)
+            return ;
+        
+        head = wss::skip_whitespace(head, token_end);
+        if (head == token_end || *head != ',')
+            return _error.set("Parsing list, unexpected character", BAD_REQUEST);
+        head ++;
+        head = wss::skip_whitespace(head, token_end);
+        token_start = head;
+    }
+}
+
+std::string::iterator RequestParser::parse_transfer_encoding_element(std::string::iterator begin, std::string::iterator end)
+{
+    CommaSeparatedFieldValue csf;
+    std::string::iterator head;
+
+    // Get name
+    head = wss::skip_until(begin, end, "; ");
+    _element_parser.parse_field_token(begin, head, csf.name);
+    if (csf.name.empty())
+    {
+        _error.set("Transfer encoding field, empty field name", BAD_REQUEST);
+        return end;
+    }
+    
+    // Parse params
+    begin = wss::skip_ascii_whitespace(head, end);
+    while (begin != end && *begin == ';')
+    {
+        std::string param_name, param_value;
+    
+        // Param name
+        begin = wss::skip_ascii_whitespace(begin + 1, end);
+        head = wss::skip_until(begin, end, "= \t");
+        _element_parser.parse_field_token(begin, head, param_name);
+        if (param_name.empty())
+        {
+            _error.set("comma separated field, empty parameter name", BAD_REQUEST);
+            return end;
+        }
+    
+        // Parse value (Skip to value)
+        begin = wss::skip_ascii_whitespace(head, end);
+        if (begin != end && *begin != '=')
+        {
+            _error.set("Comma separated parameter, unexpected character", BAD_REQUEST);
+            return end;
+        }
+        if (begin == end || begin + 1 == end)
+        {
+            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+            return end;
+        }
+        begin = wss::skip_ascii_whitespace(begin + 1, end);
+
+        // Parse value
+        if (*begin == '"')
+        {
+            head = wss::skip_until_dquoted_string_end(begin + 1, end);
+            if (head == end)
+            {
+                _error.set("Comma separated parameter, closing dquote missing", BAD_REQUEST);
+                return end;
+            }
+            _element_parser.parse_dquote_string(begin, head, param_value);
+
+            head ++; // Skip the last '"'
+        }
+        else 
+        {
+            head = wss::skip_until(begin, end, ", \t");
+            _element_parser.parse_dquote_string(begin, head, param_value);
+        }
+        if (param_value.empty())
+        {
+            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+            return end;
+        }
+
+        // Put value and push begin iterator
+        csf.parameters.push_back(std::pair<std::string, std::string>(param_name, param_value));
+        begin = wss::skip_ascii_whitespace(head, end);
+    }
+    _request.headers.transfer_encodings.push_back(csf);
+
+    return head;
+}
+
+std::string::iterator RequestParser::parse_connection_element(std::string::iterator begin, std::string::iterator end)
+{
+    std::string::iterator head = begin;
+    while (head != end && parse::is_token_char(*head))
+        head ++;
+    _request.headers.connections.push_back(std::string(begin, head));
+    wss::to_lower(_request.headers.connections.back());
+    return head;
+}
+
+std::string::iterator RequestParser::parse_expect_element(std::string::iterator begin, std::string::iterator end)
+{
+    std::string::iterator head = begin;
+    while (head != end && parse::is_token_char(*head))
+        head ++;
+    _request.headers.expectations.push_back(std::string(begin, head));
+    wss::to_lower(_request.headers.expectations.back());
+    return head;
+}
+
 
 std::string const  RequestParser::get_remainder() const
 {

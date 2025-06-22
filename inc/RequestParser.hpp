@@ -109,4 +109,15 @@ private:
     void parse_expect_field(std::string & value);
     void parse_content_type_field(std::string & value);
     void parse_cookie_field(std::string & value);
+    void parse_parameters(std::string::iterator begin, std::string::iterator end, std::vector<std::pair<std::string, std::string> > & parameters);
+
+    std::string::iterator parse_transfer_encoding_element(std::string::iterator begin, std::string::iterator end);
+    std::string::iterator parse_expect_element(std::string::iterator begin, std::string::iterator end);
+    std::string::iterator parse_connection_element(std::string::iterator begin, std::string::iterator end);
+
+    void parse_list(
+        std::string::iterator token_start, 
+        std::string::iterator token_end, 
+        std::string::iterator (RequestParser::*element_parser)(std::string::iterator token_start, std::string::iterator token_end)
+    );
 };

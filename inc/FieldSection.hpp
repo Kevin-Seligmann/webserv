@@ -6,6 +6,7 @@
 #include <sstream>
 #include <map>
 #include "HTTPElement.hpp"
+#include "MediaType.hpp"
 
 struct CommaSeparatedFieldValue 
 {
@@ -21,7 +22,9 @@ struct FieldSection : public HTTPElement
     int port;
     int content_length;
     std::vector<CommaSeparatedFieldValue> transfer_encodings;
-    std::vector<CommaSeparatedFieldValue> connections;
+    std::vector<std::string> connections;
+    std::vector<std::string> expectations;
+    MediaType content_type;
     std::map<std::string, std::string> cookies;
 
     FieldSection();
@@ -31,4 +34,4 @@ struct FieldSection : public HTTPElement
     void put_cookie(std::string::iterator name_start, std::string::iterator name_end, std::string::iterator value_start, std::string::iterator value_end);
 };
 
-std::ostream & operator<<(std::ostream & os,  FieldSection const & header);
+std::ostream & operator<<(std::ostream & os,  FieldSection const & media);

@@ -142,7 +142,7 @@ void ElementParser::parse_content_length_field(std::string::iterator & begin, st
     }
 }
 
-// End and being point to  '"'
+// End and begin point to  '"'
 void ElementParser::parse_dquote_string(std::string::iterator & begin, std::string::iterator & end, std::string & str)
 {
     begin ++;

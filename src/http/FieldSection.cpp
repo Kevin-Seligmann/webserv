@@ -13,6 +13,8 @@ void FieldSection::reset()
     transfer_encodings.clear();
     connections.clear();
     cookies.clear();
+    expectations.clear();
+    content_type.reset();
 }
 
 void FieldSection::put(std::string const & str, std::string const & value)
@@ -23,6 +25,10 @@ void FieldSection::put(std::string const & str, std::string const & value)
         fields[str] += ", " + value;
 }
 
+    // std::vector<std::string> connections;
+    // MediaType content_type;
+
+
 void FieldSection::print(std::ostream & os) const
 {
     for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); it ++)
@@ -31,6 +37,20 @@ void FieldSection::print(std::ostream & os) const
     << " port: " << port
     << " host: " << host
     << " content-length: " << content_length;
+
+    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
+    {
+        os << it->name << " ";
+        for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)
+        {
+            os << "param: " << params->first << "=" << params->second;
+            if (params + 1 != it->parameters.end())
+                os << "; ";
+        }
+        if (it + 1 != transfer_encodings.end())
+            os << ", ";
+    }
+
     if (transfer_encodings.size() > 0)
     {
         os << "\n\ttransfer-encodings: ";
@@ -59,6 +79,37 @@ void FieldSection::print(std::ostream & os) const
                 os << "; ";
         }
     }
+    if (expectations.size() > 0)
+    {
+        os << "\n\tExpectations: ";
+        for (std::vector<std::string>::const_iterator it = expectations.begin(); it != expectations.end(); it ++)
+        {
+            os << *it;
+            if (it + 1 != expectations.end())
+                os << ", ";
+        }
+    }
+    if (expectations.size() > 0)
+    {
+        os << "\n\tConnections: ";
+        for (std::vector<std::string>::const_iterator it = connections.begin(); it != connections.end(); it ++)
+        {
+            os << *it;
+            if (it + 1 != connections.end())
+                os << ", ";
+        }
+    }
+   if (content_type.type != "")
+    {
+        os << "\n\tcontent-type: " << content_type.type << "/" << content_type.subtype << "; ";
+        for (std::vector<std::pair<std::string, std::string> >::const_iterator params = content_type.parameters.begin(); params != content_type.parameters.end(); params ++)
+        {
+            os << params->first << "=" << params->second;
+            if (params + 1 != content_type.parameters.end())
+                os << "; ";
+        }
+    }
+
     os << std::endl;
 }
 

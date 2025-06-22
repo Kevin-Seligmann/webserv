@@ -8,6 +8,7 @@ std::string const & status_to_text(Status const & status)
     static const std::string bad_request = "Bad Request (400)";
     static const std::string content_too_large = "Content Too Large (413)";
     static const std::string uri_too_long = "URI Too Long (414)";
+    static const std::string expectation_failed = "Expectation failed (417)";
     static const std::string request_header_too_large = "Request Header Fields Too Large (431)";
     static const std::string not_implemented = "Not Implemented (501)";
     static const std::string version_not_supported = "HTTP Version Not Supported (505)";
@@ -22,6 +23,7 @@ std::string const & status_to_text(Status const & status)
         case REQUEST_HEADER_FIELDS_TOO_LARGE: return request_header_too_large;
         case NOT_IMPLEMENTED: return not_implemented;
         case VERSION_NOT_SUPPORTED: return version_not_supported;
+        case EXPECTATION_FAILED: return expectation_failed;
         default: return unknown;
     }
 }

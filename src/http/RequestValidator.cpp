@@ -97,13 +97,15 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     }
 
     // Validate Connection
-    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = hdr.connections.begin(); it != hdr.connections.end(); it ++)
-    {
-        if (it->name != "close")
-            return put_error("Connection value not implemented " + it->name, NOT_IMPLEMENTED);
-        if (it->parameters.size() > 0)
-            return put_error("Connection: close doesn't accept parameters", BAD_REQUEST);
-    }
+    for (std::vector<std::string>::const_iterator it = hdr.connections.begin(); it != hdr.connections.end(); it ++)
+        if (*it != "close" && *it != "keep-alive")
+            return put_error("Connection value not implemented \"" + *it + "\"", NOT_IMPLEMENTED);
+        
+    // Validate expectations
+              for (std::vector<std::string>::const_iterator it = hdr.expectations.begin(); it != hdr.expectations.end(); it ++)
+        if (*it != "100-continue")
+            return put_error("Only expectation allowed is '100-continue'", EXPECTATION_FAILED);
+  
 }
 
 void RequestValidator::validate_body(HTTPBody const & body)
