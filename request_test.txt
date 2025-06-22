@@ -1,0 +1,3 @@
+GET /Exam HTTP/1.1
+Host: Example.txt
+

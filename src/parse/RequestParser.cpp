@@ -176,6 +176,7 @@ void RequestParser::parse_protocol()
 
 void RequestParser::parse_header_line()
 {
+
     if (_begin == _end)
         return ;
     
