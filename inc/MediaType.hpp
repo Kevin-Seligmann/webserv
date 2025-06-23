@@ -6,6 +6,7 @@
 
 struct MediaType 
 {
+    static 
     std::string type;
     std::string subtype;
     std::vector<std::pair<std::string, std::string> > parameters;
