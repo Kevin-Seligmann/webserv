@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stdexcept>
 #include <cstring>
 #include "ParsingUtil.hpp"
 
@@ -11,6 +12,8 @@ namespace wss
     void trim(std::string &);
     bool str_equal(std::string::iterator it, size_t n, const char *s);
     bool str_equal(std::string::iterator it, const char *s);
+    bool casecmp(std::string const & s1, std::string const & s2);
+    bool casecmp(std::string const & s1, size_t pos, size_t len, std::string const & s2);
 
     void remove_uri_segment(std::string & out);
     std::string::iterator move_uri_segment(std::string & dst, std::string & src, std::string::iterator begin);

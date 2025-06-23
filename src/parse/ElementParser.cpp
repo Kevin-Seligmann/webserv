@@ -167,11 +167,11 @@ void ElementParser::parse_dquote_string(std::string::iterator & begin, std::stri
     }
 }
 
-void ElementParser::parse_comma_separated_values(std::string::iterator & begin, std::string::iterator & end, std::vector<CommaSeparatedFieldValue> & values)
+void ElementParser::parse_comma_separated_values(std::string::iterator & begin, std::string::iterator & end, std::vector<Coding> & values)
 {
     while (1)
     {
-        CommaSeparatedFieldValue csf;
+        Coding csf;
         std::string::iterator head;
 
         // Get name

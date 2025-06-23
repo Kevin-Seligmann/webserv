@@ -57,7 +57,10 @@ void RequestValidator::validate_uri(URI const & uri)
 
 
 // TODO: Server 400 if: Lacks a Host header, contains more than one host, contains a host with INVALID VALUE? Client must send host = authority or empty (If no authority). But this is a CLIENT restriction. 
+/*
+    If the URI contains authority, Host must contain the same
 
+*/
 void RequestValidator::validate_headers(HTTPRequest const & request, FieldSection const & hdr)
 {
     std::map<std::string, std::string>::const_iterator host = hdr.fields.find("host");
@@ -67,21 +70,14 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
         return put_error("The header section must contain a host header field", BAD_REQUEST);
 
     if (host->second.find(',') != std::string::npos)
-        return put_error("The host header must be a single value (Comma detected)", BAD_REQUEST);
+        return put_error("The host header must be a single value", BAD_REQUEST);
     
-    // if (host != hdr.fields.end() && host->second.empty())
-    //     return put_error("Host found on header, but the value is empty", BAD_REQUEST);
-
     if (!request.uri.host.empty() && (request.uri.host != hdr.host || request.uri.port != hdr.port))
-         return put_error("The authority component on URI has a different host than the headers", BAD_REQUEST);
-    // else
-    // {
-    //     if (!hdr.fields.find("host")->second.front().empty())
-    //         return _error_container.put_error("A host is not present on the URI and the header host field is not empty", BAD_REQUEST);
-    // }
+         return put_error("The authority component on URI is different from the header's authority", BAD_REQUEST);
+
 
     // Validate transfer encodings
-    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = hdr.transfer_encodings.begin(); it != hdr.transfer_encodings.end(); it ++)
+    for (std::vector<Coding>::const_iterator it = hdr.transfer_encodings.begin(); it != hdr.transfer_encodings.end(); it ++)
     {
         if (it->name != "chunked")
              return put_error("Not implemented Transfer-Encoding: " + it->name, NOT_IMPLEMENTED);
@@ -98,15 +94,54 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
 
     // Validate Connection
     for (std::vector<std::string>::const_iterator it = hdr.connections.begin(); it != hdr.connections.end(); it ++)
-        if (*it != "close" && *it != "keep-alive")
-            return put_error("Connection value not implemented \"" + *it + "\"", NOT_IMPLEMENTED);
+        if (*it == "close")
+            _request.headers.close_status = RCS_CLOSE;
         
     // Validate expectations
-              for (std::vector<std::string>::const_iterator it = hdr.expectations.begin(); it != hdr.expectations.end(); it ++)
+    for (std::vector<std::string>::const_iterator it = hdr.expectations.begin(); it != hdr.expectations.end(); it ++)
         if (*it != "100-continue")
             return put_error("Only expectation allowed is '100-continue'", EXPECTATION_FAILED);
   
+    // Validate Content-Type
+    if (_request.method == POST)
+    {
+        if (_request.headers.fields.find("content-type") == _request.headers.fields.end())
+        {
+            _request.headers.content_type.type = "application";
+            _request.headers.content_type.subtype = "octet-stream";
+        }
+
+        t_mime_conf::iterator it;
+        for (it = MediaType::ACCEPTED_TYPES.begin(); it != MediaType::ACCEPTED_TYPES.end(); it ++)
+        {
+            if (wss::casecmp(it->first.type, _request.headers.content_type.type) && wss::casecmp(it->first.subtype, _request.headers.content_type.subtype))
+            {
+                validate_extensions(_request.get_path(), it->second);
+                break ;
+            }
+        }
+        if (it == MediaType::ACCEPTED_TYPES.end())
+            return put_error("Unsupported media type " + _request.headers.content_type.type + "/" + _request.headers.content_type.subtype, UNSUPPORTED_MEDIA_TYPE);
+    }
+
 }
+
+bool RequestValidator::validate_extension(std::string const & filename, std::string const & extension)
+{
+    std::cout<< "VALIDATE: " << filename << " " << extension << std::endl;
+    return wss::casecmp(filename, filename.size() - extension.size(), extension.size(), extension);
+}
+
+void RequestValidator::validate_extensions(std::string const & filename, std::vector<std::string> const & extensions)
+{
+    std::vector<std::string>::const_iterator it;
+    for (it = extensions.begin(); it != extensions.end() && _error.status() == OK; it ++)
+        if (validate_extension(filename, *it))
+            break ;
+    if (it == extensions.end() && !extensions.empty())
+        _error.set("Mismatch between Content-Type and extension", BAD_REQUEST);
+}
+
 
 void RequestValidator::validate_body(HTTPBody const & body)
 {}

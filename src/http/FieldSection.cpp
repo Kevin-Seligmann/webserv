@@ -15,6 +15,7 @@ void FieldSection::reset()
     cookies.clear();
     expectations.clear();
     content_type.reset();
+    close_status = RCS_KEEP_ALIVE;
 }
 
 void FieldSection::put(std::string const & str, std::string const & value)
@@ -25,10 +26,6 @@ void FieldSection::put(std::string const & str, std::string const & value)
         fields[str] += ", " + value;
 }
 
-    // std::vector<std::string> connections;
-    // MediaType content_type;
-
-
 void FieldSection::print(std::ostream & os) const
 {
     for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); it ++)
@@ -38,7 +35,7 @@ void FieldSection::print(std::ostream & os) const
     << " host: " << host
     << " content-length: " << content_length;
 
-    for (std::vector<CommaSeparatedFieldValue>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
+    for (std::vector<Coding>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
     {
         os << it->name << " ";
         for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)
@@ -54,7 +51,7 @@ void FieldSection::print(std::ostream & os) const
     if (transfer_encodings.size() > 0)
     {
         os << "\n\ttransfer-encodings: ";
-        for (std::vector<CommaSeparatedFieldValue>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
+        for (std::vector<Coding>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
         {
             os << it->name << " ";
             for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)

@@ -181,3 +181,25 @@ std::string::iterator wss::skip_hexa_token(std::string::iterator begin, std::str
         begin ++;
     return begin;
 }
+
+bool wss::casecmp(std::string const & s1, std::string const & s2)
+{
+    if (s1.size() != s2.size())
+        return false;
+    for (size_t i = 0; i < s1.size(); ++i)
+        if (tolower(s1[i]) != s2[i])
+            return false;
+    return true;
+}
+
+bool wss::casecmp(std::string const & s1, size_t pos, size_t len, std::string const & s2)
+{
+    if (pos + len > s1.size() || s2.size() < len)
+        return false;
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (std::tolower(s1[pos + i]) != std::tolower(s2[i]))
+            return false;
+    }
+    return true;
+}

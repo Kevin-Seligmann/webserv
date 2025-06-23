@@ -8,11 +8,13 @@
 #include "HTTPElement.hpp"
 #include "MediaType.hpp"
 
-struct CommaSeparatedFieldValue 
+struct Coding 
 {
     std::string name;
     std::vector<std::pair<std::string, std::string> > parameters;
 };
+
+enum e_close_status {RCS_CLOSE, RCS_KEEP_ALIVE};
 
 struct FieldSection : public HTTPElement
 {
@@ -21,11 +23,14 @@ struct FieldSection : public HTTPElement
     std::string host;
     int port;
     int content_length;
-    std::vector<CommaSeparatedFieldValue> transfer_encodings;
+    std::vector<Coding> transfer_encodings;
     std::vector<std::string> connections;
     std::vector<std::string> expectations;
     MediaType content_type;
     std::map<std::string, std::string> cookies;
+    
+    // Other data
+    e_close_status close_status;
 
     FieldSection();
     void reset();

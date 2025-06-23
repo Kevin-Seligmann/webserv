@@ -9,10 +9,12 @@ noproxy *
 
 # Request
 url = localhost:8080
-request-target = http://localhost:8080/index.txt
-request = GET
-header="empty-name;"
-header="header-name: name"
+request-target = http://localhost:8081/index.png
+# request = GET
+header = "Host: localhost:8079"
+header = "Expect: 100-continue; a=b"
+header = "empty-name;"
+header = "Content-Type: text/css; q=0"
 
 
 # Post request

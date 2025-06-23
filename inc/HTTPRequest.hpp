@@ -8,6 +8,7 @@
 
 struct HTTPRequest : public HTTPElement
 {
+    // Request componentes
     URI uri;
     std::string protocol;
     HTTPMethod method;
@@ -18,6 +19,10 @@ struct HTTPRequest : public HTTPElement
     std::string to_string();
     void reset();
     void print(std::ostream & os) const;
+
+    int get_port() const;
+    std::string const get_host() const;
+    std::string const get_path() const;
 };
 
 std::ostream & operator<<(std::ostream & os, HTTPRequest request);

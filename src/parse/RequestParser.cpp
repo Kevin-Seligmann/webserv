@@ -341,9 +341,9 @@ void RequestParser::parse_content_length_field(std::string & value)
         _element_parser.parse_content_length_field(token_start, token_end, _request.headers.content_length);
     else 
     {
-        std::vector<CommaSeparatedFieldValue> csfs;
+        std::vector<Coding> csfs;
         _element_parser.parse_comma_separated_values(token_start, token_end, csfs);
-        for (std::vector<CommaSeparatedFieldValue>::iterator it = csfs.begin(); it != csfs.end(); it ++)
+        for (std::vector<Coding>::iterator it = csfs.begin(); it != csfs.end(); it ++)
         {
             ssize_t prev_value = _request.headers.content_length;
             token_start = it->name.begin();
@@ -443,6 +443,9 @@ void RequestParser::parse_content_type_field(std::string & value)
     while (head != value.end() && parse::is_token_char(*head))
         head ++;
     _request.headers.content_type.subtype = std::string(begin, head);
+    
+    wss::to_lower(_request.headers.content_type.type);
+    wss::to_lower(_request.headers.content_type.subtype);
 
     if (_request.headers.content_type.type == "" || _request.headers.content_type.subtype == "")
         return _error.set("Media-Type, empty type or subtype", BAD_REQUEST);
@@ -605,7 +608,7 @@ void RequestParser::parse_list (
 
 std::string::iterator RequestParser::parse_transfer_encoding_element(std::string::iterator begin, std::string::iterator end)
 {
-    CommaSeparatedFieldValue csf;
+    Coding csf;
     std::string::iterator head;
 
     // Get name

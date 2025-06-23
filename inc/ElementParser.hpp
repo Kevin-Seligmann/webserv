@@ -24,7 +24,7 @@ public:
     void parse_field_token(std::string::iterator & begin, std::string::iterator & end, std::string & name);
    
     void parse_content_length_field(std::string::iterator & begin, std::string::iterator & end, int & length);
-    void parse_comma_separated_values(std::string::iterator & begin, std::string::iterator & end, std::vector<CommaSeparatedFieldValue> & values);
+    void parse_comma_separated_values(std::string::iterator & begin, std::string::iterator & end, std::vector<Coding> & values);
     void parse_dquote_string(std::string::iterator & begin, std::string::iterator & end, std::string & str);
 
 private:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "MediaType.hpp"
 #include "Status.hpp"
 #include "URI.hpp"
 #include "HTTPRequest.hpp"
@@ -18,6 +19,8 @@ public:
     void validate_protocol(std::string const & protocol);
     void validate_request(HTTPRequest const & request);
     void validate_first_line(HTTPRequest const & request);
+    void validate_extensions(std::string const & filename, std::vector<std::string> const & extensions);
+    bool validate_extension(std::string const & filename, std::string const & extension);
 
     HTTPError const * error();
 
