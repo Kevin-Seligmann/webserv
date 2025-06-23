@@ -1,0 +1,31 @@
+7
+200
+POST /index.html HTTP/1.1
+Host: Example.com
+Content-Type: text/html
+
+POST /.html HTTP/1.1
+Host: Example.com
+Content-Type: text/html
+
+POST /.htm HTTP/1.1
+Host: Example.com
+Content-Type: text/html
+
+POST /index.htm HTTP/1.1
+Host: Example.com
+Content-Type: text/html
+
+POST /index.js HTTP/1.1
+Host: Example.com
+Content-Type: text/javascript
+
+POST /.js HTTP/1.1
+Host: Example.com
+Content-Type: application/javascript
+
+POST /index.mjs HTTP/1.1
+Host: Example.com
+Content-Type: text/javascript
+
+

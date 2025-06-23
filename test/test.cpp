@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <iomanip>
 #include <sys/stat.h>
+#include <iostream>
+#include "MediaType.hpp"
 #include "RequestManager.hpp"
 #include "Logger.hpp"
 #include "HTTPRequest.hpp"
@@ -150,12 +152,26 @@ void run_request_parsing_test(std::string filename)
 
 void test_request_parsing(std::string src)
 {
+
+	MediaType::load_types();
     std::vector<std::string> tests;
     create_test_suite(src, tests);
 
     for (std::vector<std::string>::iterator it = tests.begin(); it != tests.end(); it ++)
        run_request_parsing_test(*it);
 }
+
+void test_mime_loading()
+{
+	MediaType::load_types();
+	for (t_mime_conf::iterator it = MediaType::ACCEPTED_TYPES.begin(); it != MediaType::ACCEPTED_TYPES.end(); it ++)
+	{
+		std::cout << it->first;
+        for (std::vector<std::string>::iterator s = it->second.begin(); s != it->second.end(); s ++)
+            std::cout << "\"" << *s << "\"" << ", ";
+        std::cout << std::endl;
+	}
+} 
 
 int main(int argc, char ** argv)
 {
@@ -166,4 +182,5 @@ int main(int argc, char ** argv)
     else
         src = "testfiles";
     test_request_parsing(src);
+    // test_mime_loading();
 }
