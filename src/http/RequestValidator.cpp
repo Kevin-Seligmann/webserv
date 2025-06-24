@@ -36,19 +36,6 @@ void RequestValidator::validate_first_line(HTTPRequest const & request)
     if (_error.status() == OK) {validate_method(request.method);}
 }
 
-// TODO: URI Reconstruction
-/*
-    Target:
-    Absolute form (Full (full) URI) => Request target (In first line)
-
-    If not
-    - The scheme is HTTP
-    - Authority form uri-host ":" port if present makes the authority. Else, it't the value of host header, else there's no authority.
-    - If authority form, the path is empty (ROOT), else it's on the path
-
-    Thus an empty authority could be rejected or could depend on server config.
-
-*/
 void RequestValidator::validate_uri(URI const & uri)
 {
     if (uri.schema != "" && uri.schema != "http")
@@ -56,11 +43,6 @@ void RequestValidator::validate_uri(URI const & uri)
 }
 
 
-// TODO: Server 400 if: Lacks a Host header, contains more than one host, contains a host with INVALID VALUE? Client must send host = authority or empty (If no authority). But this is a CLIENT restriction. 
-/*
-    If the URI contains authority, Host must contain the same
-
-*/
 void RequestValidator::validate_headers(HTTPRequest const & request, FieldSection const & hdr)
 {
     std::map<std::string, std::string>::const_iterator host = hdr.fields.find("host");
@@ -123,7 +105,6 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
         if (it == MediaType::ACCEPTED_TYPES.end())
             return put_error("Unsupported media type " + _request.headers.content_type.type + "/" + _request.headers.content_type.subtype, UNSUPPORTED_MEDIA_TYPE);
     }
-
 }
 
 bool RequestValidator::validate_extension(std::string const & filename, std::string const & extension)
