@@ -129,7 +129,7 @@ void run_request_parsing_test(std::string filename)
             msg = request.to_string();
             // if (msg.size() > 100)
             //     msg = msg.substr(0, 100) + "...\n";
-            std::cout << msg;
+           //  std::cout << msg;
             manager.new_request();
         }
     }

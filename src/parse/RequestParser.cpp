@@ -226,7 +226,7 @@ void RequestParser::parse_chunked_size()
         return _error.set("The chunk size line must have at least one hex digit", BAD_REQUEST);
 
     // Get hexa value
-    size_t_chunk_length = parse::s_to_hex(token_start, token_end, RequestParser::MAX_CHUNK_SIZE);
+    _chunk_length = parse::s_to_hex(token_start, token_end, RequestParser::MAX_CHUNK_SIZE);
     if (_chunk_length == 0)
         _status = PRS_TRAILER_LINE;
     else
