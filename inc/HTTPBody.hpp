@@ -11,7 +11,6 @@ struct HTTPBody : public HTTPElement
     HTTPBody();
     void reset();
     void print(std::ostream & os) const;
-    void put(std::string const & str);
 };
 
 std::ostream & operator<<(std::ostream & os,  HTTPBody const & line);

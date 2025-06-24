@@ -25,7 +25,7 @@
 class RequestParser 
 {
 public:
-    enum parsing_status {PRS_FIRST_LINE, PRS_METHOD, PRS_URI, PRS_PROTOCOL, PRS_HEADER_LINE, PRS_BODY, PRS_CHUNKED_SIZE, PRS_CHUNKED_BODY, PRS_TRAILER_LINE, PRS_DONE};
+    enum parsing_status {PRS_FIRST_LINE, PRS_HEADER_LINE, PRS_BODY, PRS_CHUNKED_SIZE, PRS_CHUNKED_BODY, PRS_TRAILER_LINE, PRS_DONE};
 
     static const size_t URI_MAX_LENGTH;
     static const size_t FIRST_LINE_MAX_LENGTH;
@@ -49,9 +49,6 @@ public:
     void parse_body();
     void parse_chunked_size();
     void parse_chunked_body();
-    void parse_method();
-    void parse_uri();
-    void parse_protocol();
 
     bool test_first_line();
     bool test_chunk_size();
@@ -87,8 +84,7 @@ private:
     size_t _trailer_field_count;
     size_t _chunk_length;
 
-    std::string::iterator _aux_token_start, _aux_token_end, _begin, _end;
-    std::string _aux_line;
+    std::string::iterator _begin, _end;
 
     void percentage_decode(std::string & str);
 
@@ -102,6 +98,9 @@ private:
     void get_schema(std::string::iterator & token_begin, std::string::iterator & token_end);
     bool has_authority(std::string::iterator & token_begin, std::string::iterator & token_end) const;
 
+    void parse_method();
+    void parse_uri();
+    void parse_protocol();
     void parse_host_field(std::string & value);
     void parse_content_length_field(std::string & value);
     void parse_transfer_encoding_field(std::string & value);

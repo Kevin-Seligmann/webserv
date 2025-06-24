@@ -8,7 +8,6 @@ ReadNetBuffer::ReadNetBuffer()
 {
     _buffer = new uint8_t[START_BUFFER_SIZE];
     _start = _buffer;
-    _prev_start = _buffer;
     _tail = _buffer;
     _end = _buffer + START_BUFFER_SIZE;
 }
@@ -32,6 +31,7 @@ void ReadNetBuffer::append(uint8_t const * str, ssize_t size)
     _tail += size;
 }
 
+// TODO: Fix
 void ReadNetBuffer::shrink()
 {
     uint8_t * new_buffer = new uint8_t[START_BUFFER_SIZE];
@@ -39,7 +39,6 @@ void ReadNetBuffer::shrink()
     _buffer = new_buffer;
     _start = new_buffer;
     _tail = new_buffer;
-    _prev_start = new_buffer;
     _end = new_buffer + START_BUFFER_SIZE;
 }
 
@@ -53,7 +52,6 @@ void ReadNetBuffer::expand(size_t min_size)
     std::memcpy(new_buffer, _start, size);
     delete [] _buffer;
     _buffer = new_buffer;
-    _prev_start = new_buffer;
     _start = new_buffer;
     _tail = _start + size;
     _end = new_buffer + new_capacity;
@@ -61,7 +59,6 @@ void ReadNetBuffer::expand(size_t min_size)
 
 void ReadNetBuffer::consume_bytes(ssize_t bytes)
 {
-    _prev_start = _start;
     _start += bytes;
 }
 
