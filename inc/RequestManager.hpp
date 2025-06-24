@@ -19,7 +19,6 @@ public:
     void process();
     bool request_done();
     void new_request();
-    bool empty();
     HTTPError & gerError();
 
 private:

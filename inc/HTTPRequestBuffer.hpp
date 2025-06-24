@@ -14,11 +14,8 @@ public:
     ~HTTPRequestBuffer();
 
     void new_request();
-   // bool get_crlf_line(std::string & dst);
     bool get_crlf_line(std::string::iterator & _begin, std::string::iterator & _end);
-   // bool get_chunk(ssize_t size, std::string & dst);
     bool get_chunk(ssize_t size, std::string::iterator & _begin, std::string::iterator & _end);
-    bool get_chunk_with_crlf(ssize_t chunk_size, std::string::iterator & _begin, std::string::iterator & _end);
 
     ssize_t previous_read_size() const;
 
