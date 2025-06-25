@@ -203,3 +203,16 @@ bool wss::casecmp(std::string const & s1, size_t pos, size_t len, std::string co
     }
     return true;
 }
+
+std::string wss::i_to_hex(size_t size)
+{
+    std::string res;
+
+    while (size > 0)
+    {
+        res.push_back(parse::byte_char_to_hex(size % 16));
+        size /= 16;
+    }
+    std::reverse(res.begin(), res.end());
+    return res.empty() ? "0" : res;
+}

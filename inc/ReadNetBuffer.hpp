@@ -13,6 +13,7 @@ public:
     ~ReadNetBuffer();
 
     void append(uint8_t const * str, ssize_t size);
+    void append(std::string const & str);
     void expand(size_t min_size);
     void shrink();
     void consume_bytes(ssize_t n);
@@ -24,6 +25,8 @@ public:
     std::string::iterator end();
     std::string::const_iterator cbegin() const;
     std::string::const_iterator cend() const;
+
+    uint8_t * get_start();
 
 protected:
     void discard_current();

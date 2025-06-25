@@ -44,6 +44,15 @@ void ReadNetBuffer::append(uint8_t const * str, ssize_t size)
     _tail += size;
 }
 
+void ReadNetBuffer::append(std::string const & str)
+{
+    if (_tail - _buffer + str.size() > capacity())
+        expand(_tail - _buffer + str.size());
+    std::memcpy(_tail, str.c_str(), str.size());
+    _tail += str.size();
+}
+
+
 void ReadNetBuffer::expand(size_t min_size)
 {
     size_t new_capacity = std::max<size_t>(std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE), min_size);
@@ -63,6 +72,9 @@ void ReadNetBuffer::consume_bytes(ssize_t bytes)
 {
     _start += bytes;
 }
+
+
+uint8_t * ReadNetBuffer::get_start(){return _start;}
 
 ssize_t ReadNetBuffer::capacity() const {return _end - _buffer;}
 

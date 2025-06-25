@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
 #include "ParsingUtil.hpp"
 
 namespace wss 
@@ -14,6 +15,8 @@ namespace wss
     bool str_equal(std::string::iterator it, const char *s);
     bool casecmp(std::string const & s1, std::string const & s2);
     bool casecmp(std::string const & s1, size_t pos, size_t len, std::string const & s2);
+
+    std::string i_to_hex(size_t size);
 
     void remove_uri_segment(std::string & out);
     std::string::iterator move_uri_segment(std::string & dst, std::string & src, std::string::iterator begin);

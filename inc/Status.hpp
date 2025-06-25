@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stdexcept>
 
 enum Status {
     NO_STATUS = 0,
@@ -17,5 +18,6 @@ enum Status {
 
 namespace status {
     std::string const & status_to_text(Status const & status);
+    std::string const & stoa(Status const & status);
 }
 

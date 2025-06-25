@@ -123,6 +123,17 @@ char parse::hex_to_byte(char c)
         return std::toupper(c) - 'A' + 10;
 }
 
+char parse::byte_char_to_hex(int c)
+{
+    if (c > 15)
+        throw std::runtime_error("Converting a byte to hexa, but it's too big (>15)");
+    
+    if (c < 10)
+        return c + '0';
+    else
+        return c + 'A';
+}
+
 // max = 0 is no max. Use a max that would not overflow on size_t boundaries
 size_t parse::s_to_hex(std::string::iterator start, std::string::iterator end, size_t max)
 {
