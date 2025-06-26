@@ -59,6 +59,8 @@ public:
     bool test_body();
     bool test_trailer_line();
     bool test_header_line();
+    
+    void process_headers();
 
     // Debug
     void dump_remainder() const;
@@ -100,8 +102,22 @@ private:
     void get_schema(std::string::iterator & token_begin, std::string::iterator & token_end);
     bool has_authority(std::string::iterator & token_begin, std::string::iterator & token_end) const;
 
-    void process_headers();
     void parse_host_field(std::string & value);
     void parse_content_length_field(std::string & value);
     void parse_transfer_encoding_field(std::string & value);
+    void parse_connection_field(std::string & value);
+    void parse_expect_field(std::string & value);
+    void parse_content_type_field(std::string & value);
+    void parse_cookie_field(std::string & value);
+    void parse_parameters(std::string::iterator begin, std::string::iterator end, std::vector<std::pair<std::string, std::string> > & parameters);
+
+    std::string::iterator parse_transfer_encoding_element(std::string::iterator begin, std::string::iterator end);
+    std::string::iterator parse_expect_element(std::string::iterator begin, std::string::iterator end);
+    std::string::iterator parse_connection_element(std::string::iterator begin, std::string::iterator end);
+
+    void parse_list(
+        std::string::iterator token_start, 
+        std::string::iterator token_end, 
+        std::string::iterator (RequestParser::*element_parser)(std::string::iterator token_start, std::string::iterator token_end)
+    );
 };

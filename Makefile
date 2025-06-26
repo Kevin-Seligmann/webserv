@@ -4,14 +4,11 @@ VPATH = src src/util src/http src/parse src/buffer src/cgi
 OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-<<<<<<< HEAD
-	HTTPError.o ErrorContainer.o CGI.o CGIUtils.o
-=======
 	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
 	SysFileBuffer.o SysNetBuffer.o debug.o serversInit.o Listen.o \
 	Locations.o Parsed.o Servers.o VirtualServersManager.o ServerValidator.o \
-	Utils.o serversRun.o Connection.o  \
->>>>>>> 0a6afc13775c6b82b4a5679b32370c73a186a006
+	Utils.o serversRun.o Connection.o MediaType.o \
+	CGI.o CGIUtils.o  \
 
 # Target
 NAME = webserv

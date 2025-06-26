@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/21 19:33:33 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/23 17:11:13 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ struct CGI
 	~CGI();
 
 	void reset();
-	std::string findHeaderIgnoreCase(const HTTPRequest& req_headers, const std::string& headerToFind);
+//	std::string findHeaderIgnoreCase(const HTTPRequest& req_headers, const std::string& headerToFind);
 	bool setPipeFlags(int fd);
 	void runCGI();
 	void readCGIOut(int fd);

@@ -14,6 +14,13 @@ std::string methodToString(HTTPMethod method)
 	}
 }
 
+std::string intToString(int value)
+{
+	std::stringstream ss;
+	ss << value;
+	return (ss.str());
+}
+
 std::string getExtension(const std::string& path)
 {
 	size_t dot = path.find_last_of('.');

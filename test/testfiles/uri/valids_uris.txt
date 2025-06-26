@@ -1,0 +1,37 @@
+11
+200
+
+GET /path%20with%20spaces?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com/?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com/abc?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com:80?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com:80/?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com:80/abc?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http:?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http:a?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http:/a?que%20ry#fr%20ag HTTP/1.1
+Host: example.com
+
+GET http://example.com:80/../../.././//./.././.././.././a../raf./rae.qe/rq./rt/ewr/../../ewr.//./../abc HTTP/1.1
+Host: example.com
+
+

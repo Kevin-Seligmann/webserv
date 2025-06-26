@@ -34,7 +34,7 @@ std::string::iterator wss::skip_ascii_whitespace(std::string::iterator begin, st
 
 std::string::iterator wss::skip_whitespace(std::string::iterator begin, std::string::iterator end)
 {
-    while(begin != end && *begin == ' ') begin ++; 
+    while(begin != end && (*begin == ' '|| *begin == '\t')) begin ++; 
     return begin;
 }
 

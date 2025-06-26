@@ -36,12 +36,27 @@ void RequestValidator::validate_first_line(HTTPRequest const & request)
     if (_error.status() == OK) {validate_method(request.method);}
 }
 
+// TODO: URI Reconstruction
+/*
+    Target:
+    Absolute form (Full (full) URI) => Request target (In first line)
+
+    If not
+    - The scheme is HTTP
+    - Authority form uri-host ":" port if present makes the authority. Else, it't the value of host header, else there's no authority.
+    - If authority form, the path is empty (ROOT), else it's on the path
+
+    Thus an empty authority could be rejected or could depend on server config.
+
+*/
 void RequestValidator::validate_uri(URI const & uri)
 {
-    if (uri.schema != "" && uri.schema != "HTTP")
+    if (uri.schema != "" && uri.schema != "http")
         _error.set("Protocol not implemented: " + uri.schema, NOT_IMPLEMENTED);
 }
 
+
+// TODO: Server 400 if: Lacks a Host header, contains more than one host, contains a host with INVALID VALUE? Client must send host = authority or empty (If no authority). But this is a CLIENT restriction. 
 
 void RequestValidator::validate_headers(HTTPRequest const & request, FieldSection const & hdr)
 {
@@ -54,8 +69,8 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     if (host->second.find(',') != std::string::npos)
         return put_error("The host header must be a single value (Comma detected)", BAD_REQUEST);
     
-    if (host != hdr.fields.end() && host->second.empty())
-        return put_error("Host found on header, but the value is empty", BAD_REQUEST);
+    // if (host != hdr.fields.end() && host->second.empty())
+    //     return put_error("Host found on header, but the value is empty", BAD_REQUEST);
 
     if (!request.uri.host.empty() && (request.uri.host != hdr.host || request.uri.port != hdr.port))
          return put_error("The authority component on URI has a different host than the headers", BAD_REQUEST);
@@ -80,6 +95,17 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
                 return put_error("Transfer-Encoding and Content-Length are incompatible", BAD_REQUEST);
         }
     }
+
+    // Validate Connection
+    for (std::vector<std::string>::const_iterator it = hdr.connections.begin(); it != hdr.connections.end(); it ++)
+        if (*it != "close" && *it != "keep-alive")
+            return put_error("Connection value not implemented \"" + *it + "\"", NOT_IMPLEMENTED);
+        
+    // Validate expectations
+              for (std::vector<std::string>::const_iterator it = hdr.expectations.begin(); it != hdr.expectations.end(); it ++)
+        if (*it != "100-continue")
+            return put_error("Only expectation allowed is '100-continue'", EXPECTATION_FAILED);
+  
 }
 
 void RequestValidator::validate_body(HTTPBody const & body)

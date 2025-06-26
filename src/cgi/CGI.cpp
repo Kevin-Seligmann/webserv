@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:14:39 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/21 19:38:54 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/26 14:27:33 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,8 @@ CGI::CGI(const HTTPRequest& req)
 	cgi_map[".py"] = "/usr/bin/python3";
 	cgi_map[".php"] = "/usr/bin/php-cgi";
 
-	env["CONTENT_LENGTH"] = findHeaderIgnoreCase(req, "content-length");
-	env["CONTENT_TYPE"] = findHeaderIgnoreCase(req, "content-type");
+	env["CONTENT_LENGTH"] = CGIUtils::intToString(req.headers.content_length); //findHeaderIgnoreCase(req, "content-length");
+	env["CONTENT_TYPE"] = req.headers.content_type.type + "/" + req.headers.content_type.subtype;
 	env["GATEWAY_INTERFACE"] = "CGI/1.1"; // por defecto
 	env["QUERY_STRING"] = req.uri.query;
 	env["PATH_INFO"] = req.uri.path;
@@ -40,7 +40,7 @@ CGI::CGI(const HTTPRequest& req)
 	env["SERVER_PROTOCOL"] = req.protocol;
 	env["SERVER_SOFTWARE"] = "webserver"; // este variable es obligatorio, pero no influye a script call
 
-	req_body = req.body.raw;
+	req_body = req.body.content;
 }
 
 CGI::~CGI() {}
@@ -49,7 +49,7 @@ void CGI::reset()
 {
 	env.clear();
 }
-
+/*
 std::string CGI::findHeaderIgnoreCase(const HTTPRequest& req_headers, const std::string& headerToFind)
 {
 	std::string res = headerToFind;
@@ -65,7 +65,7 @@ std::string CGI::findHeaderIgnoreCase(const HTTPRequest& req_headers, const std:
         }
     }
     return ("");
-}
+}*/
 
 bool CGI::setPipeFlags(int fd)
 {
