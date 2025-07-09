@@ -1,5 +1,5 @@
 #include "../inc/Connection.hpp"
-#include "../inc/Servers.hpp"
+#include "../inc/Server.hpp"
 #include "../inc/Utils.hpp"
 #include <unistd.h>
 #include <iostream>
@@ -67,8 +67,8 @@ void Connection::setBytesToSend(size_t bytes_to_send) { _bytes_to_send = bytes_t
 size_t Connection::getBytesSent() const { return _bytes_sent; }
 void Connection::setBytesSent(size_t bytes_sent) { _bytes_sent = bytes_sent; }
 
-Servers* Connection::getServer() const { return _server; }
-void Connection::setServer(Servers* server) { _server = server; }
+Server* Connection::getServer() const { return _server; }
+void Connection::setServer(Server* server) { _server = server; }
 
 const std::string& Connection::getReadBuffer() const { return _read_buff; }
 void Connection::appendToReadBuffer(const std::string& data) { _read_buff += data; updateActivity(); }

@@ -93,7 +93,7 @@ bool parse::is_hexa_char(char c)
 
 bool parse::is_obs_text_char(char c)
 {
-    return  (unsigned char) c >= 0x80 && (unsigned char) c <= 0xff;
+    return  (unsigned char) c >= 0x80;
 }
 
 bool parse::is_qdtext_char(char c)

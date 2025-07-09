@@ -5,7 +5,7 @@
 #include <string>
 
 // Forward declarations
-class Servers;
+class Server;
 class HttpResponse; 
 
 enum ConnectionState {
@@ -24,7 +24,7 @@ private:
 	bool										_response_complete;
 	size_t										_bytes_to_send;
 	size_t										_bytes_sent;
-	Servers*									_server;
+	Server*										_server;
 	std::string									_read_buff; // request
 	std::string									_write_buff; // response
 //	HttpResponse*								_response;
@@ -53,8 +53,8 @@ public:
 	size_t getBytesSent() const;
 	void setBytesSent(size_t bytes_sent);
 
-	Servers* getServer() const;
-	void setServer(Servers* server);
+	Server* getServer() const;
+	void setServer(Server* server);
 
 	const std::string& getReadBuffer() const;
 	void appendToReadBuffer(const std::string& data);

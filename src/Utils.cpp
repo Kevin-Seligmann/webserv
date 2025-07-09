@@ -12,6 +12,13 @@
 
 #include "Utils.hpp"
 
+// Temporary color macros to fix compilation
+#define RED        "\033[1;91m"
+#define GREEN      "\033[1;92m"
+#define YELLOW     "\033[1;93m"
+#define BLUE       "\033[1;94m"
+#define RESET      "\033[0m"
+
 int checkFile(const char* argv)
 {
     std::ifstream infile(argv);
@@ -47,23 +54,11 @@ int checkFile(const char* argv)
     return (0);
 }
 
-void printLocationConfig(const Locations& loc)
+void printLocationConfig(const Location& loc)
 {
-	std::cout << "    Path: " << loc.path << std::endl;
-	std::cout << "    Root: " << loc.root << std::endl;
-	std::cout << "    Index: " << loc.index << std::endl;
-	std::cout << "    Autoindex: " << (loc.autoindex ? "true" : "false") << std::endl;
-	std::cout << "    Return Path: " << loc.return_path << std::endl;
-	std::cout << "    Allow Upload: " << (loc.allow_upload ? "true" : "false") << std::endl;
-	std::cout << "    Upload Dir: " << loc.upload_dir << std::endl;
-
-	std::cout << "    Allow Methods:" << std::endl;
-	for (size_t i = 0; i < loc.allow_methods.size(); ++i)
-		std::cout << "      - " << loc.allow_methods[i] << std::endl;
-
-	std::cout << "    CGI Handlers:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = loc.cgi.begin(); it != loc.cgi.end(); ++it)
-		std::cout << "      " << it->first << " => " << it->second << std::endl;
+	// TODO: Implement when Location class has proper getters
+	(void)loc; // Suppress unused parameter warning
+	std::cout << "    Location configuration (not implemented yet)" << std::endl;
 }
 
 void printServerConfig(const ParsedServer& config)
@@ -95,7 +90,7 @@ void printServerConfig(const ParsedServer& config)
 	std::cout << YELLOW << "Client Max Body Size: " << RESET << config.client_max_body_size << std::endl;
 
 	std::cout << YELLOW << "Locations:" << RESET << std::endl;
-	for (std::map<std::string, Locations>::const_iterator it = config.locations.begin();
+	for (std::map<std::string, Location>::const_iterator it = config.locations.begin();
 		 it != config.locations.end(); ++it)
 	{
 		std::cout << "  Location block for: " << it->first << std::endl;

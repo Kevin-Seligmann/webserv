@@ -115,7 +115,7 @@ std::string::iterator wss::skip_schema_token(std::string::iterator begin, std::s
 // S.f if sizeof(s) < n, or it + n >= str.end()
 bool wss::str_equal(std::string::iterator it, size_t n, const char *s)
 {
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
         if (*(it + i) != s[i])
             return false;
     return true;
