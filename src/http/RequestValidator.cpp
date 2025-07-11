@@ -125,5 +125,7 @@ void RequestValidator::validate_extensions(std::string const & filename, std::ve
 
 
 void RequestValidator::validate_body(HTTPBody const & body)
-{}
+{
+    (void)body; // Suppress unused parameter warning
+}
 

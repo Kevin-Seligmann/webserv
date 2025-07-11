@@ -17,7 +17,7 @@ ReadNetBuffer::~ReadNetBuffer(){delete [] _buffer;}
 
 void ReadNetBuffer::discard_current()
 {
-    if (capacity() >= SHRINK_BUFFER_SIZE)
+    if (static_cast<size_t>(capacity()) >= SHRINK_BUFFER_SIZE)
         shrink();
 }
 

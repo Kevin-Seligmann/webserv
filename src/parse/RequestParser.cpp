@@ -51,7 +51,7 @@ void RequestParser::append(uint8_t const * str, ssize_t size) {_buffer.append(st
 bool RequestParser::test_first_line()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_buffer.previous_read_size() >= RequestParser::FIRST_LINE_MAX_LENGTH)
+    if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::FIRST_LINE_MAX_LENGTH)
     {
         _error.set("Request first line length is too long", BAD_REQUEST);
         return false;
@@ -71,7 +71,7 @@ bool RequestParser::test_first_line()
 bool RequestParser::test_chunk_size()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_buffer.previous_read_size() >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
+    if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
     {
         _error.set("Chunk size line too long", BAD_REQUEST);
         return false;
@@ -97,7 +97,7 @@ bool RequestParser::test_body()
 bool RequestParser::test_trailer_line()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
+    if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
     {
         _error.set("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
         return false;
@@ -116,7 +116,7 @@ bool RequestParser::test_trailer_line()
 bool RequestParser::test_header_line()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_buffer.previous_read_size() >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
+    if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
     {
         _error.set("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE);
         return false;
@@ -256,7 +256,7 @@ void RequestParser::parse_uri()
 
     // Check URI length
     std::string::iterator uri_limit = wss::skip_until(token_start, token_end, " ");
-    if (std::distance(token_start, uri_limit) >= RequestParser::URI_MAX_LENGTH)
+    if (static_cast<size_t>(std::distance(token_start, uri_limit)) >= RequestParser::URI_MAX_LENGTH)
         return _error.set("Request uri", URI_TOO_LONG);
 
     // Parse
@@ -517,6 +517,7 @@ void RequestParser::process_headers()
 
 bool RequestParser::has_authority(std::string::iterator & token_start, std::string::iterator & token_end) const
 {
+    (void)token_end; // Suppress unused parameter warning
     return token_start + 1 < _end && *token_start == '/' && *(token_start + 1) == '/';
 }
 

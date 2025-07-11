@@ -25,6 +25,16 @@ SRCS = main.cpp \
        http/HTTPMethod.cpp \
        http/FieldSection.cpp \
        http/URI.cpp \
+       http/RequestValidator.cpp \
+       parse/ElementParser.cpp \
+       parse/RequestManager.cpp \
+       parse/RequestParser.cpp \
+       buffer/HTTPRequestBuffer.cpp \
+       buffer/ReadNetBuffer.cpp \
+       buffer/SysBuffer.cpp \
+       buffer/SysBufferFactory.cpp \
+       buffer/SysFileBuffer.cpp \
+       buffer/SysNetBuffer.cpp \
        util/Logger.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \

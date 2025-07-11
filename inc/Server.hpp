@@ -6,6 +6,10 @@
 #include <map>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>          // Para getaddrinfo()
+#include <cstring>          // Para memset()
+#include <unistd.h>         // Para close()
+#include <iostream>         // Para std::cout
 #include "Parsed.hpp"
 #include "Location.hpp"
 #include "HTTPRequest.hpp"
@@ -57,6 +61,7 @@ public:
     // Getters para acceso transparente a los miembros
     const NetworkLayer& getNetwork() const { return _network; }
     const ConfigLayer& getConfig() const { return _config; }
+    ConfigLayer& getConfig() { return _config; }
     
     // Métodos para mostrar información detallada
     void printNetworkLayer() const;

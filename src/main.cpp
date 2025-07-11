@@ -220,10 +220,7 @@ void runInteractiveTest(const ParsedServers& configs) {
         }
     }
     
-    std::cout << "\nPress Enter to start, or Ctrl+C to skip..." << std::endl;
-    
-    std::string input;
-    std::getline(std::cin, input);
+    std::cout << "\nStarting servers..." << std::endl;
     
     try {
         VirtualServersManager manager(configs);
@@ -231,10 +228,8 @@ void runInteractiveTest(const ParsedServers& configs) {
         std::cout << "Starting all servers..." << std::endl;
         std::cout << "Press Ctrl+C to stop" << std::endl;
         
-        // This would start the actual event loop
-        // manager.run();  // Uncomment when ready
-        
-        std::cout << "Servers would run here (manager.run() not implemented yet)" << std::endl;
+        // Start the actual event loop
+        manager.run();
         
     } catch (const std::exception& e) {
         std::cout << "✗ Error running servers: " << e.what() << std::endl;
@@ -281,16 +276,17 @@ int main(int argc, char* argv[]) {
     std::cout << "\nRun with config file for interactive testing" << std::endl;
     std::cout << "Example: ./webserv_test config/default.conf --interactive" << std::endl;
     
-    // Check for interactive flag
-    bool interactive = false;
+    // Check for interactive flag or run automatically if no flag
+    bool interactive = true; // Default to interactive
     for (int i = 1; i < argc; ++i) {
-        if (std::string(argv[i]) == "--interactive") {
-            interactive = true;
+        if (std::string(argv[i]) == "--test") {
+            interactive = false;
             break;
         }
     }
     
     if (interactive) {
+        std::cout << "\n🚀 Starting servers automatically..." << std::endl;
         runInteractiveTest(parsedConfig);
     }
     

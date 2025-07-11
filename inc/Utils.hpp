@@ -31,9 +31,6 @@
 
 # include "Parsed.hpp"
 
-// Forward declaration to avoid circular dependency
-class VirtualServersManager;
-
 /* Colores para debug y otros - COMENTADOS para evitar conflicto con Logger.hpp */
 // # define RED        "\033[1;91m" 
 // # define GREEN      "\033[1;92m"  
@@ -58,16 +55,6 @@ std::string getLoopbackAddress();
 void printLocationConfig(const Location& loc);
 void printServerConfig(const ParsedServer& config);
 void printParsingMessage(ParsingMessageType type);
-
-/* Server initialization functions */
-// implemented in serversInit.cpp
-bool serversInit(VirtualServersManager& sm, const ParsedServers& ps);
-
-/* Server startup functions */
-// implemented in serversStart.cpp
-bool event_loop(VirtualServersManager &sm);
-
-bool serversStart(VirtualServersManager& sm);
 
 /* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);

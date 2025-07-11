@@ -14,6 +14,7 @@ Server::NetworkLayer::NetworkLayer()
 }
 
 void Server::NetworkLayer::setupSocket() {
+
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd < 0) {
         throw std::runtime_error("Failed to create socket");
@@ -27,7 +28,29 @@ void Server::NetworkLayer::setupSocket() {
     
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
-    address.sin_addr.s_addr = INADDR_ANY;
+    
+    if (host == "0.0.0.0" || host.empty()) { // todas las ips
+        address.sin_addr.s_addr = INADDR_ANY;
+        std::cout << "Binding to all interfaces (0.0.0.0):" << port << std::endl;
+    }
+    else { // solo una ip
+        struct addrinfo hints, *result; 
+        std::memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        
+        int ret = getaddrinfo(host.c_str(), NULL, &hints, &result);
+        if (ret != 0) {
+            close(socket_fd);
+            throw std::runtime_error("Invalid host address: " + host);
+        }
+        
+        struct sockaddr_in* addr_in = (struct sockaddr_in*)result->ai_addr;
+        address.sin_addr = addr_in->sin_addr;
+        
+        freeaddrinfo(result);
+        std::cout << "Binding to specific host " << host << ":" << port << std::endl;
+    }
 }
 
 void Server::NetworkLayer::bindAndListen() {
@@ -63,24 +86,16 @@ Location* Server::ConfigLayer::findLocation(const std::string& path) {
     Location* best_match = NULL;
     size_t best_length = 0;
     
-    // TODO: Implement when Location class has matchesPath() and getPath() methods
-    (void)path; // Suppress unused parameter warning
-    (void)best_length; // Suppress unused variable warning
-    
     for (std::vector<Location>::iterator it = locations.begin();
          it != locations.end(); ++it) {
-        // TODO: Uncomment when Location class is complete
-        // if (it->matchesPath(path)) {
-        //     size_t match_length = it->getPath().length();
-        //     if (match_length > best_length) {
-        //         best_match = &(*it);
-        //         best_length = match_length;
-        //     }
-        // }
-        
-        // For now, return first location as placeholder
-        best_match = &(*it);
-        break;
+
+        if (it->matchesPath(path)) {
+            size_t match_length = it->getPath().length();
+            if (match_length > best_length) {
+                best_match = &(*it);
+                best_length = match_length;
+            }
+        }
     }
     return best_match;
 }
