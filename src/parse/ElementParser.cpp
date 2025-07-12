@@ -136,7 +136,7 @@ void ElementParser::parse_content_length_field(std::string::iterator & begin, st
         if (!parse::is_digit(*begin))
             return _error.set("Header Content-Length, unexpected character", BAD_REQUEST);
         length = length * 10 + *begin - '0';
-        if (length >= RequestParser::MAX_CONTENT_LENGTH)
+        if (static_cast<size_t>(length) >= RequestParser::MAX_CONTENT_LENGTH)
             return _error.set("Header Content-Length, too large", CONTENT_TOO_LARGE);
         begin ++;
     }

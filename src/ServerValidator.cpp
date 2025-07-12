@@ -12,6 +12,13 @@
 
 #include "ServerValidator.hpp"
 
+// Temporary color macros to fix compilation
+#define RED        "\033[1;91m"
+#define GREEN      "\033[1;92m"
+#define YELLOW     "\033[1;93m"
+#define BLUE       "\033[1;94m"
+#define RESET      "\033[0m"
+
 void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 {
 	std::map<ListenKey, std::vector<const ParsedServer*> > listen_map;

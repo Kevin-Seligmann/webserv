@@ -182,7 +182,7 @@ void showServers(const VirtualServersManager& ws) {
         const VirtualServersManager::VirtualServerGroup& servers_vec = ws_it->second;
         VirtualServersManager::VirtualServerGroup::const_iterator s_it;
         for (s_it = servers_vec.begin(); s_it != servers_vec.end(); ++s_it, ++server_count) {
-            const Servers::VirtualServerInfo& srv = *s_it;
+            const Server& srv = *s_it;
             
             std::cout << BLUE << "\n--- Server " << server_count << " ---" << RESET << std::endl;
             
@@ -358,7 +358,7 @@ void showSockets(const VirtualServersManager& ws) {
             const VirtualServersManager::VirtualServersMap& servers_map = ws.getServersManager();
             VirtualServersManager::VirtualServersMap::const_iterator mgr_it = servers_map.find(it->first);
             if (mgr_it != servers_map.end() && !mgr_it->second.empty()) {
-                const Servers::VirtualServerInfo& srv = mgr_it->second[0];
+                const Server& srv = mgr_it->second[0];
                 const std::vector<std::string>& names = srv.getServerNames();
                 if (!names.empty()) {
                     std::cout << BLUE << "  Server name: " << RESET << names[0] << std::endl;

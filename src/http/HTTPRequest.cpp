@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cstdlib>  // Para std::atoi
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest(){}
@@ -38,24 +39,37 @@ std::ostream & operator<<(std::ostream & os, HTTPRequest request)
 
 int HTTPRequest::get_port() const
 {
-    if (!uri.schema.empty())
-    {
-        if (uri.port < 0)
-            return 80;
-        else
-            return uri.port;
-    }
-    if (headers.port < 0)
+    // Return port from URI, or default to 80 if not specified
+    if (uri.port == 0)
         return 80;
     else
-        return headers.port;
+        return uri.port;
 }
 
 std::string const HTTPRequest::get_host() const
 {
-    if (!uri.schema.empty())
+    // Try to get host from Host header first, then from URI
+    std::map<std::string, std::string>::const_iterator it = headers.fields.find("Host");
+    if (it != headers.fields.end())
+    {
+        std::string host_header = it->second;
+        // Remove port from host header if present (host:port format)
+        size_t colon_pos = host_header.find(':');
+        if (colon_pos != std::string::npos)
+            return host_header.substr(0, colon_pos);
+        return host_header;
+    }
+    
+    // Alternative: use the host field directly
+    if (!headers.host.empty())
+        return headers.host;
+    
+    // Fallback to URI host
+    if (!uri.host.empty())
         return uri.host;
-    return headers.host;
+        
+    // Default fallback
+    return "localhost";
 }
 
 std::string const HTTPRequest::get_path() const

@@ -25,8 +25,8 @@ public:
     HTTPError const * error();
 
 private:
-    HTTPError & _error;
     HTTPRequest & _request;
+    HTTPError & _error;
 
     void put_error(std::string const & text, Status status);
 };

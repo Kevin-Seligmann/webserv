@@ -31,15 +31,12 @@
 
 # include "Parsed.hpp"
 
-// Forward declaration to avoid circular dependency
-class VirtualServersManager;
-
-/* Colores para debug y otros */
-# define RED        "\033[1;91m" 
-# define GREEN      "\033[1;92m"  
-# define YELLOW     "\033[1;93m"
-# define BLUE       "\033[1;94m"
-# define RESET      "\033[0m"
+/* Colores para debug y otros - COMENTADOS para evitar conflicto con Logger.hpp */
+// # define RED        "\033[1;91m" 
+// # define GREEN      "\033[1;92m"  
+// # define YELLOW     "\033[1;93m"
+// # define BLUE       "\033[1;94m"
+// # define RESET      "\033[0m"
 
 enum ParsingMessageType {
     DEFAULT_SERVER,
@@ -55,19 +52,9 @@ int checkFile(const char* argv);
 std::string getLoopbackAddress();
 
 /* Functions for printing */
-void printLocationConfig(const Locations& loc);
+void printLocationConfig(const Location& loc);
 void printServerConfig(const ParsedServer& config);
 void printParsingMessage(ParsingMessageType type);
-
-/* Server initialization functions */
-// implemented in serversInit.cpp
-bool serversInit(VirtualServersManager& sm, const ParsedServers& ps);
-
-/* Server startup functions */
-// implemented in serversStart.cpp
-bool event_loop(VirtualServersManager &sm);
-
-bool serversStart(VirtualServersManager& sm);
 
 /* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);

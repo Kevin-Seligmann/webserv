@@ -1,11 +1,12 @@
 #include "RequestManager.hpp"
 
 RequestManager::RequestManager(HTTPRequest & request, SysBufferFactory::sys_buffer_type type, int fd)
-:_validator(_request, _error),
+:_request(request),
+_validator(_request, _error),
 _element_parser(_error),
 _request_parser(_request, _error, _element_parser),
-_sys_buffer(SysBufferFactory::get_buffer(type, fd)),
-_request(request){}
+_sys_buffer(SysBufferFactory::get_buffer(type, fd))
+{}
 
 RequestManager::~RequestManager(){delete _sys_buffer;};
 

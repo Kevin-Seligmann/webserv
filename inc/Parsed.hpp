@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PARSED_HPP
-#define PARSED_HPP
+#ifndef WEBSERV_PARSED_HPP
+#define WEBSERV_PARSED_HPP
 
 #include <fstream>
 #include <iostream>
@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "Listen.hpp"
-#include "Locations.hpp"
+#include "Location.hpp"
 
 class ServersManager;
 
@@ -35,7 +35,7 @@ struct ParsedServer {
 	std::vector<std::string> allow_methods;
 	bool autoindex;
 	std::string client_max_body_size;
-	std::map<std::string, Locations> locations;
+	std::map<std::string, Location> locations;
 
 	ParsedServer()
 		: autoindex(false) {}
@@ -45,7 +45,7 @@ struct ParsedServer {
 				 const std::string& root,
 				 const std::vector<std::string>& index_files,
 				 const std::map<int, std::string>& error_pages,
-				 const std::map<std::string, Locations>& locations);
+				 const std::map<std::string, Location>& locations);
 
 	~ParsedServer();
 };
@@ -62,7 +62,7 @@ int to_int(const std::string& s);
 
 Listen parse_listen(const std::vector<std::string>& tokens);
 
-Locations parseLocation(const std::vector<std::string>& tokens, size_t& i);
+Location parseLocation(const std::vector<std::string>& tokens, size_t& i);
 
 ParsedServer parseServer(const std::vector<std::string>& tokens, size_t& i);
 
@@ -71,4 +71,4 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string>& tokens);
 // PROCESS
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig);
 
-#endif
+#endif // WEBSERV_PARSED_HPP
