@@ -9,7 +9,10 @@
 
 // NetworkLayer Implementation
 Server::NetworkLayer::NetworkLayer() 
-    : socket_fd(-1), host("0.0.0.0"), port(80), active(false) {
+    : socket_fd(-1)
+    , host("0.0.0.0")
+    , port(80)
+    , active(false) {
     std::memset(&address, 0, sizeof(address));
 }
 
@@ -68,39 +71,91 @@ void Server::NetworkLayer::bindAndListen() {
 }
 
 // ConfigLayer Implementation
+
 Server::ConfigLayer::ConfigLayer() 
-    : autoindex(false), client_max_body_size(1024 * 1024) {
-}
+    : autoindex(false)
+    , client_max_body_size(1024 * 1024)
+    {}
+
 
 bool Server::ConfigLayer::matchesServerName(const std::string& name) const {
-    if (server_names.empty()) return true;  // Default server
-    
-    for (std::vector<std::string>::const_iterator it = server_names.begin();
-         it != server_names.end(); ++it) {
-        if (*it == name) return true;
+
+    if (server_names.empty()) {
+        return true;
+    }
+
+    std::vector<std::string>::const_iterator name_it = server_names.begin();
+    for (; name_it != server_names.end(); ++name_it) {
+        if ((*name_it) == name || (*name_it) == "_") {
+            return true;
+        }
     }
     return false;
 }
 
-Location* Server::ConfigLayer::findLocation(const std::string& path) {
+
+Location* Server::ConfigLayer::findLocation(const std::string& path, bool resolve_index) const {
+    
+    std::map<std::string, Location>::const_iterator exact_it = locations.find(path);
+    if (exact_it != locations.end()) {
+        if (exact_it->second.getMatchType() == Location::EXACT) {
+            Location* exact_location = const_cast<Location*>(&exact_it->second);
+        
+            if (path[path.length() - 1] == '/') {
+                return resolveIndexAndRematch(path, exact_location);
+            }
+            return const_cast<Location*>(&exact_it->second);
+        }
+
+    }
+
     Location* best_match = NULL;
     size_t best_length = 0;
     
-    for (std::vector<Location>::iterator it = locations.begin();
+    for (std::map<std::string, Location>::const_iterator it = locations.begin();
          it != locations.end(); ++it) {
 
-        if (it->matchesPath(path)) {
-            size_t match_length = it->getPath().length();
+        if (it->second.getMatchType() == Location::PREFIX &&
+            it->second.matchesPath(path)) {
+
+            size_t match_length = it->first.length();
             if (match_length > best_length) {
-                best_match = &(*it);
+                best_match = const_cast<Location*>(&it->second);
                 best_length = match_length;
             }
         }
     }
-    return best_match;
+    
+    if (best_match) {
+        if (resolve_index && path[path.length() - 1] == '/') {
+            return resolveIndexAndRematch(path, best_match);
+        }
+        return best_match;
+    }
+
+    return NULL;
 }
 
+
+Location* Server::ConfigLayer::resolveIndexAndRematch(const std::string& path, Location* original_location) const {
+    for (size_t i = 0; i < index_files.size(); ++i) {
+        std::string index_path = path + index_files[i];
+
+        Location* new_location = findLocation(index_path, false);
+        if (new_location) {
+            return new_location;
+        }
+    }
+    return original_location;
+}
+
+
+
 std::string Server::ConfigLayer::getErrorPage(int code) const {
+    // TODO: Implementar jerarquía completa de error pages:
+    // 1. Location-specific error pages (cuando Location esté completa)
+    // 2. Server-specific error pages (actual implementación)
+    // 3. Default webserver error pages
     std::map<int, std::string>::const_iterator it = error_pages.find(code);
     if (it != error_pages.end()) {
         return it->second;
@@ -134,7 +189,7 @@ Server::Server(const ParsedServer& parsed) {
     // Convert locations map to vector
     for (std::map<std::string, Location>::const_iterator it = parsed.locations.begin();
          it != parsed.locations.end(); ++it) {
-        _config.locations.push_back(it->second);
+        _config.locations[it->first] = it->second;
     }
 }
 

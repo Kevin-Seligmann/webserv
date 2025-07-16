@@ -110,11 +110,24 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
 	Location loc;
 	
+	if (tokens[i] == "=") {
+		loc.setMatchType(Location::EXACT);
+		++i;
+		loc.setPath(tokens[i]);
+		++i;
+	}
+	else if (tokens[i] == "~" || tokens[i] == "~*") {
+		throw std::runtime_error("Invalid regex location");
+	}
+	else {
+		loc.setPath(tokens[i]);
+		++i;
+	}
+
 	// TODO: Implement proper Location parsing when class has setters
 	// For now, just skip to the closing brace
 	(void)loc; // Suppress unused variable warning
 	
-	++i; // Skip path
 	i = expect(tokens, i, "{");
 	while (i < tokens.size() && tokens[i] != "}")
 	{
@@ -228,10 +241,15 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "error_page")
 		{
-			int code = to_int(tokens[i++]);
+			std::vector<int>codes;
 			while (isdigit(tokens[i][0]))
-				code = to_int(tokens[i++]);
-			server.error_pages[code] = tokens[i++];
+				codes.push_back(to_int(tokens[i++]));
+			
+			std::string error_page_path = tokens[i++];
+			for (size_t j = 0; j < codes.size(); ++j)
+			{
+				server.error_pages[codes[j]] = error_page_path;
+			}
 		}
 		else if (key == "allow_methods")
 		{
@@ -239,15 +257,23 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 				server.allow_methods.push_back(tokens[i++]);
         }
 		else if (key == "autoindex")
-			server.autoindex = (tokens[i++] == "true");
+		{
+			std::string autoindex_value = tokens[i++];
+			if (autoindex_value == "true" || autoindex_value == "on")
+				server.autoindex = true;
+			else if (autoindex_value == "false" || autoindex_value == "off")
+				server.autoindex = false;
+			else {
+				server.autoindex = false;
+				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
+			}
+		}
 		else if (key == "client_max_body_size")
 			server.client_max_body_size = tokens[i++];
 		else if (key == "location")
 		{
 			Location loc = parseLocation(tokens, i);
-			// TODO: Fix this when Location class has public path or getter
-			// server.locations[loc.path] = loc;
-			server.locations["/" /* placeholder */] = loc;
+			server.locations[loc.getPath()] = loc;
 		}
 		if (tokens[i] == ";") ++i;
 	}
@@ -255,6 +281,19 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 	return (server);
 }
+
+/*
+
+Posibles mejoras de robustez de la validacion en server validator
+ Códigos de error HTTP válidos (100-599)
+ Valores de autoindex válidos (on/off/true/false)
+ Tamaños de client_max_body_size válidos
+ Métodos HTTP válidos en allow_methods
+ Rutas de archivos válidas en root, index, error_page
+ Sintaxis de locations válida
+ Sintaxis de listen válida (puertos 1-65535)
+
+*/
 
 std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 {

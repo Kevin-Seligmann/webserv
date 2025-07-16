@@ -1,6 +1,6 @@
 #include "VirtualServersManager.hpp"
 
-// ================ STATIC MEMBERS ================
+// ================ STATIC MEMBER ================
 
 std::map<int, VirtualServersManager::ClientState*> VirtualServersManager::ClientState::client_states;
 
@@ -32,6 +32,7 @@ VirtualServersManager::~VirtualServersManager() {
 	}
 }
 
+
 // ================ CLIENT STATE MANAGEMENT ================
 
 VirtualServersManager::ClientState* VirtualServersManager::ClientState::getOrCreateClientState(int client_fd) {
@@ -45,6 +46,7 @@ VirtualServersManager::ClientState* VirtualServersManager::ClientState::getOrCre
 	return state;
 }
 
+
 void VirtualServersManager::ClientState::cleanupClientState(int client_fd) {
 	std::map<int, ClientState*>::iterator it = client_states.find(client_fd);
 	if (it != client_states.end()) {
@@ -53,7 +55,246 @@ void VirtualServersManager::ClientState::cleanupClientState(int client_fd) {
 	}
 }
 
-// ================ PRIVATE METHODS ================
+
+// ================ AUX FUNCTIONS ================
+
+bool VirtualServersManager::isServerFD(int fd) const {
+	for (size_t i = 0; i < _servers.size(); ++i) {
+		if (_servers[i].getSocketFD() == fd)
+			return true; // es server
+	}
+	return false; // es cliente
+}
+
+int VirtualServersManager::findServerIndex(int fd) const {
+	for (size_t i = 0; i < _servers.size(); ++i) {
+		if (_servers[i].getSocketFD() == fd)
+			return static_cast<int>(i);
+	}
+	return -1;
+}
+
+
+// ================ EVENT HANDLER ================
+
+void VirtualServersManager::handleEvent(const struct epoll_event& event) {
+	int fd = event.data.fd;
+
+	if (event.events & EPOLLIN) {
+		if (isServerFD(fd)) {
+			int server_index = findServerIndex(fd);
+			if (server_index >= 0) {
+				handleNewConnection(server_index);
+			}
+		}
+		else {
+			handleClientData(fd);
+		}
+	}
+	if (event.events & (EPOLLHUP | EPOLLERR)) {
+		if (!isServerFD(fd)) {
+			disconnectClient(fd);
+		}
+	}
+}
+
+
+void VirtualServersManager::handleClientData(int client_fd) {
+	ClientState* client = ClientState::getOrCreateClientState(client_fd);
+
+	try {
+		client->request_manager->process();
+
+		if (client->hasError()) {
+			std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
+//			sendErrorResponse(client_fd, client->error); // sera de response manager? como es la estructura response?
+			disconnectClient(client_fd);
+			return;
+		}
+
+		if (client->isRequestComplete()) {
+			std::cout << "Request complete for FD: " << client_fd << std::endl;
+			processCompleteRequest(client_fd, client->request);
+//			client->request_manager->new_request();
+// activarlo cuando este ok
+			disconnectClient(client_fd);
+		}
+	} catch (const std::exception& e) {
+		std::cerr << "Exception processing client data: " << e.what() << std::endl;
+		disconnectClient(client_fd);
+	}
+}
+
+
+void VirtualServersManager::handleNewConnection(int server_index) {
+	std::cout << "New connection at server " << server_index << std::endl;
+
+	int server_fd = _servers[server_index].getSocketFD();
+
+	struct sockaddr_in client_addr;
+	memset(&client_addr, 0, sizeof(client_addr));
+	socklen_t client_len = sizeof(client_addr);
+	int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+
+	if (client_fd < 0) {
+		std::cerr << "Failed to accept connection on server " << server_index << std::endl;
+	}
+	
+	std::cout << "Client connected @ FD: " << client_fd << std::endl;
+
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = client_fd;
+
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &event) < 0) {
+		close(client_fd);
+		return;
+	}
+
+	_client_fds.push_back(client_fd);
+}
+
+
+void VirtualServersManager::disconnectClient(int client_fd) {
+	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
+	
+	ClientState::cleanupClientState(client_fd);
+	
+	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+	
+	close(client_fd);
+	
+	std::vector<int>::iterator it = std::find(_client_fds.begin(), _client_fds.end(), client_fd);
+	if (it != _client_fds.end())
+		_client_fds.erase(it);
+	
+	std::cout << "Client FD: " << client_fd << " cleaned up" << std::endl;
+}
+
+
+// ================ PROCESS REQUESTS ================
+
+void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& request) {
+	std::cout << "\tComplete request:" << std::endl;
+	std::cout << request;
+	
+	Server* target_server = findServerForRequest(request);
+	if (!target_server) {
+		// REPLACE sendErrorResponse(client_fd, 404, "Server not found");
+		return;
+	}
+
+	Location* location = findLocationForRequest(request, target_server);
+	if (!location) {
+		// REPLACE sendErrorResponse(client_fd, 404, "Location not found");
+		return;
+	}
+
+	if (!isMethodAllowed(target_server, location, request.method)) {
+		// REPLACE sendErrorResponse(client_fd, 405, "Method not allowed");
+		return;
+	}
+
+	if (isCgiRequest(location, request.get_path())) {
+		processCgiRequest(client_fd, request, location);
+	}
+	else {
+		processStaticRequest(client_fd, request, location);
+	}
+}
+
+
+void VirtualServersManager::temp_sendSimpleResponse(int client_fd) {
+	std::string body = "<html><body><h1>Hello from Webserv!</h1></body></html>";
+	std::ostringstream response;
+	response << "HTTP/1.1 200 OK\r\n"
+			 << "Content-Type: text/html\r\n"
+			 << "Content-Length: " << body.length() << "\r\n"
+			 << "\r\n"
+			 << body;
+	
+	std::string response_str = response.str();
+	send(client_fd, response_str.c_str(), response_str.length(), 0);
+}
+
+
+// ================ MATCHTING REQUEST <> NETWORK LAYER ================
+
+
+Server* VirtualServersManager::findServerForRequest(const HTTPRequest& request) {
+   std::string host = request.get_host();
+   int port = request.get_port();
+
+	// match de port && server_name
+	for (std::vector<Server>::iterator server_it = _servers.begin();
+   		server_it != _servers.end(); ++server_it) {
+		if ((*server_it).getNetwork().port == port) {
+			if ((*server_it).getConfig().matchesServerName(host)) {
+				return &(*server_it);
+			}
+		}
+	}
+	// default server (primero)
+	for (std::vector<Server>::iterator server_it = _servers.begin();
+   		server_it != _servers.end(); ++server_it) {
+		if ((*server_it).getNetwork().port == port) {
+		   return &(*server_it);
+		}
+	}
+   
+	return NULL;
+}
+
+
+Location* VirtualServersManager::findLocationForRequest(const HTTPRequest& request, const Server* target_server) {
+	Server* no_const_target_server = const_cast<Server*>(target_server);
+	Server::ConfigLayer* config = &no_const_target_server->getConfig();
+	Location* location_found = config->findLocation(request.get_path());
+	return const_cast<Location*>(location_found);
+	// return (const_cast<Server*>(target_server)->getConfig().findLocation(request.get_path()));
+}
+
+
+static std::string httpMethodToString(HTTPMethod method) {
+	switch (method) {
+		case GET: return "GET";
+		case POST: return "POST";
+		case PUT: return "PUT";
+		case DELETE: return "DELETE";
+		default: return "UNKNOWN";
+	}
+}
+
+
+bool VirtualServersManager::isMethodAllowed(Server* server, Location* location, HTTPMethod method) {
+
+	std::string method_str = httpMethodToString(method);
+
+	if (!location->getMethods().empty()) {
+		for (std::vector<std::string>::const_iterator methods_it = location->getMethods().begin();
+			methods_it != location->getMethods().end(); ++methods_it) {
+			if (*methods_it == method_str) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	const std::vector<std::string>& server_methods = server->getConfig().allow_methods;
+	if (server_methods.empty()) {
+		return true;
+	}
+	for (std::vector<std::string>::const_iterator server_methods_it = server_methods.begin();
+		server_methods_it != server_methods.end(); ++server_methods_it) {
+		if (*server_methods_it == method_str) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+// ================ EPOLL SETUP ================
 
 void VirtualServersManager::setupEpoll() {
 	std::cout << "Starting epoll configuration" << std::endl;
@@ -92,194 +333,13 @@ void VirtualServersManager::setupEpoll() {
 	// llevar la cuenta de los que fallan para restarlo de _servers.size() ??
 }
 
-bool VirtualServersManager::isServerFD(int fd) const {
-	for (size_t i = 0; i < _servers.size(); ++i) {
-		if (_servers[i].getSocketFD() == fd)
-			return true; // es server
-	}
-	return false; // es cliente
-}
 
-int VirtualServersManager::findServerIndex(int fd) const {
-	for (size_t i = 0; i < _servers.size(); ++i) {
-		if (_servers[i].getSocketFD() == fd)
-			return static_cast<int>(i);
-	}
-	return -1;
-}
-
-
-void VirtualServersManager::disconnectClient(int client_fd) {
-	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
-	
-	ClientState::cleanupClientState(client_fd);
-	
-	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-	
-	close(client_fd);
-	
-	std::vector<int>::iterator it = std::find(_client_fds.begin(), _client_fds.end(), client_fd);
-	if (it != _client_fds.end())
-		_client_fds.erase(it);
-	
-	std::cout << "Client FD: " << client_fd << " cleaned up" << std::endl;
-}
-
-void VirtualServersManager::handleEvent(const struct epoll_event& event) {
-	int fd = event.data.fd;
-
-	if (event.events & EPOLLIN) {
-		if (isServerFD(fd)) {
-			int server_index = findServerIndex(fd);
-			if (server_index >= 0) {
-				handleNewConnection(server_index);
-			}
-		}
-		else {
-			handleClientData(fd);
-		}
-	}
-	if (event.events & (EPOLLHUP | EPOLLERR)) {
-		if (!isServerFD(fd)) {
-			disconnectClient(fd);
-		}
-	}
-}
-
-void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& request) {
-	std::cout << "\tComplete request:" << std::endl;
-	std::cout << request;
-	
-	Server* target_server = findServerForRequest(request);
-	if (!target_server) {
-		sendErrorResponse(client_fd, 404, "Server not found");
-		return;
-	}
-
-	Location* location = target_server->getConfig().findLocation(request.get_path());
-	if (!location) {
-		sendErrorResponse(client_fd, 404, "Location not found");
-		return;
-	}
-
-	if (!isMethodAllowed(location, request.method)) {
-		sendErrorResponse(client_fd, 405, "Method not allowed");
-		return;
-	}
-
-	if (isCgiRequest(location, request.get_path())) {
-		processCgiRequest(client_fd, request, location);
-	}
-	else {
-		processStaticRequest(client_fd, request, location);
-	}
-}
-
-void VirtualServersManager::handleClientData(int client_fd) {
-	ClientState* client = ClientState::getOrCreateClientState(client_fd);
-
-	try {
-		client->request_manager->process();
-
-		if (client->hasError()) {
-			std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
-			sendErrorResponse(client_fd, client->error); // sera de response manager? como es la estructura response?
-			disconnectClient(client_fd);
-			return;
-		}
-
-		if (client->isRequestComplete()) {
-			std::cout << "Request complete for FD: " << client_fd << std::endl;
-			processCompleteRequest(client_fd, client->request);
-//			client->request_manager->new_request();
-// activarlo cuando este ok
-			disconnectClient(client_fd);
-		}
-	} catch (const std::exception& e) {
-		std::cerr << "Exception processing client data: " << e.what() << std::endl;
-		disconnectClient(client_fd);
-	}
-}
-
-void VirtualServersManager::handleNewConnection(int server_index) {
-	std::cout << "New connection at server " << server_index << std::endl;
-
-	int server_fd = _servers[server_index].getSocketFD();
-
-	struct sockaddr_in client_addr;
-	memset(&client_addr, 0, sizeof(client_addr));
-	socklen_t client_len = sizeof(client_addr);
-	int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
-
-	if (client_fd < 0) {
-		std::cerr << "Failed to accept connection on server " << server_index << std::endl;
-	}
-	
-	std::cout << "Client connected @ FD: " << client_fd << std::endl;
-
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = client_fd;
-
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &event) < 0) {
-		close(client_fd);
-		return;
-	}
-
-	_client_fds.push_back(client_fd);
-}
-
-void VirtualServersManager::temp_sendSimpleResponse(int client_fd) {
-	std::string body = "<html><body><h1>Hello from Webserv!</h1></body></html>";
-	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n"
-			 << "Content-Type: text/html\r\n"
-			 << "Content-Length: " << body.length() << "\r\n"
-			 << "\r\n"
-			 << body;
-	
-	std::string response_str = response.str();
-	send(client_fd, response_str.c_str(), response_str.length(), 0);
-}
-
-// ================ HELPER METHODS ================
-
-Server* VirtualServersManager::findServerForRequest(const HTTPRequest& request) {
-	// Implement match based on Host header and port
-	(void)request;
-	if (!_servers.empty()) {
-		return &_servers[0];
-	}
-	return NULL;
-}
-
-bool VirtualServersManager::isMethodAllowed(Location* location, HTTPMethod method) {
-	// Implement check based on location._methods
-	(void)location;
-	(void)method;
-	return true;
-}
-
-void VirtualServersManager::sendErrorResponse(int client_fd, int status_code, const std::string& message) {
-	std::ostringstream response;
-	response << "HTTP/1.1 " << status_code << " " << message << "\r\n"
-			 << "Content-Type: text/plain\r\n"
-			 << "Content-Length: " << message.length() << "\r\n"
-			 << "\r\n"
-			 << message;
-	
-	std::string response_str = response.str();
-	send(client_fd, response_str.c_str(), response_str.length(), 0);
-}
-
-void VirtualServersManager::sendErrorResponse(int client_fd, const HTTPError& error) {
-	int status_code = static_cast<int>(error.status());
-	sendErrorResponse(client_fd, status_code, error.msg());
-}
-
-// ================ PUBLIC ================
+// ================ EVENTS LOOP EPOLL ================
 
 void VirtualServersManager::run() {
+	// NOTE: En el processCompleteRequest mirar si al salir de location hay error 404 
+	// y si hay directory listing habilitado para llamar a un recurso que genere el 
+	// listing si es necesario (en lugar de devolver 404 directamente)
 
 	std::cout << std::string(10, '=') << " Starting WEBSERVER " << std::string(10, '=') << std::endl;
 
@@ -301,9 +361,9 @@ void VirtualServersManager::run() {
 			break;
 		}
 
-		if (incoming == 0) {
+/*		if (incoming == 0) {
 			continue;
-		}
+		} // nunca habrá timeout // deberia haber timeout?? */
 
 		std::cout << "Starting to process: " << incoming << " events" << std::endl;
 
@@ -318,7 +378,8 @@ void VirtualServersManager::run() {
 	std::cout << std::string(10, '=') << " Closing EVENT LOOP " << std::string(10, '=') << std::endl;
 }
 
-// ================ REQUEST PROCESSING METHODS ================
+
+// ================ PROCESS REQUESTS ================
 
 bool VirtualServersManager::isCgiRequest(Location* location, const std::string& path) {
 	// Implement CGI detection based on location configuration
@@ -326,6 +387,7 @@ bool VirtualServersManager::isCgiRequest(Location* location, const std::string& 
 	(void)path;
 	return path.find(".cgi") != std::string::npos; // true si uri de la request termina en cgi
 }
+
 
 void VirtualServersManager::processCgiRequest(int client_fd, HTTPRequest& request, Location* location) {
 	// Implement CGI request processing
@@ -341,6 +403,7 @@ void VirtualServersManager::processCgiRequest(int client_fd, HTTPRequest& reques
 	
 	send(client_fd, response.c_str(), response.length(), 0);
 }
+
 
 void VirtualServersManager::processStaticRequest(int client_fd, HTTPRequest& request, Location* location) {
 	// Implement static HTML

@@ -71,16 +71,14 @@ private:
 	// metodos de request
 	void processCompleteRequest(int client_fd, HTTPRequest& request);
 	Server* findServerForRequest(const HTTPRequest& request);
-	bool isMethodAllowed(Location* location, HTTPMethod method);
+	Location* findLocationForRequest(const HTTPRequest& request, const Server* server);
+	bool isMethodAllowed(Server* server, Location* location, HTTPMethod method);
 	
 	// proceso y aux de cgi
 	bool isCgiRequest(Location* location, const std::string& path);
 	void processCgiRequest(int client_fd, HTTPRequest& request, Location* location);
 	void processStaticRequest(int client_fd, HTTPRequest& request, Location* location);
 	
-	void sendErrorResponse(int client_fd, int status_code, const std::string& message);
-	void sendErrorResponse(int client_fd, const HTTPError& error);
-
 	void temp_sendSimpleResponse(int client_fd);
 
 public:
