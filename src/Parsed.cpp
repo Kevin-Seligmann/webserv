@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:17:10 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/07/20 20:38:30 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,10 +108,16 @@ Locations parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	{
 		std::string key = tokens[i++];
 		if (key == "root") loc.root = tokens[i++];
-		else if (key == "index") loc.index = tokens[i++];
+		else if (key == "index") 
+		{
+			while (tokens[i] != ";")
+				loc.index.push_back(tokens[i++]);
+		}
 		else if (key == "autoindex") loc.autoindex = (tokens[i++] == "true");
-		else if (key == "allow_methods") {
-			while (tokens[i] != ";") loc.allow_methods.push_back(tokens[i++]);
+		else if (key == "allow_methods")
+		{
+			while (tokens[i] != ";") 
+				loc.allow_methods.push_back(tokens[i++]);
 		}
 		else if (key == "return") loc.return_path = tokens[i++];
 		else if (key == "allow_upload") loc.allow_upload = (tokens[i++] == "true");
@@ -156,11 +162,9 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 			size_t colon = token.find(':');
 			if (brace_open != std::string::npos) 
 			{
-				printParsingMessage(IPV6_HOST);
-				if (brace_close == std::string::npos) {
-					throw std::runtime_error("Unclosed brackets in listen directive"); }
-				if (brace_close + 1 < token.size() && token[brace_close + 1] == ':') {
-					ld.port = to_int(token.substr(brace_close + 2)); }
+				if (brace_close == std::string::npos)
+					throw std::runtime_error("Unclosed brackets in listen directive");
+				throw std::runtime_error("IPv6 addresses are not allowed: " + token);
 			}
 			else if (colon != std::string::npos)
 			{

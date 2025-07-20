@@ -11,12 +11,12 @@ int main(int argc, char** argv) {
         if (parseProcess(argc, argv, config) != 0)return (1);
         showParse(config);
 
-        ServersManager webSevers;
+/*        ServersManager webSevers;
         serversInit(webSevers, config);
         showServers(webSevers);
 
         SocketsManager listenSockets;
-        socketsInit(listenSockets, webSevers);
+        socketsInit(listenSockets, webSevers);*/
 
         return (0);
     }

@@ -9,7 +9,7 @@ struct Locations
 {
 	std::string								path;
 	std::string								root;
-	std::string								index;
+	std::vector<std::string>				index;
 	std::vector<std::string>				allow_methods;
 	bool									autoindex;
 	std::string                             return_path;

@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:14:47 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/07/20 20:38:39 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@
 
 enum ParsingMessageType {
     DEFAULT_SERVER,
-    IPV6_HOST,
     LOCAL_HOST,
     ASTERIKS_HOST
 };

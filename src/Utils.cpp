@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:14:42 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/07/20 20:48:39 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,13 @@ void printLocationConfig(const Locations& loc)
 {
 	std::cout << "    Path: " << loc.path << std::endl;
 	std::cout << "    Root: " << loc.root << std::endl;
-	std::cout << "    Index: " << loc.index << std::endl;
+	std::cout << "    Index: " << std::endl;
+	for (size_t j = 0; j < loc.index.size(); ++j)
+	{
+		std::cout << loc.index[j];
+		if (j < loc.index.size() - 1) std::cout << ", ";
+	}
+	std::cout << std::endl;
 	std::cout << "    Autoindex: " << (loc.autoindex ? "true" : "false") << std::endl;
 	std::cout << "    Return Path: " << loc.return_path << std::endl;
 	std::cout << "    Allow Upload: " << (loc.allow_upload ? "true" : "false") << std::endl;
@@ -115,14 +121,6 @@ void printParsingMessage(ParsingMessageType type)
 			"with the same host:port, the first one in order is considered the primary. The " <<
 			YELLOW << "[default_server]" << RESET << " directive is " << YELLOW <<
 			"ignored" << RESET << "." << std::endl;
-			break;
-		case IPV6_HOST:
-			std::cout << YELLOW << "INFO: " << RESET <<
-			"According to the subject requirements, we accept IPv4 host form only. Hosts like " <<
-			YELLOW << "[::] or [::1]" << RESET << " will be " << YELLOW <<
-			"replaced with default host. " << RESET <<
-			"According to subject, if this replace will affect same host:port of other server, " <<
-			YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
 			break;
 		case LOCAL_HOST:
 			std::cout << YELLOW << "INFO: " << RESET <<

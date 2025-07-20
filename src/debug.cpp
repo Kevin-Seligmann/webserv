@@ -113,7 +113,11 @@ void showParse(const ParsedServers& config) {
                 if (loc.index.empty()) {
                     std::cout << RED << "Empty" << RESET;
                 } else {
-                    std::cout << loc.index;
+					for (size_t j = 0; j < loc.index.size(); ++j) {
+                            std::cout << loc.index[j];
+                            if (j < loc.index.size() - 1) std::cout << ", ";
+                        }
+                        std::cout << std::endl;
                 }
                 std::cout << std::endl;
                 
@@ -279,7 +283,11 @@ void showServers(const ServersManager& ws) {
                     if (loc.index.empty()) {
                         std::cout << RED << "Empty" << RESET;
                     } else {
-                        std::cout << loc.index;
+						for (size_t j = 0; j < loc.index.size(); ++j) {
+                            std::cout << loc.index[j];
+                            if (j < loc.index.size() - 1) std::cout << ", ";
+						}
+                        std::cout << std::endl;
                     }
                     std::cout << std::endl;
                     
