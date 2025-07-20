@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/07/20 20:38:30 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/07/20 21:10:14 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,7 @@ Locations parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		if (tokens[i] == ";") ++i;
 	}
 	++i;
+
 	return (loc);
 }
 

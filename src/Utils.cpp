@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/07/20 20:48:39 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/07/20 21:07:19 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,7 @@ void printLocationConfig(const Locations& loc)
 	std::cout << "    Root: " << loc.root << std::endl;
 	std::cout << "    Index: " << std::endl;
 	for (size_t j = 0; j < loc.index.size(); ++j)
-	{
-		std::cout << loc.index[j];
-		if (j < loc.index.size() - 1) std::cout << ", ";
-	}
+		std::cout << "      - " << loc.index[j] << std::endl;
 	std::cout << std::endl;
 	std::cout << "    Autoindex: " << (loc.autoindex ? "true" : "false") << std::endl;
 	std::cout << "    Return Path: " << loc.return_path << std::endl;
