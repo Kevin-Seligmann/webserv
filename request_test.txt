@@ -1,3 +1,5 @@
-GET /Exam HTTP/1.1
-Host: Example.txt
+GET /cgi-bin/hello.py?name=ilya&lang=ru HTTP/1.1
+Host: www.example.com
+User-Agent: Mozilla/5.0
+Accept: text/html
 

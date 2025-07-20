@@ -21,6 +21,19 @@ std::string intToString(int value)
 	return (ss.str());
 }
 
+std::string socketToPort(int socket_fd)
+{
+	struct sockaddr_in addr;
+
+	socklen_t len = sizeof(addr);
+	if (getsockname(socket_fd, (struct sockaddr*)&addr, &len) == -1) 
+	{
+		exit(1); // TODO need to find out the way to keep it safe
+	}
+
+	return (intToString(ntohs(addr.sin_port)));
+}
+
 std::string getExtension(const std::string& path)
 {
 	size_t dot = path.find_last_of('.');

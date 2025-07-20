@@ -1,5 +1,7 @@
 #include "MediaType.hpp"
 
+std::string MediaType::type = "";
+
 std::ostream & operator<<(std::ostream & os,  MediaType const & media)
 {
     os << media.type << "/" << media.subtype << "; ";

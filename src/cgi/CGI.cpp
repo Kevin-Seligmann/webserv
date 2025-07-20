@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:14:39 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/26 18:13:36 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/06/30 20:33:04 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ CGI::CGI(const HTTPRequest& req)
 	env["REQUEST_METHOD"] = CGIUtils::methodToString(req.method);
 	env["SCRIPT_NAME"] = req.uri.path;
 	env["SERVER_NAME"] = "server"; // server_config
-	env["SERVER_PORT"] = "8080"; // TODO server_config
+	env["SERVER_PORT"] = "8080"; // TODO CGIUtils::socketToPort(con.getSocketFd());
 	env["SERVER_PROTOCOL"] = req.protocol;
 	env["SERVER_SOFTWARE"] = "webserver"; // este variable es obligatorio, pero no influye a script call
 
