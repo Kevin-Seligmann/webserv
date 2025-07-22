@@ -1,5 +1,3 @@
-#include <sstream>
-#include <cstdlib>  // Para std::atoi
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest(){}
@@ -31,7 +29,7 @@ void HTTPRequest::print(std::ostream & os) const
     << "BODY: " << body << "\n";
 }
 
-std::ostream & operator<<(std::ostream & os, HTTPRequest request)
+std::ostream & operator<<(std::ostream & os, const HTTPRequest &request)
 {
     request.print(os);
     return os;

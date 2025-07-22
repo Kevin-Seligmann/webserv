@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <sstream>
 #include "HTTPElement.hpp"
 #include "FieldSection.hpp"
 #include "HTTPBody.hpp"
@@ -25,4 +26,4 @@ struct HTTPRequest : public HTTPElement
     std::string const get_path() const;
 };
 
-std::ostream & operator<<(std::ostream & os, HTTPRequest request);
+std::ostream & operator<<(std::ostream & os, const HTTPRequest &request);

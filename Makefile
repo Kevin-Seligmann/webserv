@@ -1,3 +1,5 @@
+VPATH = src src/util src/http src/parse src/buffer
+
 # Variables
 NAME = webserv_test
 CXX = c++
@@ -38,7 +40,7 @@ SRCS = main.cpp \
        util/Logger.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \
-       util/ParsingUtil.cpp
+       utilParsingUtil.cpp
 
 # Add src/ prefix and generate object file paths
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(SRCS))

@@ -31,6 +31,8 @@
 
 # include "Parsed.hpp"
 
+# define CODE_ERR(str) throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + std::to_string(__LINE__))
+
 /* Colores para debug y otros - COMENTADOS para evitar conflicto con Logger.hpp */
 // # define RED        "\033[1;91m" 
 // # define GREEN      "\033[1;92m"  

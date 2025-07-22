@@ -21,19 +21,32 @@ Vary and Accept - etc are ignored
 
 Conditionals are ignored
 
-## Supported Fields
 
-- Host 
-- Connection
-- Set-Cookie
-- Date
-- Content-Type
+## Request fields
+
+Below there's a short list of fields that are parsed on requests,
+
+- Host
 - Content-Length
-- Last-Modified
-- Allowed
-- Location
-- Expect
 - Transfer-Encoding
+- Connection
+- Expect
+- Cookie
+- Content-Type
+
+## Response fields
+
+Below there's a short list of fields that are generated on responses, and when are they used.
+
+- Allow: When not allowd
+- Location: Created responses, Redirections
+- Server: = Webserv, always
+- Date: Always
+- Connection: Close when closing
+- Content-Type: When returning content
+- Content-Length: When returning content
+- last-Modified: For GET requests, before Date
+- Transfer-Encoding: = chunked
 
 ## Parsing and general rules
 

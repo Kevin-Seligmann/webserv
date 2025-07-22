@@ -24,6 +24,7 @@ struct MediaType
     std::string subtype;
     std::vector<std::pair<std::string, std::string> > parameters;
 
+    static std::string filename_to_type(std::string const & filename);
 
     void reset();
 };

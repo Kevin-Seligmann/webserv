@@ -44,6 +44,21 @@ void MediaType::load_types()
     }
 }
 
+bool ends_with(std::string const& filename, std::string const& ext) {
+    return filename.size() >= ext.size() &&
+           filename.compare(filename.size() - ext.size(), ext.size(), ext) == 0;
+}
+
+std::string MediaType::filename_to_type(std::string const & filename)
+{
+    for (t_mime_conf::iterator it = MediaType::ACCEPTED_TYPES.begin(); it != MediaType::ACCEPTED_TYPES.end(); it ++)
+        for (std::vector<std::string>::iterator s = it->second.begin(); s != it->second.end(); s++)
+            if (ends_with(filename, *s))  
+                return it->first.type + "/" + it->first.subtype;
+    return "application/octet-stream";
+}
+
+
 MediaType::MediaType(){}
 
 MediaType::MediaType(std::string type, std::string subtype):type(type), subtype(subtype){}
