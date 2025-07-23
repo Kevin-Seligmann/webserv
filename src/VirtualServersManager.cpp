@@ -148,11 +148,8 @@ void VirtualServersManager::handleEvent(const struct epoll_event& event) {
 
 void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& request) {
 	std::cout << "\tComplete request:" << std::endl;
-	std::cout << "\t\tMethod: " << request.method << std::endl;
-	std::cout << "\t\tHost: " << request.get_host() << std::endl;
-	std::cout << "\t\tPath: " << request.get_path() << std::endl;
-	std::cout << "\t\tPort: " << request.get_port() << std::endl;
-
+	std::cout << request;
+	
 	Server* target_server = findServerForRequest(request);
 	if (!target_server) {
 		sendErrorResponse(client_fd, 404, "Server not found");
@@ -186,7 +183,7 @@ void VirtualServersManager::handleClientData(int client_fd) {
 
 		if (client->hasError()) {
 			std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
-			sendErrorResponse(client_fd, client->error);
+			sendErrorResponse(client_fd, client->error); // sera de response manager? como es la estructura response?
 			disconnectClient(client_fd);
 			return;
 		}
