@@ -20,6 +20,7 @@ SRCS = main.cpp \
        Utils.cpp \
        Location.cpp \
        ServerValidator.cpp \
+       File.cpp \
        MediaType.cpp \
        http/HTTPRequest.cpp \
        http/HTTPBody.cpp \
@@ -38,10 +39,12 @@ SRCS = main.cpp \
        buffer/SysBufferFactory.cpp \
        buffer/SysFileBuffer.cpp \
        buffer/SysNetBuffer.cpp \
+       buffer/HTTPResponseBuffer.cpp\
        util/Logger.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \
-       util/ParsingUtil.cpp
+       util/ParsingUtil.cpp \
+       
 
 
 

@@ -28,6 +28,8 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 */
 void ResponseManager::generate_response()
 {
+    Logger::getInstance() << "Gerating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;;
+
     switch (::status::status_type(_error.status()))
     {
         case STYPE_IMMEDIATE_RESPONSE: generate_status_response(); break;
@@ -53,7 +55,12 @@ void ResponseManager::generate_get_response()
     // Find real path (Not for now ...)
     std::string final_path = _request.get_path();
 
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path << std::endl;
+
     _file.open(final_path, O_RDONLY);
+
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opepning file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
+
     switch (_file.get_status())
     {
         case File::OK: break;
@@ -67,12 +74,16 @@ void ResponseManager::generate_get_response()
     {
         case File::REGULAR: prepare_file_reading(); break;
         case File::DIRECTORY: read_directory(); break;
+        case File::NONE: _error.set("Rare file type", FORBIDDEN); return generate_status_response();
     }
 }
 
 void ResponseManager::prepare_file_reading()
 {
     std::string final_path = _request.get_path();
+
+    _buffer.put_protocol("HTTP/1.1");
+    _buffer.put_status(_error);
     _buffer.put_header("Server", "Webserv");
     _buffer.put_header_time("Date", time(NULL));
     _buffer.put_header_time("Last-Modified", _file.last_modified());
@@ -105,6 +116,8 @@ void ResponseManager::read_file()
 
 void ResponseManager::read_directory()
 {
+    _buffer.put_protocol("HTTP/1.1");
+    _buffer.put_status(_error);
     _buffer.put_header("Server", "Webserv");
     _buffer.put_header_time("Date", time(NULL));
     _buffer.put_header_time("Last-Modified", _file.last_modified());
@@ -116,16 +129,26 @@ void ResponseManager::read_directory()
     // Find real path (Not for now ...) (This is logical path)
     std::string final_path = _request.get_path();
 
-    _buffer.put_body("<!DOCTYPE html><html><body>");
+    std::string dirs;
+
+    dirs += "<!DOCTYPE html><html><body>";
     while (struct dirent * dir = _file.dir_next())
-        _buffer.put_body("<a href=\"" + final_path + "/" + dir->d_name + "\">" + dir->d_name + "</a></hr>");
-    _buffer.put_body("</html></body>");
+        dirs += "<a href=\"" + final_path + "/" + dir->d_name + "\">" + dir->d_name + "</a><hr>";
+    dirs += "</html></body>";
+
+    _buffer.put_header("Content-Length", wss::i_to_dec(dirs.size()));
+    _buffer.put_new_line();
+    _buffer.put_body(dirs);
+
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: " + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
 
     _status = WRITING_RESPONSE;
 }
 
 void ResponseManager::generate_status_response()
 {
+    Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
+
     _buffer.put_protocol("HTTP/1.1");
     _buffer.put_status(_error);
     _buffer.put_header("Server", "Webserv");

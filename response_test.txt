@@ -1,3 +1,5 @@
-HTTP/1.1 505 Invalid protocol: HTP/1.1 only HTTP/1.1 supported
 Server: Webserv
-Date: Wed, 23 Jul 2025 16:14:48 GMT
+Date: Wed, 23 Jul 2025 16:40:51 GMT
+Last-Modified: Wed, 23 Jul 2025 16:40:48 GMT
+Content-Type: text/html
+<!DOCTYPE html><html><body><a href="/home/kevin/42/webserv/.vscode">.vscode</a></hr><a href="/home/kevin/42/webserv/request_test.txt">request_test.txt</a></hr><a href="/home/kevin/42/webserv/.gitignore">.gitignore</a></hr><a href="/home/kevin/42/webserv/conf">conf</a></hr><a href="/home/kevin/42/webserv/inc">inc</a></hr><a href="/home/kevin/42/webserv/webserv">webserv</a></hr><a href="/home/kevin/42/webserv/src">src</a></hr><a href="/home/kevin/42/webserv/.git">.git</a></hr><a href="/home/kevin/42/webserv/..">..</a></hr><a href="/home/kevin/42/webserv/.">.</a></hr><a href="/home/kevin/42/webserv/obj">obj</a></hr><a href="/home/kevin/42/webserv/test">test</a></hr><a href="/home/kevin/42/webserv/test-nginx">test-nginx</a></hr><a href="/home/kevin/42/webserv/docs">docs</a></hr><a href="/home/kevin/42/webserv/Makefile">Makefile</a></hr><a href="/home/kevin/42/webserv/response_test.txt">response_test.txt</a></hr><a href="/home/kevin/42/webserv/Makefile.test">Makefile.test</a></hr><a href="/home/kevin/42/webserv/webserv_test">webserv_test</a></hr></html></body>

@@ -42,8 +42,8 @@ time_t File::last_modified() const
 
 File::descriptor_status File::get_status() const
 {
-    if (filetype == NONE)
-        CODE_ERR(std::string("Unexpectedly asking status of an invalid or unintiialized state"));
+    // if (filetype == NONE)
+    //     CODE_ERR(std::string("Unexpectedly asking status of an invalid or unintiialized state"));
     return status;
 }
 

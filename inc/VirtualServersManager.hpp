@@ -78,7 +78,7 @@ private:
 	// proceso y aux de cgi
 	bool isCgiRequest(Location* location, const std::string& path);
 	void processCgiRequest(int client_fd, HTTPRequest& request, Location* location);
-	void processStaticRequest(int client_fd, HTTPRequest& request, Location* location);
+	void processStaticRequest(int client_fd, Location* location);
 	
 	void sendErrorResponse(int client_fd, int status_code, const std::string& message);
 	void sendErrorResponse(int client_fd, const HTTPError& error);

@@ -171,7 +171,7 @@ void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& r
 		processCgiRequest(client_fd, request, location);
 	}
 	else {
-		processStaticRequest(client_fd, request, location);
+		processStaticRequest(client_fd, location);
 	}
 }
 
@@ -342,10 +342,33 @@ void VirtualServersManager::processCgiRequest(int client_fd, HTTPRequest& reques
 	send(client_fd, response.c_str(), response.length(), 0);
 }
 
-void VirtualServersManager::processStaticRequest(int client_fd, HTTPRequest& request, Location* location) {
-	// Implement static HTML
-	(void)request;
-	(void)location;
-	
-	temp_sendSimpleResponse(client_fd);
+void VirtualServersManager::processStaticRequest(int client_fd, Location* location) {
+	ClientState* client = ClientState::getOrCreateClientState(client_fd);
+
+	(void) location;
+	// Cosas que hacer:
+	// Set Location
+	// Set server
+
+	/*
+		Toma el FD y el EPOLL mode que necesita. Por ejemplo si está leyendo un 
+		archivo, el FD de ese archivo abierto. (O el fd del socket mismo, en ese caso ignorar)
+	*/
+	// responseManager.get_active_file_descriptor(); 
+
+	// generate response: Por primera vez cuando una request esté terminada
+	client->response_manager.generate_response();
+
+	// Esto se debe llamar en loop por cada iteración del loop de eventos
+	// Este WHILE debería desparecer
+	while (1)
+	{
+		/*
+			Dependiendo del modo actual. Lee un fichero o escribe en el socket.
+		*/
+		client->response_manager.process();
+
+		if (client->response_manager.response_done())
+			break ;
+	}
 }

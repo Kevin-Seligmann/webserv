@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <ctime>
+#include "Logger.hpp"
 #include "Utils.hpp"
 
 /*

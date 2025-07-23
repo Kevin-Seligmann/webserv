@@ -8,7 +8,7 @@ ipv4
 noproxy *
 
 # Request
-url = localhost:8080
+url = localhost:1234
 request-target = http://localhost:8080/index.png?query=abc#asdqd
 header = "Host: localhost:8080"
 header = "empty-name;"

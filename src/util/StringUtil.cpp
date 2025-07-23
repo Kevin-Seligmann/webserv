@@ -217,6 +217,27 @@ std::string wss::i_to_hex(size_t size)
     return res.empty() ? "0" : res;
 }
 
+std::string wss::ui_to_dec(ssize_t size)
+{
+    bool ng = false;
+    std::string res;
+
+    if (size < 0)
+    {
+        ng = true;
+        size *= -1;
+    }
+    while (size > 0)
+    {
+        res.push_back(parse::byte_char_to_hex(size % 10));
+        size /= 10;
+    }
+    if (ng)
+        res.push_back('-');
+    std::reverse(res.begin(), res.end());
+    return res.empty() ? "0" : res;
+}
+
 std::string wss::i_to_dec(size_t size)
 {
     std::string res;
