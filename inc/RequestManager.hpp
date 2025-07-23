@@ -17,7 +17,7 @@ public:
     ~RequestManager();
 
     void process();
-    bool request_done();
+    bool request_done() const;
     void new_request();
     HTTPError & gerError();
 

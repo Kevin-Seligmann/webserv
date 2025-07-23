@@ -12,6 +12,7 @@
 #include "RequestValidator.hpp"
 #include "ElementParser.hpp"
 #include "RequestParser.hpp"
+#include "ResponseManager.hpp"
 
 void create_test_suite(const std::string & path, std::vector<std::string> & tests)
 {
@@ -113,9 +114,9 @@ void run_request_parsing_test(std::string filename)
     std::cout << std::endl;
     lseek(f, start, SEEK_SET);
     
+    HTTPError error;
     HTTPRequest request;
-    RequestManager manager(request, SysBufferFactory::SYSBUFF_FILE, f);
-
+    RequestManager manager(request, error, SysBufferFactory::SYSBUFF_FILE, f);
 
     int requests_done = 0;
     while (requests_done < num_requests)

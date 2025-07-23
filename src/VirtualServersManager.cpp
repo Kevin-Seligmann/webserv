@@ -179,7 +179,7 @@ void VirtualServersManager::handleClientData(int client_fd) {
 	ClientState* client = ClientState::getOrCreateClientState(client_fd);
 
 	try {
-		client->request_manager->process();
+		client->request_manager.process();
 
 		if (client->hasError()) {
 			std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;

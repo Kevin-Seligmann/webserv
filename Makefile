@@ -28,6 +28,7 @@ SRCS = main.cpp \
        http/FieldSection.cpp \
        http/URI.cpp \
        http/RequestValidator.cpp \
+       response/ResponseManager.cpp \
        parse/ElementParser.cpp \
        parse/RequestManager.cpp \
        parse/RequestParser.cpp \
@@ -40,7 +41,9 @@ SRCS = main.cpp \
        util/Logger.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \
-       utilParsingUtil.cpp
+       util/ParsingUtil.cpp
+
+
 
 # Add src/ prefix and generate object file paths
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(SRCS))

@@ -69,7 +69,7 @@ void RequestManager::process()
     }
 }
 
-bool RequestManager::request_done()
+bool RequestManager::request_done() const
 {
     return _request_parser.get_status() == RequestParser::PRS_DONE;
 }

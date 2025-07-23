@@ -7,6 +7,7 @@
 #include "HTTPError.hpp"
 #include "ElementParser.hpp"
 #include "SysBufferFactory.hpp"
+#include "ResponseManager.hpp"
 #include "Location.hpp"
 #include "HTTPMethod.hpp"
 #include "Status.hpp"
@@ -30,19 +31,20 @@ public:
 		HTTPRequest 	request;
 		HTTPError		error;
 		ElementParser	element_parser;
-		RequestManager*	request_manager;
-		
+		RequestManager request_manager;
+		ResponseManager response_manager;
+	
 		ClientState(int client_fd)
 			: element_parser(error)
-			, request_manager(new RequestManager(request, SysBufferFactory::SYSBUFF_SOCKET, client_fd))
+			, request_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
+			, response_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 			{}
 
 		~ClientState() {
-			delete request_manager;
 		}
 		
 		bool isRequestComplete() const {
-			return request_manager->request_done();
+			return request_manager.request_done();
 		}
 
 		bool hasError() const {
