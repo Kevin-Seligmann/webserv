@@ -18,8 +18,21 @@
 #include "ResponseManager.hpp"
 #include "SysBufferFactory.hpp"
 
+void generate_rq_response(ResponseManager & responseManager)
+{
+	responseManager.generate_response();
+	while (1)
+	{
+		// responseManager.get_active_file_descriptor();
+		responseManager.process();
+		if (responseManager.response_done())
+			break ;
+	}
+}
+
 int main(int argc, char ** argv){
-    int f = open("request_test.txt", O_RDONLY);
+    int f = open("request_test.txt", O_RDONLY | O_NONBLOCK);
+    int fr = open("response_test.txt", O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC, 0777);
 
 	if (f <= 0)
 	{
@@ -27,24 +40,18 @@ int main(int argc, char ** argv){
 		return 1;
 	}
 
+	HTTPError err;
     HTTPRequest request;
-    RequestManager manager(request, SysBufferFactory::SYSBUFF_FILE, f);
+    RequestManager requestmanager(request, err, SysBufferFactory::SYSBUFF_FILE, f);
+	ResponseManager responsemanager(request, err, SysBufferFactory::SYSBUFF_FILE, fr);
 
     while (1)
     {
-        manager.process();
-        if  (manager.gerError().status() != OK)
+        requestmanager.process();
+        if (requestmanager.gerError().status() != OK || requestmanager.request_done())
 		{
-			std::cout << "Fail" << std::endl;
-			// Do anything with failed request
+			generate_rq_response(responsemanager);
             break ;
-		}
-        if (manager.request_done())
-		{
-			std::cout << request;
-			// Do anything with done request
-
-			break ;
 		}
     }
 }

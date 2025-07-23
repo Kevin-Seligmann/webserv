@@ -17,6 +17,7 @@ namespace wss
     bool casecmp(std::string const & s1, size_t pos, size_t len, std::string const & s2);
 
     std::string i_to_hex(size_t size);
+    std::string i_to_dec(size_t size);
 
     void remove_uri_segment(std::string & out);
     std::string::iterator move_uri_segment(std::string & dst, std::string & src, std::string::iterator begin);

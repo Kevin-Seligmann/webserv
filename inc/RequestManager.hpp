@@ -13,7 +13,7 @@
 class RequestManager 
 {
 public:
-    RequestManager(HTTPRequest & request, SysBufferFactory::sys_buffer_type type, int fd);
+    RequestManager(HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd);
     ~RequestManager();
 
     void process();
@@ -25,7 +25,7 @@ private:
     static const size_t _READ_BUFFER_SIZE = 2000;
 
     HTTPRequest & _request;
-    HTTPError _error;
+    HTTPError & _error;
     RequestValidator _validator;
     ElementParser _element_parser;
     RequestParser _request_parser;

@@ -19,6 +19,8 @@ void File::open(std::string const & path, int mode)
     open_file(path, mode);
 }
 
+void File::close(){destroy_current();}
+
 File::~File()
 {
     destroy_current();
@@ -54,7 +56,7 @@ void File::destroy_current()
 {
     if (fd > -1)
     {
-        close(fd);
+        ::close(fd);
         fd = -1;
     }
     if (_dir)

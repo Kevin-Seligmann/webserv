@@ -26,12 +26,10 @@ public:
     void set_virtual_server(Server const * config);
     void set_location(Location const * location);
     void generate_response();
-    void prepare_file_reading();
     // void generate_response(CGIResponse & response);
     void process();
     bool response_done();
-    void new_response();
-    void put_headers();
+
     ActiveFileDescriptor get_active_file_descriptor();
 
 private:
@@ -52,4 +50,6 @@ private:
     void read_file();
     void write_response();
     void read_directory();
+    void prepare_file_reading();
+    void new_response();
 };

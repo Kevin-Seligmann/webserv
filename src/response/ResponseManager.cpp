@@ -24,20 +24,28 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 }
 
 /*
-    Called once request is dome
+    Called once request is done
 */
 void ResponseManager::generate_response()
 {
     switch (::status::status_type(_error.status()))
     {
-        case StatusType::STYPE_IMMEDIATE_RESPONSE: generate_status_response(); break;
-        case StatusType::STYPE_GENERATE_RESPONSE:
+        case STYPE_IMMEDIATE_RESPONSE: generate_status_response(); break;
+        case STYPE_GENERATE_RESPONSE:
             switch (_request.method)
             {
                 case GET: generate_get_response(); break ;
                 default: CODE_ERR("Not implemented");
             }
     }
+}
+
+void ResponseManager::new_response()
+{
+    _buffer.clear();
+    _config = NULL;
+    _location = NULL;
+    _status = WAITING_REQUEST;
 }
 
 void ResponseManager::generate_get_response()
@@ -92,9 +100,7 @@ void ResponseManager::read_file()
         return generate_status_response();
     }
     if (bytes_read == 0)
-    {
         _status = WRITING_RESPONSE;
-    }
 }
 
 void ResponseManager::read_directory()
@@ -104,8 +110,8 @@ void ResponseManager::read_directory()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header("Content-Type", "text/html");
 
-    if (!_location->hasDirectoryListing())
-        return _error.set("Directory listing is forbidden", FORBIDDEN);
+    // if (!_location->hasDirectoryListing())
+    //     return _error.set("Directory listing is forbidden", FORBIDDEN);
 
     // Find real path (Not for now ...) (This is logical path)
     std::string final_path = _request.get_path();
@@ -142,10 +148,24 @@ void ResponseManager::process()
 
 void ResponseManager::write_response()
 {
-    ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), _WRITE_BUFFER_SIZE);
+    size_t max = _WRITE_BUFFER_SIZE;
+    size_t write_qty = std::min<size_t>(max, _buffer.size());
+    ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {
         _buffer.consume_bytes(written_bytes);
+    }
+    else if (written_bytes == 0)
+    {
+        _buffer.clear();
+        _file.close();
+        _status = DONE;
+    }
+    else
+    {
+        Logger & i = Logger::getInstance();
+        i.error("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close: " + std::string(strerror(errno)));
+        CODE_ERR("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close.");
     }
 }
 

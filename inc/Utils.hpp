@@ -30,8 +30,9 @@
 # include <vector>
 
 # include "Parsed.hpp"
+# include "StringUtil.hpp"
 
-# define CODE_ERR(str) throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + std::to_string(__LINE__))
+# define CODE_ERR(str) (throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
 
 /* Colores para debug y otros - COMENTADOS para evitar conflicto con Logger.hpp */
 // # define RED        "\033[1;91m" 

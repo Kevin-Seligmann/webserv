@@ -216,3 +216,16 @@ std::string wss::i_to_hex(size_t size)
     std::reverse(res.begin(), res.end());
     return res.empty() ? "0" : res;
 }
+
+std::string wss::i_to_dec(size_t size)
+{
+    std::string res;
+
+    while (size > 0)
+    {
+        res.push_back(parse::byte_char_to_hex(size % 10));
+        size /= 10;
+    }
+    std::reverse(res.begin(), res.end());
+    return res.empty() ? "0" : res;
+}

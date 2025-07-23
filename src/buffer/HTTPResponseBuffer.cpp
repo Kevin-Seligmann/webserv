@@ -57,9 +57,7 @@ ssize_t HTTPResponseBuffer::write_from_fd(int fd, size_t n)
 {
     reserve(n);
 
-    ssize_t rb = read(fd, end(), n);
-    if (rb > 0)
-        consume_bytes(rb);
+    ssize_t rb = read(fd, itend(), n);
     return rb;
 }
 

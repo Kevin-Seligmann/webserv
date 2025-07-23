@@ -5,9 +5,8 @@ OBJ = maintest.o Logger.o  HTTPMethod.o FieldSection.o \
 	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
 	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
 	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
-	SysFileBuffer.o SysNetBuffer.o Listen.o \
-	Location.o Parsed.o Server.o \
-	Utils.o Connection.o MediaType.o HTTPRequest.o\
+	SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
+	File.o HTTPResponseBuffer.o \
 
 # Target
 NAME = webserv
@@ -27,8 +26,8 @@ DEPS = $(OBJ_PATH:.o=.d)
 # Include
 INCLUDES = -I./$(INC_DIR)
 
-# Flags -Wall -Wextra -Werror
-FLAGS = -std=c++98
+# Flags -Wall -Wextra -Werror 
+FLAGS = -std=c++98 -g3
 
 # Compiler
 CC = c++

@@ -1,7 +1,7 @@
 #include "RequestManager.hpp"
 
-RequestManager::RequestManager(HTTPRequest & request, SysBufferFactory::sys_buffer_type type, int fd)
-:_request(request),
+RequestManager::RequestManager(HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
+:_request(request), _error(error),
 _validator(_request, _error),
 _element_parser(_error),
 _request_parser(_request, _error, _element_parser),

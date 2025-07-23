@@ -29,6 +29,7 @@ public:
     ~File();
 
     void open(std::string const & path, int mode);
+    void close();
 
     off_t size() const;
     time_t last_modified() const;
