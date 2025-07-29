@@ -240,10 +240,13 @@ int main(int argc, char* argv[]) {
     std::cout << "Webserv Test Suite (Using Parsed System)" << std::endl;
     std::cout << "=========================================" << std::endl;
     
+
     // Parse configuration
     ParsedServers parsedConfig;
     
     try {
+        MediaType::load_types();
+
         // Use your existing parseProcess function
         int result = parseProcess(argc, argv, parsedConfig);
         

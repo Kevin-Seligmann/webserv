@@ -53,8 +53,11 @@ std::string MediaType::filename_to_type(std::string const & filename)
 {
     for (t_mime_conf::iterator it = MediaType::ACCEPTED_TYPES.begin(); it != MediaType::ACCEPTED_TYPES.end(); it ++)
         for (std::vector<std::string>::iterator s = it->second.begin(); s != it->second.end(); s++)
+        {
+            // Logger::getInstance() << "Media type, testing " + filename + " with extension " + *s << std::endl;
             if (ends_with(filename, *s))  
                 return it->first.type + "/" + it->first.subtype;
+        }
     return "application/octet-stream";
 }
 

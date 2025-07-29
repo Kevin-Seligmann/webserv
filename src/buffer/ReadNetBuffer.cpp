@@ -37,6 +37,14 @@ void ReadNetBuffer::reserve(ssize_t n)
     _end = new_buffer + n;
 }
 
+/*
+    Kinda dangerous. Use after reserve or knowing there's space.
+*/
+void ReadNetBuffer::manual_increase(size_t n)
+{
+    _tail += n;
+}
+
 void ReadNetBuffer::shrink()
 {
     size_t size = this->size();

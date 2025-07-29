@@ -89,6 +89,7 @@ void ResponseManager::prepare_file_reading()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header_number("Content-Length", _file.size());
     _buffer.put_header("Content-Type", MediaType::filename_to_type(final_path));
+    _buffer.put_new_line();
     _status = READING_FILE;
 }
 
@@ -111,7 +112,10 @@ void ResponseManager::read_file()
         return generate_status_response();
     }
     if (bytes_read == 0)
+    {
+        Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File read. Full planned response: " + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
         _status = WRITING_RESPONSE;
+    }
 }
 
 void ResponseManager::read_directory()

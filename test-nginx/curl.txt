@@ -9,7 +9,7 @@ noproxy *
 
 # Request
 url = localhost:1234
-request-target = http://localhost:8080/index.png?query=abc#asdqd
+request-target = http://localhost:8080/home/kevin/42/webserv/test/test.html
 header = "Host: localhost:8080"
 header = "empty-name;"
 header = "Content-Type: text/css; q=0"

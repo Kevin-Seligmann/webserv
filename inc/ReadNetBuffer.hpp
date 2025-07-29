@@ -38,8 +38,7 @@ public:
 
 protected:
     void discard_current();
-
-
+    void manual_increase(size_t n);
 
 private:
     static const size_t START_BUFFER_SIZE;
@@ -48,6 +47,7 @@ private:
     ReadNetBuffer(ReadNetBuffer &);
     ReadNetBuffer & operator=(ReadNetBuffer &);
 
+    
     uint8_t *_buffer;
     uint8_t *_start;
     uint8_t *_end;

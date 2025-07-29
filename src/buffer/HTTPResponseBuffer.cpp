@@ -58,6 +58,8 @@ ssize_t HTTPResponseBuffer::write_from_fd(int fd, size_t n)
     reserve(n);
 
     ssize_t rb = read(fd, itend(), n);
+    if (rb > 0)
+        manual_increase(rb);
     return rb;
 }
 
