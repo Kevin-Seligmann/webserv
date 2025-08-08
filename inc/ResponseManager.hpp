@@ -38,7 +38,7 @@ private:
 
     HTTPRequest & _request;
     HTTPError & _error;    
-    Server const * _config;
+    Server const * _server;
     Location const * _location;
     SysBuffer * _sys_buffer;
     HTTPResponseBuffer _buffer;
@@ -52,4 +52,13 @@ private:
     void read_directory();
     void prepare_file_reading();
     void new_response();
+    bool validate_method();
+
+    std::string const get_host_path();
+    std::vector<HTTPMethod> get_allowed_methods();
+    bool allow_upload();
+    bool is_autoindex();
+    
+    // How does upload_dir work
+    // Return ?
 };

@@ -9,13 +9,11 @@ noproxy *
 
 # Request
 url = localhost:1234
-request-target = http://s2:83/
+request-target = http://localhost:1234/index.png
 header = "Host: s3:82"
-header = "empty-name;"
-header = "Content-Type: text/css; q=0"
-
 
 # Post request  
+request = POST
 
 # Cookie output
 #cookie-jar = cookies.txt

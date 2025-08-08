@@ -1,5 +1,6 @@
 .vscode
 webserv
+webserv_test
 obj
 *.o
 *.d

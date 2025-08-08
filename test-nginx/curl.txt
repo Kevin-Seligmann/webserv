@@ -8,8 +8,8 @@ ipv4
 noproxy *
 
 # Request
-url = localhost:8080
-request-target = http://s2:83/
+url = localhost:1234
+request-target = http://localhost:1234/
 header = "Host: s3:82"
 header = "empty-name;"
 header = "Content-Type: text/css; q=0"

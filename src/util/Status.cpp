@@ -8,6 +8,7 @@ std::string const & status_to_text(Status const & status)
     static const std::string bad_request = "Bad Request (400)";
     static const std::string forbidden = "Forbidden (403)";
     static const std::string not_found = "Not found (404)";
+    static const std::string method_not_allowed = "Method not allowed (405)";
     static const std::string content_too_large = "Content Too Large (413)";
     static const std::string uri_too_long = "URI Too Long (414)";
     static const std::string expectation_failed = "Expectation failed (417)";
@@ -24,6 +25,7 @@ std::string const & status_to_text(Status const & status)
         case BAD_REQUEST: return bad_request;
         case FORBIDDEN: return forbidden;
         case NOT_FOUND: return not_found;
+        case METHOD_NOT_ALLOWED: return method_not_allowed;
         case CONTENT_TOO_LARGE: return content_too_large;
         case URI_TOO_LONG: return uri_too_long;
         case EXPECTATION_FAILED: return expectation_failed;
@@ -42,6 +44,7 @@ std::string const & stoa(Status const & status)
     static const std::string bad_request = "400";
     static const std::string forbidden = "403";
     static const std::string not_found = "404";
+    static const std::string method_not_allowed = "405";
     static const std::string content_too_large = "413";
     static const std::string uri_too_long = "414";
     static const std::string expectation_failed = "417";
@@ -57,6 +60,7 @@ std::string const & stoa(Status const & status)
         case BAD_REQUEST: return bad_request;
         case FORBIDDEN: return forbidden;
         case NOT_FOUND: return not_found;
+        case METHOD_NOT_ALLOWED: return method_not_allowed;
         case CONTENT_TOO_LARGE: return content_too_large;
         case URI_TOO_LONG: return uri_too_long;
         case EXPECTATION_FAILED: return expectation_failed;
@@ -86,6 +90,7 @@ StatusType status_type(Status const & status)
         case UNSUPPORTED_MEDIA_TYPE:
         case FORBIDDEN:
         case NOT_FOUND:
+        case METHOD_NOT_ALLOWED:
         case INTERNAL_SERVER_ERROR:
             return STYPE_IMMEDIATE_RESPONSE;
     }
