@@ -17,6 +17,8 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 
     std::vector<std::string> m;
     m.push_back("GET");
+    m.push_back("POST");
+    m.push_back("DELETE");
     lc->setMethods(m);
 
     this->_location = lc;
@@ -37,6 +39,7 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
         case DONE:
             CODE_ERR("Trying to get active file descriptor from an invalid status");
         case READING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLIN);
+        case WRITING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLOUT);
         case WRITING_RESPONSE: return ActiveFileDescriptor(_sys_buffer->_fd, EPOLLOUT);
         default: CODE_ERR("Trying to get active file descriptor from an invalid status");
     }
@@ -58,6 +61,8 @@ void ResponseManager::generate_response()
             switch (_request.method)
             {
                 case GET: generate_get_response(); break ;
+                case POST: generate_post_response(); break ;
+                case DELETE: generate_delete_response(); break ;
                 default: CODE_ERR("Not implemented");
             }
     }
@@ -84,7 +89,6 @@ void ResponseManager::new_response()
 
 void ResponseManager::generate_get_response()
 {
-    // Find real path (Not for now ...)
     std::string final_path = get_host_path();
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path << std::endl;
@@ -109,6 +113,62 @@ void ResponseManager::generate_get_response()
         case File::NONE: _error.set("Rare file type", FORBIDDEN); return generate_status_response();
     }
 }
+
+void ResponseManager::generate_post_response()
+{
+    std::string final_path = get_host_path();
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing POST. File: " + final_path << std::endl;
+
+    _file.open(final_path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opepning file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
+
+    switch (_file.get_status())
+    {
+        case File::OK: break;
+        case File::NOTFOUND: _error.set("File not found", NOT_FOUND); return generate_status_response();
+        case File::NOPERM:  _error.set("No access to this file", FORBIDDEN); return generate_status_response();
+        case File::BADFILENAME: _error.set("File's basename is invalid", BAD_REQUEST); return generate_status_response();
+        case File::RAREFILE: _error.set("File type is not operational", FORBIDDEN); return generate_status_response();
+        case File::ERROR: _error.set("Error reading file", INTERNAL_SERVER_ERROR); return generate_status_response();
+    }
+    switch (_file.filetype)
+    {
+        case File::REGULAR: break;
+        case File::DIRECTORY: _error.set("Can't overwrite a directory", FORBIDDEN); return generate_status_response();
+        case File::NONE: _error.set("Rare file type", FORBIDDEN); return generate_status_response();
+    }
+
+    _wr_file_it = _request.body.content.begin();
+    _status = WRITING_FILE;
+};
+
+void ResponseManager::generate_delete_response()
+{
+    std::string final_path = get_host_path();
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing DELETE. File: " + final_path << std::endl;
+    
+    _file.open(final_path, O_RDONLY);
+
+    switch (_file.get_status())
+    {
+        case File::OK: break;
+        case File::NOTFOUND: _error.set("File not found", NOT_FOUND); return generate_status_response();
+        case File::NOPERM:  _error.set("No access to this file", FORBIDDEN); return generate_status_response();
+        case File::BADFILENAME: _error.set("File's basename is invalid", BAD_REQUEST); return generate_status_response();
+        case File::RAREFILE: _error.set("File type is not operational", FORBIDDEN); return generate_status_response();
+        case File::ERROR: _error.set("Error reading file", INTERNAL_SERVER_ERROR); return generate_status_response();
+    }
+    switch (_file.filetype)
+    {
+        case File::REGULAR: break;
+        case File::DIRECTORY: _error.set("Can't delete a directory", FORBIDDEN); return generate_status_response();
+        case File::NONE: _error.set("Rare file type", FORBIDDEN); return generate_status_response();
+    }
+
+    _file.close();
+    std::remove(final_path.c_str());
+};
+
 
 void ResponseManager::prepare_file_reading()
 {
@@ -149,6 +209,33 @@ void ResponseManager::read_file()
     }
 }
 
+void ResponseManager::write_file()
+{
+    size_t write_qty = ResponseManager::_WRITE_FILE_BUFFER_SIZE;
+    // Just writes from the body's pointer to the end or write limit
+    ssize_t bytes_writen = write(_file.fd, &(*_wr_file_it), std::min(write_qty, (size_t) std::distance(_wr_file_it, _request.body.content.end())));
+
+    if (bytes_writen < 0)
+    {
+        _status = WAITING_REQUEST ;
+        _error.set("Error writing file", INTERNAL_SERVER_ERROR);
+        return generate_status_response();
+    }
+
+    // Advance the content pointer
+    _wr_file_it += bytes_writen;
+    if (_wr_file_it == _request.body.content.end())
+    {
+        _buffer.put_protocol("HTTP/1.1");
+        _buffer.put_status(_error);
+        _buffer.put_header("Server", "Webserv");
+        _buffer.put_header_time("Date", time(NULL));
+        Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+        _status = WRITING_RESPONSE;
+    }
+}
+
+
 void ResponseManager::read_directory()
 {
     _buffer.put_protocol("HTTP/1.1");
@@ -181,13 +268,17 @@ void ResponseManager::read_directory()
     _buffer.put_body(dirs);
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: " + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
-
     _status = WRITING_RESPONSE;
 }
 
 void ResponseManager::generate_status_response()
 {
     Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
+
+    _buffer.put_protocol("HTTP/1.1");
+    _buffer.put_status(_error);
+    _buffer.put_header("Server", "Webserv");
+    _buffer.put_header_time("Date", time(NULL));
 
     if (_error.status() == METHOD_NOT_ALLOWED)
     {
@@ -203,12 +294,10 @@ void ResponseManager::generate_status_response()
         _buffer.put_header("Allow", allowed);
     }
 
-    _buffer.put_protocol("HTTP/1.1");
-    _buffer.put_status(_error);
-    _buffer.put_header("Server", "Webserv");
-    _buffer.put_header_time("Date", time(NULL));
     _buffer.put_new_line();
     // Put headers
+
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
     _status = WRITING_RESPONSE;
 }
 
@@ -218,6 +307,7 @@ void ResponseManager::process()
     {
         case WAITING_REQUEST: generate_response(); break;
         case READING_FILE: read_file(); break; 
+        case WRITING_FILE: write_file(); break ;
         case WRITING_RESPONSE: write_response(); break;
         case DONE: throw std::runtime_error("Code error: ResponseManager is DONE but tried to process");
         default: throw std::runtime_error("Code error: Unknown ResponseManager status");

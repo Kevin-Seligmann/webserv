@@ -10,13 +10,13 @@ File::File()
 File::File(std::string const & path, int mode)
 :fd(-1), filetype(NONE), _dir(NULL)
 {
-    open_file(path, mode);
+    open_file(path, mode, 0);
 }
 
-void File::open(std::string const & path, int mode)
+void File::open(std::string const & path, int mode, int f = 0)
 {
     destroy_current();
-    open_file(path, mode);
+    open_file(path, mode, f);
 }
 
 void File::close(){destroy_current();}
@@ -67,10 +67,10 @@ void File::destroy_current()
     filetype = NONE;
 }
 
-void File::open_file(std::string const & path, int mode)
+void File::open_file(std::string const & path, int mode, int f)
 {
     status = OK;
-    fd = ::open(path.c_str(), mode);
+    fd = ::open(path.c_str(), mode, f);
     if (fd == -1)
     {
         handle_error();
