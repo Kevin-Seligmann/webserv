@@ -31,7 +31,7 @@ void generate_rq_response(ResponseManager & responseManager)
 }
 
 int main(int argc, char ** argv){
-    int f = open("request_test.txt", O_RDONLY | O_NONBLOCK);
+    int f = open("default.conf", O_RDONLY | O_NONBLOCK);
     int fr = open("response_test.txt", O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC, 0777);
 
 	if (f <= 0)

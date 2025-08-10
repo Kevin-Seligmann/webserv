@@ -16,7 +16,6 @@ SRCS = main.cpp \
        VirtualServersManager.cpp \
        Parsed.cpp \
        Listen.cpp \
-       Connection.cpp \
        Utils.cpp \
        Location.cpp \
        ServerValidator.cpp \
