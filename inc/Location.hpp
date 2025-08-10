@@ -32,6 +32,8 @@ private:
 	std::string                             _redirect;
 	std::string 							_cgi_extension;
 	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
+	// Pagina de errores
+
 
 public:
 	Location();
@@ -48,7 +50,7 @@ public:
     bool hasAutoindex() const { return _autoindex; }
     const std::string& getRedirect() const { return _redirect; }
     const std::string& getCgiExtension() const { return _cgi_extension; }
-
+	bool getAllowUpload() const { return _allow_upload; }
 
 	void setPath(const std::string& path) { _path = path; }
 	void setMatchType(const MatchType& match_type) { _match_type = match_type; }
@@ -58,6 +60,7 @@ public:
 	void setDirectoryListing(const bool dl) { _autoindex = dl; }
 	void setRedirect(const std::string& redirect) { _redirect = redirect; }
 	void setCgixtension(const std::string cgi_extension) { _cgi_extension = cgi_extension; }
+	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
 };
 
 #endif
