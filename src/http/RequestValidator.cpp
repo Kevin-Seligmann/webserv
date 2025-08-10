@@ -45,6 +45,8 @@ void RequestValidator::validate_uri(URI const & uri)
 
 void RequestValidator::validate_headers(HTTPRequest const & request, FieldSection const & hdr)
 {
+    (void) request;
+    
     std::map<std::string, std::string>::const_iterator host = hdr.fields.find("host");
 
     // Host header validation
@@ -54,8 +56,8 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
     if (host->second.find(',') != std::string::npos)
         return put_error("The host header must be a single value", BAD_REQUEST);
     
-    if (!request.uri.host.empty() && (request.uri.host != hdr.host || request.uri.port != hdr.port))
-         return put_error("The authority component on URI is different from the header's authority", BAD_REQUEST);
+    // if (!request.uri.host.empty() && (request.uri.host != hdr.host || request.uri.port != hdr.port))
+    //      return put_error("The authority component on URI is different from the header's authority", BAD_REQUEST);
 
 
     // Validate transfer encodings

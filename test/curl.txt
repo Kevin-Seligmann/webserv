@@ -9,10 +9,14 @@ noproxy *
 
 # Request
 url = localhost:1234
-request-target = http://s2:83/
+request-target = http://localhost:1234/s2
 header = "Host: s3:82"
-header = "empty-name;"
-header = "Content-Type: text/css; q=0"
+header = "Content-Type: application/javascript"
+
+# Post request  
+request = DELETE
+# data-binary = @post-data
+
 
 
 # Post request  

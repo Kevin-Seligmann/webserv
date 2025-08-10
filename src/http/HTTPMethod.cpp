@@ -16,14 +16,26 @@ std::ostream & operator<<(std::ostream & os, HTTPMethod method)
 
 HTTPMethod method::str_to_method(std::string const & str)
 {
-    if (str == "GET")
+    if (wss::casecmp(str, "GET"))
         return GET;
-    else if (str == "POST")
+    else if (wss::casecmp(str, "POST"))
         return POST;
-    else if (str == "DELETE")
+    else if (wss::casecmp(str, "DELETE"))
         return DELETE;
-    else if (str == "PUT")
+    else if (wss::casecmp(str, "PUT"))
         return PUT;
     else
         return NOMETHOD;
+}
+
+std::string const method::method_to_str(HTTPMethod const & m)
+{
+    switch (m)
+    {
+        case GET: return "GET";
+        case POST: return "POST";
+        case DELETE: return "DELETE";
+        case PUT: return  "PUT";
+        default: CODE_ERR("Trying to transform an unknown method to string");
+    }
 }

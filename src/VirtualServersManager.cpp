@@ -132,10 +132,16 @@ void VirtualServersManager::handleClientData(int client_fd) {
 		client->request_manager.process();
 
 		if (client->hasError()) {
+			// Not all errors are disconnect, and they should go through response manager
+
 			std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
-			this->sendErrorResponse(client_fd, client->error);
+			processCompleteRequest(client_fd, client->request);
 			disconnectClient(client_fd);
-			return;
+
+			// std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
+			// sendErrorResponse(client_fd, client->error); // sera de response manager? como es la estructura response?
+			// disconnectClient(client_fd);
+			// return;
 		}
 
 		if (client->isRequestComplete()) {

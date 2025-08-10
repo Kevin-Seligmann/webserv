@@ -29,7 +29,7 @@ public:
     File();
     ~File();
 
-    void open(std::string const & path, int mode);
+    void open(std::string const & path, int mode, int f = 0);
     void close();
 
     off_t size() const;
@@ -47,7 +47,7 @@ private:
 
     void handle_error();
     void destroy_current();
-    void open_file(std::string const & src, int mode);
+    void open_file(std::string const & src, int mode, int f = 0);
     enum descriptor_status status;
 
     File(File const &);
