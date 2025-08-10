@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:21:11 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/10 17:29:00 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utils.hpp"
+#include "Location.hpp"
+#include "Parsed.hpp"
 
 // Temporary color macros to fix compilation
 #define RED        "\033[1;91m"

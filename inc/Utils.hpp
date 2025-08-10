@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:14:47 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/10 17:28:56 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,17 +29,12 @@
 # include <unistd.h>
 # include <vector>
 
-# include "Parsed.hpp"
+// Forward declarations para evitar dependencias circulares
+class Location;
+struct ParsedServer;
 # include "StringUtil.hpp"
 
 # define CODE_ERR(str) (throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
-
-/* Colores para debug y otros - COMENTADOS para evitar conflicto con Logger.hpp */
-// # define RED        "\033[1;91m" 
-// # define GREEN      "\033[1;92m"  
-// # define YELLOW     "\033[1;93m"
-// # define BLUE       "\033[1;94m"
-// # define RESET      "\033[0m"
 
 enum ParsingMessageType {
     DEFAULT_SERVER,

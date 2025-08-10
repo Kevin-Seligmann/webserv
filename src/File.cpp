@@ -13,7 +13,7 @@ File::File(std::string const & path, int mode)
     open_file(path, mode, 0);
 }
 
-void File::open(std::string const & path, int mode, int f = 0)
+void File::open(std::string const & path, int mode, int f)
 {
     destroy_current();
     open_file(path, mode, f);

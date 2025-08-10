@@ -34,7 +34,6 @@ public:
 		RequestManager request_manager;
 		ResponseManager response_manager;
 	
-		// Máquina de estados para el ciclo de vida del cliente
 		enum Status {
 			READING_REQUEST,
 			PROCESSING_REQUEST,
@@ -50,7 +49,7 @@ public:
 			: element_parser(error)
 			, request_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 			, response_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-			, status(READING_REQUEST) // Estado inicial
+			, status(READING_REQUEST)
 			{}
 
 		~ClientState() {
