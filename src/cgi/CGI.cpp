@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:14:39 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/30 20:33:04 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/10 15:15:39 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ CGI::CGI(const HTTPRequest& req)
 	env["CONTENT_TYPE"] = req.headers.content_type.type + "/" + req.headers.content_type.subtype;
 	env["GATEWAY_INTERFACE"] = "CGI/1.1"; // por defecto
 	env["QUERY_STRING"] = req.uri.query;
-	env["PATH_INFO"] = req.uri.path;
+	env["PATH_INFO"] = req.uri.path; // parte de uri despues del nombre de script!!!
 	env["REQUEST_METHOD"] = CGIUtils::methodToString(req.method);
 	env["SCRIPT_NAME"] = req.uri.path;
 	env["SERVER_NAME"] = "server"; // server_config

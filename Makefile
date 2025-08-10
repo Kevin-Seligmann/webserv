@@ -8,7 +8,7 @@ OBJ = main.o Logger.o HTTPRequest.o HTTPMethod.o FieldSection.o \
 	SysFileBuffer.o SysNetBuffer.o debug.o serversInit.o Listen.o \
 	Locations.o Parsed.o Servers.o VirtualServersManager.o ServerValidator.o \
 	Utils.o serversRun.o Connection.o MediaType.o \
-	CGI.o CGIUtils.o  \
+	CGI.o CGI_mapping.o CGIUtils.o  \
 
 # Target
 NAME = webserv

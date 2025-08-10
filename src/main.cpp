@@ -1,5 +1,7 @@
 
 // SERVER TEST
+
+#include "CGI_mapping.hpp"
 #include "VirtualServersManager.hpp"
 #include "Parsed.hpp"
 #include "Utils.hpp"
@@ -10,6 +12,11 @@ int main(int argc, char** argv) {
 	ParsedServers config;
 	VirtualServersManager webServers;
 	try {
+
+		// creamos una mapa de las rutas hasta los scripts
+		// es mas facil y suficiente para mantener CGI en todo el proyecto
+		CGIMapping::instance().load("cgi-bin/cgi_mapping.conf");
+
 		if (parseProcess(argc, argv, config) != 0) return (1);
 		
 		serversInit(webServers, config);
