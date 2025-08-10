@@ -36,7 +36,7 @@ int main(int argc, char ** argv){
 
 	if (f <= 0)
 	{
-		perror("request_test.txt");
+		perror("default.conf");
 		return 1;
 	}
 

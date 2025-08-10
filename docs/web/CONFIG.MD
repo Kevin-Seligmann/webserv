@@ -18,7 +18,7 @@ The port information on the request itself is completely irrelevant.
 Nginx also doesn't do the validations that RFC asks for about Host header field and Aboslute-URI adresses and ports.
 
 (Supported?) The "Host" header field might be skip if "" is a server name. 
-
+   
 # Server name
 
 
@@ -44,7 +44,7 @@ The '=' character defines an exact match that takes priority above other locatio
 
 For CGI requests, when the location has an ending slash and if the location matches up until the last /. The URI must contain this slash. Otherwise a redirect is returned to the correct URI.
 
-Nesting doesn't do anything special. Most directives are not inherited.
+Nesting doesn't do anything special. Most directives are not inherited. Not supported.
 
 # Directives
 
@@ -52,11 +52,11 @@ Nesting doesn't do anything special. Most directives are not inherited.
 
 Defines the URI that will be shown on error.
 
-EG: error_page 500 502 503 504 /50x.html; (Implemented ?)
+EG: error_page 500 502 503 504 /50x.html;
 
 This produces an internal redirect to such URI as a GET. Which means that the context will be the one of the new Location.
 
-(Discutir qué de esto se implementa)
+Full URL? 
 
 ### Listen: Server, Location; Default: listen *:80 or *:8000;
 
@@ -105,23 +105,25 @@ Investigate more, what happens when there's no match.
 
 If the requet ends in a slash, produces directory listing.
 
-### client_max_body_size: Server, Location; Default: 1m
+### client_max_body_size: Server; Default: 1m
 
 Max client body size.
 
 Would return 413 (Request Entity Too Large). 0 means unlimited size.
 
-### allow_upload: Server?, Location?; Default: False
+### allow_upload: Location; Default: False
 
 Allos POST requests that upload content natively (Not through CGI)
 
-### upload_dir: Server?, Location?; Default: all
+### upload_dir: Server, Location; Default: all
 
-Restrict uplaods to the specific URI.
+Not implemented
 
-### Return: Server?, Location?
+### Return: Server, Location
 
-### allow_methods: Server?, Location?; Default: GET
+Not implemented
+
+### allow_methods: Server, Location; Default: GET
 
 Methods allowed.
 

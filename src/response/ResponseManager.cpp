@@ -245,7 +245,7 @@ void ResponseManager::read_directory()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header("Content-Type", "text/html");
 
-    // if (!_location->hasDirectoryListing())
+    // if (!_location->hasAutoindex())
     //     return _error.set("Directory listing is forbidden", FORBIDDEN);
 
     std::string final_path = get_host_path();
@@ -387,5 +387,5 @@ bool ResponseManager::is_autoindex()
     // Else, return default.
 
     // Temp
-    return _location->hasDirectoryListing();
+    return _location->hasAutoindex();
 }

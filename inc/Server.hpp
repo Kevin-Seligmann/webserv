@@ -14,7 +14,7 @@
 #include "Location.hpp"
 #include "HTTPRequest.hpp"
 
-class Server {
+class Server {    
 public:
 	struct NetworkLayer {
 		int                 socket_fd;
