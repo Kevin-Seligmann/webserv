@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/10 17:29:00 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/08/16 13:34:18 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,14 +112,6 @@ void printParsingMessage(ParsingMessageType type)
 			"with the same host:port, the first one in order is considered the primary. The " <<
 			YELLOW << "[default_server]" << RESET << " directive is " << YELLOW <<
 			"ignored" << RESET << "." << std::endl;
-			break;
-		case IPV6_HOST:
-			std::cout << YELLOW << "INFO: " << RESET <<
-			"According to the subject requirements, we accept IPv4 host form only. Hosts like " <<
-			YELLOW << "[::] or [::1]" << RESET << " will be " << YELLOW <<
-			"replaced with default host. " << RESET <<
-			"According to subject, if this replace will affect same host:port of other server, " <<
-			YELLOW << "the first one in order is considered the primary" << RESET << "." << std::endl;
 			break;
 		case LOCAL_HOST:
 			std::cout << YELLOW << "INFO: " << RESET <<

@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/06/12 14:17:10 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/16 13:33:46 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,13 +164,11 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 			size_t brace_close = token.find(']');
 			size_t point = token.find('.');
 			size_t colon = token.find(':');
-			if (brace_open != std::string::npos) 
+			if (brace_open != std::string::npos)
 			{
-				printParsingMessage(IPV6_HOST);
-				if (brace_close == std::string::npos) {
-					throw std::runtime_error("Unclosed brackets in listen directive"); }
-				if (brace_close + 1 < token.size() && token[brace_close + 1] == ':') {
-					ld.port = to_int(token.substr(brace_close + 2)); }
+				if (brace_close == std::string::npos)
+					throw std::runtime_error("Unclosed brackets in listen directive");
+				throw std::runtime_error("IPv6 addresses are not allowed: " + token);
 			}
 			else if (colon != std::string::npos)
 			{

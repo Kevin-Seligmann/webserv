@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/10 17:28:56 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/08/16 13:35:56 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ struct ParsedServer;
 
 enum ParsingMessageType {
     DEFAULT_SERVER,
-    IPV6_HOST,
     LOCAL_HOST,
     ASTERIKS_HOST
 };
