@@ -15,7 +15,7 @@ header = "Content-Type: application/javascript"
 
 # Post request  
 request = DELETE
-# data-binary = @post-data
+# data-binary = @post
 
 # Cookie output
 #cookie-jar = cookies.txt
