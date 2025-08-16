@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/05/30 19:06:39 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/16 18:30:04 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "Enums.hpp"
 #include "Listen.hpp"
 #include "Location.hpp"
 
@@ -33,18 +34,20 @@ struct ParsedServer {
 	std::vector<std::string> index_files;
 	std::map<int, std::string> error_pages;
 	std::vector<std::string> allow_methods;
-	bool autoindex;
+	AutoIndexState autoindex;
+//	bool autoindex;
 	std::string client_max_body_size;
 	std::map<std::string, Location> locations;
 
 	ParsedServer()
-		: autoindex(false) {}
+		: autoindex(AINDX_DEF_OFF) {}
 
 	ParsedServer(const Listen& listen,
 				 const std::vector<std::string>& server_names,
 				 const std::string& root,
 				 const std::vector<std::string>& index_files,
 				 const std::map<int, std::string>& error_pages,
+				 const std::vector<std::string>& allow_methods,
 				 const std::map<std::string, Location>& locations);
 
 	~ParsedServer();

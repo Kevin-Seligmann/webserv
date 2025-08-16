@@ -15,6 +15,7 @@ SRCS = main.cpp \
        Server.cpp \
        VirtualServersManager.cpp \
        Parsed.cpp \
+	   ConfigInheritance.cpp \
        Listen.cpp \
        Utils.cpp \
        Location.cpp \

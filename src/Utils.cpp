@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 13:34:18 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/16 19:07:50 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,11 +56,34 @@ int checkFile(const char* argv)
     return (0);
 }
 
+std::string autoindexToString(AutoIndexState state)
+{
+    switch (state)
+    {
+        case AINDX_DEF_OFF:  return "DEFAULT_OFF";
+        case AINDX_DEF_ON:   return "DEFAULT_ON";
+        case AINDX_SERV_OFF: return "SERVER_OFF";
+        case AINDX_SERV_ON:  return "SERVER_ON";
+        case AINDX_LOC_OFF:  return "LOCATION_OFF";
+        case AINDX_LOC_ON:   return "LOCATION_ON";
+        default:             return "UNKNOWN";
+    }
+}
+
 void printLocationConfig(const Location& loc)
 {
+	std::cout << YELLOW << "    Autoindex: " << RESET << autoindexToString(loc.getAutoindex()) << std::endl;
+
+	std::cout << YELLOW << "    Root: " << RESET << loc.getRoot() << std::endl;
+	std::vector<std::string> methods = loc.getMethods();
+	std::cout << YELLOW << "    Allowed Methods:" << RESET << std::endl;
+    for (size_t i = 0; i < methods.size(); ++i)
+        std::cout << "      - " << methods[i] << std::endl;
+
+
 	// TODO: Implement when Location class has proper getters
-	(void)loc; // Suppress unused parameter warning
-	std::cout << "    Location configuration (not implemented yet)" << std::endl;
+//	(void)loc; // Suppress unused parameter warning
+//	std::cout << "    Location configuration (not implemented yet)" << std::endl;
 }
 
 void printServerConfig(const ParsedServer& config)
@@ -87,7 +110,10 @@ void printServerConfig(const ParsedServer& config)
 	for (size_t i = 0; i < config.allow_methods.size(); ++i)
 		std::cout << "  - " << config.allow_methods[i] << std::endl;
 
-	std::cout << YELLOW << "Autoindex: " << RESET << (config.autoindex ? "true" : "false") << std::endl;
+//	std::cout << YELLOW << "Autoindex: " << RESET << (config.autoindex ? "true" : "false") << std::endl;
+
+	std::cout << YELLOW << "Autoindex: " << RESET << autoindexToString(config.autoindex) << std::endl;
+
 
 	std::cout << YELLOW << "Client Max Body Size: " << RESET << config.client_max_body_size << std::endl;
 
@@ -95,7 +121,7 @@ void printServerConfig(const ParsedServer& config)
 	for (std::map<std::string, Location>::const_iterator it = config.locations.begin();
 		 it != config.locations.end(); ++it)
 	{
-		std::cout << "  Location block for: " << it->first << std::endl;
+		std::cout << BLUE <<"  Location block for: " << it->first << RESET << std::endl;
 		printLocationConfig(it->second);
 	}
 

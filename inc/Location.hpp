@@ -1,6 +1,7 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
+#include "Enums.hpp"
 #include "HTTPRequest.hpp"
 #include <string>
 #include <vector>
@@ -28,7 +29,7 @@ private:
 	std::vector<std::string>				_methods;
 	std::string								_root;
 	std::string								_index;
-	bool									_autoindex; // que llegue heredado ya y que  no haga falta mirar server
+	AutoIndexState							_autoindex; // que llegue heredado ya y que  no haga falta mirar server
 	std::string                             _redirect;
 	std::string 							_cgi_extension;
 	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
@@ -46,6 +47,7 @@ public:
 	const MatchType& getMatchType() const { return _match_type; }
 	const std::string& getRoot() const { return _root; }
     const std::string& getIndex() const { return _index; }
+	AutoIndexState getAutoindex() const { return _autoindex; }
     const std::vector<std::string>& getMethods() const { return _methods; }
     bool hasAutoindex() const { return _autoindex; }
     const std::string& getRedirect() const { return _redirect; }
@@ -57,7 +59,8 @@ public:
     void setMethods(const std::vector<std::string>& methods) { _methods = methods; }
     void setRoot(const std::string& root) { _root = root; }
 	void setIndex(const std::string& index) { _index = index; }
-	void setDirectoryListing(const bool dl) { _autoindex = dl; }
+	void setAutoindex(AutoIndexState state) { _autoindex = state; }
+//	void setDirectoryListing(const bool dl) { _autoindex = dl; }
 	void setRedirect(const std::string& redirect) { _redirect = redirect; }
 	void setCgixtension(const std::string cgi_extension) { _cgi_extension = cgi_extension; }
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }

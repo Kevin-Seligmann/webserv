@@ -6,10 +6,11 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 13:33:46 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/16 20:18:01 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "ConfigInheritance.hpp"
 #include "Parsed.hpp"
 #include "Utils.hpp"
 #include "ServerValidator.hpp"
@@ -28,13 +29,15 @@ ParsedServer::ParsedServer(
     const std::string& root,
     const std::vector<std::string>& indexFiles,
     const std::map<int, std::string>& errorPages,
+	const std::vector<std::string>& methods,
     const std::map<std::string, Location>& locations
 )
   : server_names(serverNames)
   , root(root)
   , index_files(indexFiles)
   , error_pages(errorPages)
-  , autoindex(false)
+  , allow_methods(methods)
+  , autoindex(AINDX_DEF_OFF)
   , locations(locations)
 {
     listens.push_back(listen);
@@ -124,17 +127,65 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		++i;
 	}
 
-	// TODO: Implement proper Location parsing when class has setters
-	// For now, just skip to the closing brace
-	(void)loc; // Suppress unused variable warning
-	
 	i = expect(tokens, i, "{");
 	while (i < tokens.size() && tokens[i] != "}")
 	{
-		++i; // Skip all tokens until closing brace
+		std::string key = tokens[i++];
+		if (key == "location")
+        {
+            throw std::runtime_error("Locations inside location are not supported.");
+		}
+		else if (key == "allow_methods")
+		{
+			std::vector<std::string> methods;
+			while (i < tokens.size() && tokens[i] != ";")
+				methods.push_back(tokens[i++]);
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			loc.setMethods(methods);
+		}
+		else if (key == "root")
+		{
+			if (i < tokens.size()) loc.setRoot(tokens[i++]);
+		}
+		else if (key == "index")
+		{
+			if (i < tokens.size()) loc.setIndex(tokens[i++]);
+		}
+		else if (key == "autoindex")
+		{
+			std::string autoindex_value = tokens[i++];
+			if (autoindex_value == "true" || autoindex_value == "on")
+				loc.setAutoindex(AINDX_LOC_ON);
+			else if (autoindex_value == "false" || autoindex_value == "off")
+				loc.setAutoindex(AINDX_LOC_OFF);
+			else {
+				loc.setAutoindex(AINDX_LOC_OFF);
+				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
+			}
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+		}
+		else if (key == "redirect") 
+		{
+            if (i < tokens.size()) loc.setRedirect(tokens[i++]);
+        }
+        else if (key == "cgi_extension")
+		{
+            if (i < tokens.size()) loc.setCgixtension(tokens[i++]);
+        }
+        else if (key == "allow_upload")
+		{
+            if (i < tokens.size()) {
+                std::string value = tokens[i++];
+                loc.setAllowUpload(value == "on" || value == "true");
+            }
+        }
+        else
+		{
+            if (i < tokens.size() && tokens[i] == ";") ++i;
+        }
 	}
-	++i; // Skip the closing brace
-	
+	if (i < tokens.size() && tokens[i] == "}") ++i;
+
 	return loc;
 }
 
@@ -258,11 +309,11 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		{
 			std::string autoindex_value = tokens[i++];
 			if (autoindex_value == "true" || autoindex_value == "on")
-				server.autoindex = true;
+				server.autoindex = AINDX_SERV_ON;
 			else if (autoindex_value == "false" || autoindex_value == "off")
-				server.autoindex = false;
+				server.autoindex = AINDX_SERV_OFF;
 			else {
-				server.autoindex = false;
+				server.autoindex = AINDX_DEF_OFF;
 				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
 			}
 		}
@@ -276,6 +327,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		if (tokens[i] == ";") ++i;
 	}
 	++i;
+
+	applyAutoindex(server);
+	applyAllowMethods(server);
 
 	return (server);
 }
@@ -351,9 +405,15 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         std::vector<std::string> tokens = tokenize(content);
 
 		parsedConfig = parseConfig(tokens);
-        
+
+
+		for (size_t i = 0; i < parsedConfig.size(); ++i)
+		{
+			printServerConfig(parsedConfig[i]);
+		}
+
         ServerValidator::validate(parsedConfig);
-        
+
         std::cout << BLUE << successMessage << RESET << std::endl;
         
     } catch (const std::exception& e) {
