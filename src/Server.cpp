@@ -166,7 +166,7 @@ std::string Server::ConfigLayer::getErrorPage(int code) const {
 // Server Implementation
 Server::Server() {
 }
-
+ 
 Server::Server(const ParsedServer& parsed) {
     if (!parsed.listens.empty()) {
         _network.host = parsed.listens[0].host;

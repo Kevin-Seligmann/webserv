@@ -73,6 +73,8 @@ private:
 	int                             _epoll_fd;
 	std::vector<struct epoll_event> _events;
 	std::vector<int>                _client_fds;
+	std::map<Listen, int>			_listen_sockets;
+	std::map<Listen, std::vector<ServerConfig*> >	_virtual_host;
 
 	void setupEpoll();
 	bool isServerFD(int fd) const;
