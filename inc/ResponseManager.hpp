@@ -9,10 +9,13 @@
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "SysBufferFactory.hpp"
-#include "Server.hpp"
 #include "HTTPResponseBuffer.hpp"
 #include "File.hpp"
 #include "ActiveFileDescriptor.hpp"
+
+// FORWARD DECLARATIONS TO AVOID CIRCULAR DEPENDENCIES
+class ServerConfig;
+class Location;
 
 class ResponseManager
 {
@@ -24,7 +27,7 @@ public:
     ResponseManager(HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
     ~ResponseManager();
 
-    void set_virtual_server(Server const * config);
+    void set_virtual_server(ServerConfig const * config); // Cambiado: Server -> ServerConfig
     void set_location(Location const * location);
     void generate_response();
     // void generate_response(CGIResponse & response);
@@ -40,11 +43,11 @@ private:
 
     HTTPRequest & _request;
     HTTPError & _error;    
-    Server const * _server;
+    RM_status _status;
+    ServerConfig const * _server; // Cambiado: Server -> ServerConfig
     Location const * _location;
     SysBuffer * _sys_buffer;
     HTTPResponseBuffer _buffer;
-    RM_status _status;
     File _file;
     std::string::iterator _wr_file_it;
 

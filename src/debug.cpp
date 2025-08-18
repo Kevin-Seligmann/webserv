@@ -172,7 +172,7 @@ void showParse(const ParsedServers& config) {
 }
 
 // FUNCIÓN PARA DEBUG DE SERVERS MANAGER
-void showServers(const VirtualServersManager& ws) {
+/* void showServers(const VirtualServersManager& ws) {
     std::cout << GREEN << "\n=== SERVERS MANAGER DEBUG ===" << RESET << std::endl;
 
     size_t server_count = 1;
@@ -338,7 +338,9 @@ void showServers(const VirtualServersManager& ws) {
 
     std::cout << GREEN << "\n=== END SERVERS MANAGER DEBUG ===" << RESET << std::endl;
 }
+*/
 
+/*
 // PARA DEBUG DE SOCKETS
 void showSockets(const VirtualServersManager& ws) {
     std::cout << GREEN << "\n=== SOCKETS DEBUG ===" << RESET << std::endl;
@@ -374,3 +376,4 @@ void showSockets(const VirtualServersManager& ws) {
     
     std::cout << GREEN << "\n=== END SOCKETS DEBUG ===" << RESET << std::endl;
 }
+*/

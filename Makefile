@@ -1,7 +1,7 @@
 VPATH = src src/util src/http src/parse src/buffer
 
 # Variables
-NAME = webserv_test
+NAME = webserver
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 INCLUDES = -Iinc
@@ -12,16 +12,16 @@ OBJ_DIR = obj
 
 # Source files
 SRCS = main.cpp \
-       Server.cpp \
        VirtualServersManager.cpp \
        Parsed.cpp \
-	   ConfigInheritance.cpp \
+	ConfigInheritance.cpp \
        Listen.cpp \
        Utils.cpp \
        Location.cpp \
        ServerValidator.cpp \
        File.cpp \
        MediaType.cpp \
+       ServerConfig.cpp \
        http/HTTPRequest.cpp \
        http/HTTPBody.cpp \
        http/HTTPError.cpp \

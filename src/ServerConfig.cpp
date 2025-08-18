@@ -10,6 +10,7 @@ ServerConfig::ServerConfig()
     : root("/var/www/html")
     , autoindex(AINDX_DEF_OFF)
     , client_max_body_size(1048576)
+    , allow_upload(false)
 {
     index_files.push_back("index.html");
     index_files.push_back("index.htm");
@@ -27,6 +28,7 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
     , autoindex(parsed.autoindex)
     , client_max_body_size(parseBodySize(parsed.client_max_body_size))
     , locations(parsed.locations)
+    , allow_upload(false) // falta el allow_upload en ParsedServer
 {
     if (index_files.empty()) {
         index_files.push_back("index.html");
@@ -53,6 +55,7 @@ ServerConfig::ServerConfig(const ServerConfig& other)
     , autoindex(other.autoindex)
     , client_max_body_size(other.client_max_body_size)
     , locations(other.locations)
+    , allow_upload(other.allow_upload)
 {
 }
 
@@ -70,6 +73,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& other) {
     return *this;
 }
 
+// matchesServerName
 bool ServerConfig::matchesServerName(const std::string& hostname) const {
     if (server_names.empty()) {
         return true;
@@ -90,6 +94,7 @@ bool ServerConfig::matchesServerName(const std::string& hostname) const {
     return false;
 }
 
+// findLocation
 Location* ServerConfig::findLocation(const std::string& path, bool resolve_index) const {
     std::map<std::string, Location>::const_iterator exact_it = locations.find(path);
     if (exact_it != locations.end() && exact_it->second.getMatchType() == Location::EXACT) {
@@ -126,6 +131,7 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
     return best_match;
 }
 
+// getErrorPage
 std::string ServerConfig::getErrorPage(int error_code) const {
     std::map<int, std::string>::const_iterator it = error_pages.find(error_code);
     if (it != error_pages.end()) {
@@ -134,6 +140,7 @@ std::string ServerConfig::getErrorPage(int error_code) const {
     return "";
 }
 
+// isMethodAllowed
 bool ServerConfig::isMethodAllowed(const std::string& method) const {
     if (allow_methods.empty()) {
         return true;
@@ -149,12 +156,34 @@ bool ServerConfig::isMethodAllowed(const std::string& method) const {
     return false;
 }
 
-bool ServerConfig::isAutoIndexEnabled() const {
-    return autoindex == AINDX_DEF_ON || 
-           autoindex == AINDX_SERV_ON || 
-           autoindex == AINDX_LOC_ON;
+// getAllowMethods
+const std::vector<std::string>& ServerConfig::getAllowMethods(const Location* location) const {
+    if (location && !location->getMethods().empty()) {
+        return location->getMethods();
+    }
+    
+    return allow_methods;
 }
 
+
+// getAutoindex methods
+bool ServerConfig::getAutoindex() const {
+    return autoindex == AINDX_DEF_ON;
+}
+
+AutoIndexState ServerConfig::getAutoindex(const Location* location) const {
+    if (location) {
+        AutoIndexState loc_state = location->getAutoindex();
+        
+        if (loc_state == AINDX_LOC_ON || loc_state == AINDX_LOC_OFF) {
+            return loc_state;
+        }
+    }
+    
+    return autoindex;
+}
+
+// getClientMaxBodySizeString
 std::string ServerConfig::getClientMaxBodySizeString() const {
     if (client_max_body_size >= 1024 * 1024 * 1024) {
         return wss::i_to_dec(client_max_body_size / (1024 * 1024 * 1024)) + "G";
@@ -167,6 +196,7 @@ std::string ServerConfig::getClientMaxBodySizeString() const {
     }
 }
 
+// getDebugInfo
 std::string ServerConfig::getDebugInfo() const {
     std::stringstream ss;
     
@@ -179,7 +209,7 @@ std::string ServerConfig::getDebugInfo() const {
     ss << "]\n";
     
     ss << "  root: \"" << root << "\"\n";
-    ss << "  autoindex: " << (isAutoIndexEnabled() ? "enabled" : "disabled") << "\n";
+    ss << "  autoindex: " << (getAutoindex() ? "enabled" : "disabled") << "\n";
     ss << "  client_max_body_size: " << getClientMaxBodySizeString() << "\n";
     
     ss << "  index_files: [";
@@ -204,35 +234,54 @@ std::string ServerConfig::getDebugInfo() const {
 }
 
 size_t ServerConfig::parseBodySize(const std::string& size_str) const {
+    static const size_t DEFAULT_SIZE = 1048576;  // 1MB default
+    static const size_t MAX_SIZE = ~(static_cast<size_t>(0));  // MAX size_t
+
     if (size_str.empty()) {
-        return 1048576;
+        return DEFAULT_SIZE;
     }
     
     std::string number_part;
-    char unit = '\0';
+    std::string unit_part;
+    size_t i;
     
-    for (size_t i = 0; i < size_str.length(); ++i) {
-        if (std::isdigit(size_str[i])) {
-            number_part += size_str[i];
-        } else {
-            unit = std::toupper(size_str[i]);
-            break;
-        }
+    // EXTRACT NUMBER
+    for (i = 0; i < size_str.length() && (std::isdigit(size_str[i]) || size_str[i] == '.'); ++i) {
+        number_part += size_str[i];
+    }
+    
+    // EXTRACT UNIT
+    while (i < size_str.length()) {
+        unit_part += std::toupper(size_str[i]);
+        ++i;
     }
     
     if (number_part.empty()) {
-        return 1048576;
+        return DEFAULT_SIZE;
     }
     
     size_t base_size = static_cast<size_t>(std::atoll(number_part.c_str()));
     
-    switch (unit) {
-        case 'K': return base_size * 1024;
-        case 'M': return base_size * 1024 * 1024;
-        case 'G': return base_size * 1024 * 1024 * 1024;
-        case '\0': return base_size;
-        default: return 1048576;
+    // PROTECT FROM VALUE = 0
+    if (base_size == 0) {
+        return DEFAULT_SIZE;
     }
+    
+    // UNIT CONVERTION
+    if (unit_part.empty() || unit_part == "B" || unit_part == "BYTES") {
+        return base_size;
+    } else if (unit_part == "K" || unit_part == "KB" || unit_part == "KIB") {
+        if (base_size > MAX_SIZE / 1024) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024;
+    } else if (unit_part == "M" || unit_part == "MB" || unit_part == "MIB") {
+        if (base_size > MAX_SIZE / (1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024 * 1024;
+    } else if (unit_part == "G" || unit_part == "GB" || unit_part == "GIB") {
+        if (base_size > MAX_SIZE / (1024 * 1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024 * 1024 * 1024;
+    }
+    
+    return DEFAULT_SIZE;  // UNKNOWN UNIT
 }
 
 Location* ServerConfig::resolveIndexAndRematch(const std::string& path, Location* original_location) const {
