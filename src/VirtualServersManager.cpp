@@ -1,5 +1,7 @@
 #include "VirtualServersManager.hpp"
 #include "StringUtil.hpp"
+#include "Logger.hpp"
+#include "DebugView.hpp"
 
 // ================ STATIC MEMBER ================
 
@@ -8,7 +10,8 @@ std::map<int, VirtualServersManager::ClientState*> VirtualServersManager::Client
 // ================ CLIENT STATE IMPLEMENTATION ================
 
 VirtualServersManager::ClientState::ClientState(int client_fd)
-    : element_parser(error)
+    : client_fd(client_fd)
+    , element_parser(error)
     , request_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
     , response_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 {
@@ -42,6 +45,30 @@ void VirtualServersManager::ClientState::cleanupClientState(int client_fd) {
     }
 }
 
+void VirtualServersManager::ClientState::changeStatus(Status new_status, const std::string& reason) {
+    Status old_status = status;
+    status = new_status;
+
+    std::ostringstream oss;
+    oss << "Chanfe Client Status from " << old_status << " to " << status << " for " << client_fd << " because of: " << reason; 
+    Logger::getInstance().info(oss.str());;
+}
+
+std::string VirtualServersManager::ClientState::statusToString(Status s) {
+    switch(s) {
+        case READING_REQUEST: return "READING_REQUEST";
+        case PROCESSING_REQUEST: return "PROCESSING_REQUEST";
+        case ERROR_HANDLING: return "ERROR_HANDLING";
+        case WRITING_RESPONSE: return "WRITING_RESPONSE";
+        case WAITING_FILE: return "WAITING_FILE";
+        case WAITING_CGI: return "WAITING_CGI";
+        case CLOSING: return "CLOSING";
+        case CLOSED: return "CLOSED";
+        default: return "UNKNOWN";
+    }
+}
+
+
 // ================ LISTEN SOCKET IMPLEMENTATION ================
 
 VirtualServersManager::ListenSocket::ListenSocket() {
@@ -54,6 +81,7 @@ VirtualServersManager::ListenSocket::ListenSocket(const Listen& config) {
     listen_config = config;
 }
 
+
 // ================ CONSTRUCTORS & DESTRUCTOR ================
 
 VirtualServersManager::VirtualServersManager() {
@@ -65,17 +93,16 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs) {
     _epoll_fd = -1;
     _events.resize(64);
 
-    std::cout << "Initializing VirtualServersManager with " << configs.size() 
-              << " server configurations" << std::endl;
-
+    Logger::getInstance().info("Initializing VirtualServersManager with " + wss::i_to_dec(configs.size()) + " server configurations");
+    _server_configs.reserve(configs.size() * 2);
+    // TODO: agregar parse de allow_upload en ParsedServer, es necesario?
     // Procesar cada configuración parseada (C++98 compatible)
     for (std::vector<ParsedServer>::const_iterator parsed_it = configs.begin(); 
          parsed_it != configs.end(); ++parsed_it) {
         
         const ParsedServer& parsed_server = *parsed_it;
         
-        std::cout << "  Processing server with " << parsed_server.listens.size() 
-                  << " listen directives" << std::endl;
+        Logger::getInstance().info("  Processing server with " + wss::i_to_dec(parsed_server.listens.size()) + " listen directives");
         
         // Crear ServerConfig a partir de ParsedServer
         ServerConfig server_config(parsed_server);
@@ -90,8 +117,7 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs) {
             
             const Listen& listen_config = *listen_it;
             
-            std::cout << "    Mapping to " << listen_config.host << ":" 
-                      << listen_config.port << std::endl;
+            Logger::getInstance().info("    Mapping to " + listen_config.host + ":" + wss::i_to_dec(listen_config.port));
             
             // Agregar al mapeo de virtual hosts
             _virtual_hosts[listen_config].push_back(config_ptr);
@@ -101,11 +127,10 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs) {
                 ListenSocket new_socket(listen_config);
                 _listen_sockets[listen_config] = new_socket;
                 
-                std::cout << "    Created new ListenSocket for " 
-                          << listen_config.host << ":" << listen_config.port << std::endl;
+                Logger::getInstance().info("    Created new ListenSocket for " + listen_config.host + ":" + wss::i_to_dec(listen_config.port));
             }
             
-            // Agregar config al ListenSocket (C++98 safe access)
+            // Agregar config al ListenSocket QUESTION: esta listo?
             std::map<Listen, ListenSocket>::iterator socket_it = _listen_sockets.find(listen_config);
             if (socket_it != _listen_sockets.end()) {
                 socket_it->second.virtual_hosts.push_back(config_ptr);
@@ -113,22 +138,22 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs) {
         }
     }
     
-    std::cout << "Virtual hosts mapping completed:" << std::endl;
-    std::cout << "  Total ServerConfigs: " << _server_configs.size() << std::endl;
-    std::cout << "  Total Listen addresses: " << _listen_sockets.size() << std::endl;
-    std::cout << "  Total Virtual host groups: " << _virtual_hosts.size() << std::endl;
+    Logger::getInstance().info("Virtual hosts mapping completed:");
+    Logger::getInstance().info("  Total ServerConfigs: " + wss::i_to_dec(_server_configs.size()));
+    Logger::getInstance().info("  Total Listen addresses: " + wss::i_to_dec(_listen_sockets.size()));
+    Logger::getInstance().info("  Total Virtual host groups: " + wss::i_to_dec(_virtual_hosts.size()));
 }
 
 VirtualServersManager::~VirtualServersManager() {
-    std::cout << "Destroying VirtualServersManager..." << std::endl;
+    Logger::getInstance().info("Destroying VirtualServersManager...");
     
-    // Limpiar mapeo de client_fd to listen_socket
+    // Limpiar map de client_fd to listen_socket
     _client_to_listen_socket.clear();
 
     // Cerrar epoll
     if (_epoll_fd >= 0) {
         close(_epoll_fd);
-        std::cout << "  Closed epoll fd: " << _epoll_fd << std::endl;
+        Logger::getInstance().info("  Closed epoll fd: " + wss::i_to_dec(_epoll_fd));
     }
     
     // Cerrar todos los sockets de escucha
@@ -137,8 +162,7 @@ VirtualServersManager::~VirtualServersManager() {
         
         if (it->second.socket_fd >= 0) {
             close(it->second.socket_fd);
-            std::cout << "  Closed socket fd: " << it->second.socket_fd 
-                      << " for " << it->first.host << ":" << it->first.port << std::endl;
+            Logger::getInstance().info("  Closed socket fd: " + wss::i_to_dec(it->second.socket_fd) + " for " + it->first.host + ":" + wss::i_to_dec(it->first.port));
         }
     }
     
@@ -149,30 +173,29 @@ VirtualServersManager::~VirtualServersManager() {
     }
     ClientState::client_states.clear();
     
-    std::cout << "VirtualServersManager destroyed." << std::endl;
+    Logger::getInstance().info("VirtualServersManager destroyed.");
 }
 
 // ================ SOCKET MANAGEMENT ================
 
 void VirtualServersManager::createListenSockets() {
-    std::cout << "Creating listen sockets..." << std::endl;
+    Logger::getInstance().info("Creating listen sockets...");
     
     for (std::map<Listen, ListenSocket>::iterator it = _listen_sockets.begin(); 
          it != _listen_sockets.end(); ++it) {
         
-        std::cout << "Setting up socket for " << it->first.host << ":" << it->first.port << std::endl;
+        Logger::getInstance().info("Setting up socket for " + it->first.host + ":" + wss::i_to_dec(it->first.port));
         
         try {
             setupListenSocket(it->second);
             bindListenSocket(it->second);
             
-            std::cout << "Socket " << it->second.socket_fd << " created for " 
-                      << it->first.host << ":" << it->first.port 
-                      << " with " << it->second.virtual_hosts.size() << " virtual hosts" << std::endl;
+            Logger::getInstance().info("Socket " + wss::i_to_dec(it->second.socket_fd) + " created for " + it->first.host + ":" + wss::i_to_dec(it->first.port) + " with " + wss::i_to_dec(it->second.virtual_hosts.size()) + " virtual hosts");
                       
         } catch (const std::exception& e) {
-            std::cerr << "Failed to create socket for " << it->first.host << ":" << it->first.port 
-                      << " - " << e.what() << std::endl;
+            std::ostringstream oss;
+            oss << e.what() << " for " << it->first.host << ":" << it->first.port;
+            Logger::getInstance().error(oss.str());
             throw;
         }
     }
@@ -220,7 +243,7 @@ void VirtualServersManager::bindListenSocket(ListenSocket& listen_socket) {
 }
 
 void VirtualServersManager::setupEpoll() {
-    std::cout << "Setting up epoll..." << std::endl;
+    Logger::getInstance().info("Setting up epoll...");
     
     _epoll_fd = epoll_create(1);
     if (_epoll_fd < 0) {
@@ -242,7 +265,7 @@ void VirtualServersManager::setupEpoll() {
         }
     }
     
-    std::cout << "Epoll configured with " << _listen_sockets.size() << " listen sockets" << std::endl;
+    Logger::getInstance().info("Epoll configured with " + wss::i_to_dec(_listen_sockets.size()) + " listen sockets");
 }
 
 // ================ SEARCH METHODS ================
@@ -302,8 +325,7 @@ void VirtualServersManager::handleNewConnection(ListenSocket* listen_socket) {
     }
     _client_to_listen_socket[client_fd] = listen_socket; 
     
-    std::cout << "New client connected on FD: " << client_fd 
-              << " to " << listen_socket->listen_config.host << ":" << listen_socket->listen_config.port << std::endl;
+    Logger::getInstance().info("New client connected on FD: " + wss::i_to_dec(client_fd) + " to " + listen_socket->listen_config.host + ":" + wss::i_to_dec(listen_socket->listen_config.port));
     
     struct epoll_event event;
     event.events = EPOLLIN;
@@ -321,40 +343,412 @@ void VirtualServersManager::handleClientData(int client_fd) {
     ClientState* client = ClientState::getOrCreateClientState(client_fd);
 
     try {
-        client->request_manager.process();
-
-        if (client->hasError()) {
-            std::cerr << "Error parsing request: " << client->error.to_string() << std::endl;
-            sendErrorResponse(client_fd, client->error);
-            disconnectClient(client_fd);
-            return;
+        switch (client->status) {
+            case ClientState::READING_REQUEST:
+                handleReadingRequest(client_fd, client);
+                break;
+            case ClientState::PROCESSING_REQUEST:
+                handleProcessingRequest(client_fd, client);
+                break;
+            case ClientState::ERROR_HANDLING:
+                handleErrorHandling(client_fd, client);
+                break;
+            case ClientState::WRITING_RESPONSE:
+                handleWritingResponse(client_fd, client);
+                break;
+            case ClientState::WAITING_FILE:
+                handleWaitingFile(client_fd, client);
+                break;
+            case ClientState::WAITING_CGI:
+                handleWaitingCGI(client_fd, client);
+                break;
+            case ClientState::CLOSING:
+                handleClosing(client_fd, client);
+                break;
+            case ClientState::CLOSED:
+                handleClosed(client_fd, client);
+                break;
         }
-
-        if (client->isRequestComplete()) {
-            std::cout << "Request complete for FD: " << client_fd << std::endl;
-
-            std::map<int, ListenSocket*>::iterator map_it = _client_to_listen_socket.find(client_fd);
-            if (map_it != _client_to_listen_socket.end()) {
-                ListenSocket* listen_socket = map_it->second;
-                ServerConfig* server_config = findServerConfigForRequest(client->request, listen_socket);
-                if (server_config) {
-                    Location* location = findLocationForRequest(client->request, server_config);
-
-                    client->response_manager.set_virtual_server(server_config);
-                    client->response_manager.set_location(location);
-                }
-                processCompleteRequest(client_fd, client->request);
-                disconnectClient(client_fd);
-            }
-        }
+    
     } catch (const std::exception& e) {
-        std::cerr << "Exception processing client data: " << e.what() << std::endl;
+        std::ostringstream oss;
+        oss << "Exception processing client data: " << e.what();
+        Logger::getInstance().error(oss.str());
         disconnectClient(client_fd);
     }
 }
 
+void VirtualServersManager::handleReadingRequest(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Reading request for client " + wss::i_to_dec(client_fd));
+
+    try {   
+        client->request_manager.process();
+        
+        if (client->hasError()) {
+            Logger::getInstance().warning("Error parsing request: " + client->error.to_string());
+
+            if (client->error_retry_count == 0) {
+                client->original_request = client->request;
+            }
+
+            client->status = ClientState::ERROR_HANDLING;
+            client->error_retry_count = 0;
+            return;
+        }
+        
+        if (client->isRequestComplete()) {
+            Logger::getInstance().info("Request parsing complete for client " + wss::i_to_dec(client_fd));
+            client->status = ClientState::PROCESSING_REQUEST;
+            return;
+        }
+    } catch (const std::exception &e) {
+        Logger::getInstance().error("Exception in handleReadingRequest: " + std::string(e.what()));
+        client->error.set("Internal error during request reading", INTERNAL_SERVER_ERROR);
+        client->status = ClientState::ERROR_HANDLING;
+    }
+}
+
+void VirtualServersManager::handleProcessingRequest(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Processing request for client " + wss::i_to_dec(client_fd));
+
+    try {
+        std::map<int, ListenSocket*>::iterator map_it = _client_to_listen_socket.find(client_fd);
+        if (map_it == _client_to_listen_socket.end()) {
+            client->error.set("No listen socket found for client", INTERNAL_SERVER_ERROR);
+            client->status = ClientState::ERROR_HANDLING;
+            return;
+        }
+
+        ListenSocket* listen_socket = map_it->second;
+        ServerConfig* server_config = findServerConfigForRequest(client->request, listen_socket);
+        if (!server_config) {
+            client->error.set("Virtual host not found", NOT_FOUND);
+            client->status = ClientState::ERROR_HANDLING;
+            return;
+        }
+
+        // DEBUG PARA ENCONTRAR EL ERROR DE ERRO 500
+
+        // Antes de buscar location
+        Logger::getInstance().error("DEBE DAR: 'PATH_DE_LOCATION' ");
+        Logger::getInstance().info("Searching location for path: '" + client->request.get_path() + "'");
+
+        Logger::getInstance().info("Available locations in server config:");
+        std::map<std::string, Location>::const_iterator l_it = server_config->locations.begin();
+        for (;l_it != server_config->locations.end(); ++l_it) {
+            Logger::getInstance().info("  - '" + l_it->first + "' (match_type: " + 
+            std::string(l_it->second.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX") + ")");
+        }
+
+        Location* location2 = server_config->findLocation(client->request.get_path());
+        if (!location2) {
+            Logger::getInstance().error("CRITICAL: No location found for path '" + client->request.get_path() + "'");
+        }
+
+        // FIN DEBUG PARA ERROR DE ERROR 500
+
+        Location* location = server_config->findLocation(client->request.get_path());
+        if (!location) {
+            location = server_config->findLocation("/", false);
+            if (!location) {
+                client->error.set("No location configured", INTERNAL_SERVER_ERROR);
+                client->status = ClientState::ERROR_HANDLING;
+                return;
+            }
+        }
+
+        Logger::getInstance().error(location2->getPath() == location->getPath() ? "\n\nSON IGUALES" : "\n\nsNO SON IGUALES");
+
+        if (!isMethodAllowed(server_config, location, client->request.method)) {
+            client->error.set("Method not allowed", METHOD_NOT_ALLOWED);
+            client->status = ClientState::ERROR_HANDLING;
+            return;
+        }
+
+        client->response_manager.set_virtual_server(server_config);
+        client->response_manager.set_location(location);
+
+        if (isCgiRequest(location, client->request.get_path())) {
+            Logger::getInstance().info("CGI request detected");
+            client->status = ClientState::WAITING_CGI;
+            return;
+        }
+
+        // Generar respuesta (puede ser normal o error)
+        client->response_manager.generate_response();
+        ResponseManager::RM_status rm_status = client->response_manager.get_status();
+
+        // Miramos si el ResponseManager nos pide operar sobre un archivo
+        ActiveFileDescriptor afd = client->response_manager.get_active_file_descriptor();
+        if (afd.fd != -1) {
+            Logger::getInstance().info("Registering file FD " + wss::i_to_dec(afd.fd));
+            struct epoll_event ev;
+            ev.data.fd = afd.fd;
+            ev.events = afd.mode;
+            if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, afd.fd, &ev) == -1) {
+                Logger::getInstance().error("epoll_ctl ADD failed for file fd: " + std::string(strerror(errno)));
+            }
+            client->status = ClientState::WAITING_FILE;
+            return;
+        }
+
+        // Si no hay archivo pendiente, miramos si toca escribir al socket
+        if (rm_status == ResponseManager::WRITING_RESPONSE) {
+            Logger::getInstance().info("Registering client FD " + wss::i_to_dec(client_fd) + " for EPOLLOUT");
+            struct epoll_event ev;
+            ev.data.fd = client_fd;
+            ev.events = EPOLLOUT;
+            if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, client_fd, &ev) == -1) {
+                Logger::getInstance().error("epoll_ctl MOD failed for client fd: " + std::string(strerror(errno)));
+            }
+            client->status = ClientState::WRITING_RESPONSE;
+            return;
+        }
+
+        // Caso por defecto: cerramos con error
+        Logger::getInstance().warning("Unexpected ResponseManager status after generate_response");
+        client->status = ClientState::ERROR_HANDLING;
+
+    } catch (std::exception &e) {
+        std::ostringstream oss;
+        oss << "Exception in handleProcessingRequest: " << std::string(e.what());
+        Logger::getInstance().error(oss.str());
+        client->error.set("Internal error during request processing", INTERNAL_SERVER_ERROR);
+        client->status = ClientState::ERROR_HANDLING;
+    }   
+}
+
+void VirtualServersManager::handleErrorHandling(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Handling error for client " + wss::i_to_dec(client_fd) + 
+                              ": " + client->error.to_string());
+
+    try {
+        // No loops infinitos con la misma request
+        if (client->error_retry_count >= MAX_ERROR_RETRIES) {
+            Logger::getInstance().warning("Max error retries reached, sending default error page");
+            client->response_manager.generate_response();
+            client->status = ClientState::CLOSING;
+            disconnectClient(client_fd);
+            // QUESTION es necesario desconectar el fd? y si es keep alive? en HTTP1.1 se deja abierta o se cierra?
+            return;
+        }
+
+        // Intentar reescribir la request para error page custom
+        if (attemptErrorPageRewrite(client_fd, client)) {
+            Logger::getInstance().info("Error page rewrite successful");
+            client->status = ClientState::PROCESSING_REQUEST;
+            client->error_retry_count++;
+            return;
+        }
+
+        Logger::getInstance().info("No custom error page, switching to default error page");
+        client->response_manager.generate_response();
+        
+        if (client->error.status() >= 400) {
+            client->status = ClientState::CLOSING;
+            disconnectClient(client_fd);
+        } else {
+            client->status = ClientState::WRITING_RESPONSE;
+        }
+
+    } catch (const std::exception& e) {
+        Logger::getInstance().error("Exception in handleErrorHandling: " + std::string(e.what()));
+        client->error.set("Critical error in error handling", INTERNAL_SERVER_ERROR);
+        client->response_manager.generate_response();
+        client->status = ClientState::CLOSING;
+    }
+}
+
+void VirtualServersManager::handleWritingResponse(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Writing response for client " + wss::i_to_dec(client_fd));
+    
+    try {
+        client->response_manager.process(); // QUESTION donde mas se usa, que hace? Checkear
+        
+        if (client->response_manager.response_done()) {
+            Logger::getInstance().info("Response sending complete for client " + wss::i_to_dec(client_fd));
+            
+            if (client->request.headers.close_status == RCS_CLOSE) { // QUESTION que codigo es este, que otros hay, su contexto, usos de su familia, checkear
+                client->status = ClientState::CLOSING;
+            } else {
+                // Keep-alive: preparar para nueva request
+                client->request_manager.new_request(); // QUESTION que hace, checkear
+                client->response_manager.reset(); // Acceso público a new_request()
+                client->error.set("", OK);
+                client->error_retry_count = 0;
+                client->status = ClientState::READING_REQUEST; // QUESTION que pasa si en la siguiente iteracion del bucle principal no hay datos en el socket?
+            }
+            return;
+        }
+
+    Logger::getInstance().info("Continue writing response");
+    
+    } catch (const std::exception& e) {
+        std::ostringstream oss;
+        oss << "Exception in handleWritingResponse: " << e.what();
+        Logger::getInstance().error(oss.str());
+        client->status = ClientState::CLOSING;
+    }
+}
+
+void VirtualServersManager::handleWaitingFile(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Processing file I/O for client " + wss::i_to_dec(client_fd));
+    
+    try {
+        ActiveFileDescriptor afd = client->response_manager.get_active_file_descriptor(); // QUESTION que es ActiveFileDescripto, contexto checkear
+        
+        if (afd.fd == -1) {
+            Logger::getInstance().warning("No active file descriptor, switching to response");
+            client->status = ClientState::WRITING_RESPONSE;
+            return;
+        }
+
+        client->response_manager.process();
+        
+        if (client->response_manager.get_active_file_descriptor().fd == -1) {
+            Logger::getInstance().info("File I/O done, preparing to send response");
+            client->status = ClientState::WRITING_RESPONSE;
+            return;
+        }
+
+        Logger::getInstance().info("Continue with writng/reading file");
+        
+    } catch (const std::exception& e) {
+        std::ostringstream oss;
+        oss << "Exception in handleWaitingFile: " << e.what();
+        Logger::getInstance().error(oss.str());
+        client->error.set("File I/O error", INTERNAL_SERVER_ERROR);
+        client->status = ClientState::ERROR_HANDLING;
+    }
+}
+
+void VirtualServersManager::handleWaitingCGI(int client_fd, ClientState* client) {  // QUESTION explicarlo todo
+    Logger::getInstance().info("Handling CGI for client " + wss::i_to_dec(client_fd));
+    
+    try {
+        static std::map<int, time_t> cgi_start_times;
+        
+        if (cgi_start_times.find(client_fd) == cgi_start_times.end()) {
+            cgi_start_times[client_fd] = time(NULL);
+            Logger::getInstance().info("Starting CGI execution...");
+            return;
+        }
+        
+        time_t elapsed = time(NULL) - cgi_start_times[client_fd];
+        if (elapsed > 30) { // timeout de 30 segundos
+            Logger::getInstance().warning("CGI timeout");
+            cgi_start_times.erase(client_fd);
+            client->error.set("CGI script timeout", INTERNAL_SERVER_ERROR);
+            client->status = ClientState::ERROR_HANDLING;
+            return;
+        }
+        
+        if (elapsed >= 1) { // 1 o más segundos de procesamiento //QUESTION porque damos por completo cgi con 1 segundo de procesamiento
+            Logger::getInstance().info("CGI execution complete");
+            cgi_start_times.erase(client_fd);
+            
+            client->status = ClientState::WRITING_RESPONSE;
+            return;
+        }
+        
+        Logger::getInstance().info("Continue waiting for CGI");
+        
+    } catch (const std::exception& e) {
+        std::ostringstream oss;
+        oss << "Exception in handleWaitingCGI: " << e.what();
+        Logger::getInstance().error(oss.str());
+        client->error.set("CGI execution error", INTERNAL_SERVER_ERROR);
+        client->status = ClientState::ERROR_HANDLING;
+    }
+} // ILYA como va el cgi-executor?
+
+void VirtualServersManager::handleClosing(int client_fd, ClientState* client) {
+    Logger::getInstance().info("Closing connection for client " + wss::i_to_dec(client_fd));
+    
+    try {
+        if (client->response_manager.get_active_file_descriptor().fd != -1) {
+            // TODO: Implementar cleanup en ResponseManager
+            // KEVIN hay este meteodo de cleanup de ResponseManager?
+            // QUESTION existe un cleanup para RequestManager? Donde se lo llama si existe?
+        }
+        
+        std::string final_status = client->hasError() ? "ERROR: " + client->error.to_string() : "SUCCESS";
+        Logger::getInstance().info("Client " + wss::i_to_dec(client_fd) + " session ended: " + final_status);
+        
+        client->status = ClientState::CLOSED;
+        
+    } catch (const std::exception& e) {
+        std::ostringstream oss;
+        oss << "Exception in handleClosing: " << e.what();
+        Logger::getInstance().error(oss.str());
+        client->status = ClientState::CLOSED;
+    }
+}
+
+void VirtualServersManager::handleClosed(int client_fd, ClientState* client) {
+    (void)client;
+    Logger::getInstance().info("Client " + wss::i_to_dec(client_fd) + " is closed");
+    disconnectClient(client_fd);
+}
+
+
+// ================ METHODS AUX DE ERROR ================
+
+bool VirtualServersManager::attemptErrorPageRewrite(int client_fd, ClientState* client) { // QUESTION explicar
+    std::map<int, ListenSocket*>::iterator map_it = _client_to_listen_socket.find(client_fd);
+    if (map_it == _client_to_listen_socket.end()) {
+        return false;
+    }
+
+    ListenSocket* listen_socket = map_it->second;
+    ServerConfig* server_config = findServerConfigForRequest(client->request, listen_socket);
+    Location* location = NULL;
+    
+    if (server_config) {
+        location = server_config->findLocation(client->request.get_path());
+    }
+
+    // Buscar error page
+    int status_code = static_cast<int>(client->error.status());
+    std::string error_page_path;
+    
+    if (server_config) {
+        // buscqueda jerarquizada loc > serv > def
+        error_page_path = server_config->getErrorPage(status_code, location);
+    }
+    
+    if (error_page_path.empty()) {
+        return false; // No hay custom error page
+    }
+
+    // Backup original request
+    if (client->error_retry_count == 0) {
+        client->original_request = client->request;
+    }
+    
+    // Crear nueva request GET para la error page
+    client->request.reset();
+    client->request.method = GET;
+    client->request.protocol = "HTTP/1.1";
+    client->request.uri.path = error_page_path;
+    client->request.headers.host = client->original_request.headers.host;
+    client->request.headers.port = client->original_request.headers.port;
+    
+    // Headers para debugging
+    client->request.headers.put("X-Original-URI", client->original_request.uri.path);
+    client->request.headers.put("X-Error-Status", status::stoa(client->error.status()));
+    
+    // Reset error
+    client->error.set("", OK);
+    
+    Logger::getInstance().info("Request rewritten for error page: " + error_page_path);
+    return true;
+}
+
+// ================ DISCONECT FD ================
+
 void VirtualServersManager::disconnectClient(int client_fd) {
-    std::cout << "Disconnecting client FD: " << client_fd << std::endl;
+    Logger::getInstance().info("Disconnecting client FD: " + wss::i_to_dec(client_fd));
     
     _client_to_listen_socket.erase(client_fd);
     
@@ -371,8 +765,8 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 // ================ REQUEST PROCESSING ================
 
 void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& request) {
-    std::cout << "Processing complete request for FD: " << client_fd << std::endl;
-    std::cout << "Host: " << request.get_host() << ", Path: " << request.get_path() << std::endl;
+    Logger::getInstance().info("Processing complete request for FD: " + wss::i_to_dec(client_fd));
+    Logger::getInstance().info("Host: " + request.get_host() + ", Path: " + request.get_path());
     
     // Encontrar el ListenSocket
     std::map<int, ListenSocket*>::iterator map_it = _client_to_listen_socket.find(client_fd);
@@ -392,10 +786,10 @@ void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& r
         return;
     }
     
-    std::cout << "Selected server config for host: " << request.get_host() << std::endl;
+    Logger::getInstance().info("Selected server config for host: " + request.get_host());
     
     // Encontrar la location apropiada
-    Location* location = findLocationForRequest(request, server_config);
+    Location* location = server_config->findLocation(request.get_path());
     if (!location) {
         std::cerr << "No location found for path " << request.get_path() << std::endl;
         sendErrorResponse(client_fd, 404, "Location not found");
@@ -404,7 +798,7 @@ void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& r
     
     // Verificar si el método está permitido
     if (!isMethodAllowed(server_config, location, request.method)) {
-        std::cerr << "Method not allowed: " << request.method << std::endl;
+        std::cerr << "Method not allowed" << std::endl;
         sendErrorResponse(client_fd, 405, "Method not allowed");
         return;
     }
@@ -420,24 +814,24 @@ void VirtualServersManager::processCompleteRequest(int client_fd, HTTPRequest& r
 ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPRequest& request, ListenSocket* listen_socket) {
     std::string host = request.get_host();
     
-    std::cout << "Looking for server config for host: '" << host << "'" << std::endl;
-    std::cout << "Available virtual hosts: " << listen_socket->virtual_hosts.size() << std::endl;
+    Logger::getInstance().info("Looking for server config for host: '" + host + "'");
+    Logger::getInstance().info("Available virtual hosts: " + wss::i_to_dec(listen_socket->virtual_hosts.size()));
     
     // Buscar coincidencia exacta de server_name
     for (std::vector<ServerConfig*>::iterator it = listen_socket->virtual_hosts.begin(); 
          it != listen_socket->virtual_hosts.end(); ++it) {
         
         ServerConfig* config = *it;
-        std::cout << "Checking server config..." << std::endl;
+        Logger::getInstance().info("Checking server config...");
         
         if (matchesServerName(config, host)) {
-            std::cout << "Found matching server config for host: " << host << std::endl;
+            Logger::getInstance().info("Found matching server config for host: " + host);
             return config;
         }
     }
     
     // Si no hay coincidencia, usar el primer servidor (default)
-    std::cout << "No exact match found, using default server config" << std::endl;
+    Logger::getInstance().info("No exact match found, using default server config");
     return getDefaultServerConfig(listen_socket);
 }
 
@@ -450,10 +844,6 @@ ServerConfig* VirtualServersManager::getDefaultServerConfig(ListenSocket* listen
         return NULL;
     }
     return listen_socket->virtual_hosts[0];  // El primer servidor es el default
-}
-
-Location* VirtualServersManager::findLocationForRequest(const HTTPRequest& request, const ServerConfig* server_config) {
-    return server_config->findLocation(request.get_path());
 }
 
 bool VirtualServersManager::isMethodAllowed(const ServerConfig* server_config, const Location* location, HTTPMethod method) {
@@ -503,11 +893,20 @@ void VirtualServersManager::sendErrorResponse(int client_fd, const HTTPError& er
 }
 
 bool VirtualServersManager::isCgiRequest(const Location* location, const std::string& path) {
-    (void)location;
-    return path.find(".cgi") != std::string::npos;
+    if (!location) {
+        return false;
+    }
+
+    std::string cgi_extension = location->getCgiExtension(); // QUESTION bien implementado?
+    if (cgi_extension.empty()) {
+        return false;
+    }
+    
+    return path.size() >= cgi_extension.size() &&
+           path.compare(path.size() - cgi_extension.size(), cgi_extension.size(), cgi_extension) == 0; // QUESTION como va compare?
 }
 
-void VirtualServersManager::processCgiRequest(int client_fd, HTTPRequest& request, const Location* location) {
+void VirtualServersManager::processCgiRequest(int client_fd, HTTPRequest& request, const Location* location) { // ILYA implementar aqui
     (void)request;
     (void)location;
     
@@ -540,9 +939,22 @@ void VirtualServersManager::processStaticRequest(int client_fd, const ServerConf
 // ================ MAIN RUN METHOD ================
 
 void VirtualServersManager::run() {
-    std::cout << std::string(10, '=') << " Starting WEBSERVER " << std::string(10, '=') << std::endl;
-    
-    printVirtualHostsInfo();
+    Logger::getInstance().info(std::string(10, '=') + " Starting WEBSERVER " + std::string(10, '='));
+    // Use DebugView boxed format
+    {
+        std::vector<std::string> lines;
+        for (std::map<Listen, std::vector<ServerConfig*> >::const_iterator it = _virtual_hosts.begin();
+             it != _virtual_hosts.end(); ++it) {
+            lines.push_back("listen " + it->first.host + ":" + wss::i_to_dec(it->first.port) + " | vhosts: " + wss::i_to_dec(it->second.size()));
+            for (size_t i = 0; i < it->second.size(); ++i) {
+                const ServerConfig* cfg = it->second[i];
+                std::string tag = (i == 0) ? " [DEFAULT]" : "";
+                lines.push_back("  - " + wss::i_to_dec(i + 1) + tag + " names: " + cfg->getServerNamesString());
+                lines.push_back("     root: " + cfg->getRoot() + " | locations: " + wss::i_to_dec(cfg->locations.size()));
+            }
+        }
+        DebugView::printBox("VIRTUAL HOSTS", lines);
+    }
     
     try {
         setupEpoll();
@@ -551,7 +963,7 @@ void VirtualServersManager::run() {
         return;
     }
     
-    std::cout << std::string(10, '=') << " Starting EVENT LOOP " << std::string(10, '=') << std::endl;
+    Logger::getInstance().info(std::string(10, '=') + " Starting EVENT LOOP " + std::string(10, '='));
     
     while (true) {
         int incoming = epoll_wait(_epoll_fd, _events.data(), _events.size(), -1);
@@ -570,43 +982,24 @@ void VirtualServersManager::run() {
         }
     }
     
-    std::cout << std::string(10, '=') << " Closing EVENT LOOP " << std::string(10, '=') << std::endl;
+    Logger::getInstance().info(std::string(10, '=') + " Closing EVENT LOOP " + std::string(10, '='));
 }
 
 // ================ DEBUG METHODS ================
 
 void VirtualServersManager::printVirtualHostsInfo() const {
-    std::cout << "\n" << std::string(50, '=') << std::endl;
-    std::cout << "  VIRTUAL HOSTS CONFIGURATION" << std::endl;
-    std::cout << std::string(50, '=') << std::endl;
-    
-    for (std::map<Listen, std::vector<ServerConfig*> >::const_iterator it = _virtual_hosts.begin(); 
+    std::vector<std::string> lines;
+    for (std::map<Listen, std::vector<ServerConfig*> >::const_iterator it = _virtual_hosts.begin();
          it != _virtual_hosts.end(); ++it) {
-        
-        std::cout << "\n📡 Listen Address: " << it->first.host << ":" << it->first.port << std::endl;
-        std::cout << "   Virtual Hosts: " << it->second.size() << std::endl;
-        
+        lines.push_back("listen " + it->first.host + ":" + wss::i_to_dec(it->first.port) + " | vhosts: " + wss::i_to_dec(it->second.size()));
         for (size_t i = 0; i < it->second.size(); ++i) {
-            const ServerConfig* config = it->second[i];
-            std::cout << "   " << (i + 1) << ". ";
-            
-            if (i == 0) {
-                std::cout << "[DEFAULT] ";
-            }
-            
-            std::cout << "Server names: " << config->getServerNamesString();
-            
-            if (config->isDefaultServer()) {
-                std::cout << " (catches all)";
-            }
-            
-            std::cout << std::endl;
-            std::cout << "      Root: " << config->getRoot() << std::endl;
-            std::cout << "      Locations: " << config->getLocations().size() << std::endl;
+            const ServerConfig* cfg = it->second[i];
+            std::string tag = (i == 0) ? " [DEFAULT]" : "";
+            lines.push_back("  - " + wss::i_to_dec(i + 1) + tag + " names: " + cfg->getServerNamesString());
+            lines.push_back("     root: " + cfg->getRoot() + " | locations: " + wss::i_to_dec(cfg->locations.size()));
         }
     }
-    
-    std::cout << std::string(50, '=') << std::endl;
+    DebugView::printBox("VIRTUAL HOSTS", lines);
 }
 
 void VirtualServersManager::printListenSocketsInfo() const {

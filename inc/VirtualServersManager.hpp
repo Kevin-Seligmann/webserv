@@ -29,39 +29,48 @@ class VirtualServersManager {
 public:
     // Estructura para manejar el estado de los clientes
     struct ClientState {
-        HTTPRequest     request;
-        HTTPError       error;
-        ElementParser   element_parser;
-        RequestManager  request_manager;
-        ResponseManager response_manager;
-    
-        enum Status {
-            READING_REQUEST,
-            PROCESSING_REQUEST,
-            WRITING_RESPONSE,
-            WAITING_FILE,
-            WAITING_CGI,
-            CLOSING,
-            CLOSED
-        };
-        Status status;
 
-        // Constructor C++98 compatible
-        ClientState(int client_fd);
+        public:
 
-        bool isRequestComplete() const;
-        bool hasError() const;
-    
-        static std::map<int, ClientState*> client_states;
-        static ClientState* getOrCreateClientState(int client_fd);
-        static void cleanupClientState(int client_fd);
+            enum Status {
+                READING_REQUEST,
+                PROCESSING_REQUEST,
+                ERROR_HANDLING,
+                WRITING_RESPONSE,
+                WAITING_FILE,
+                WAITING_CGI,
+                CLOSING,
+                CLOSED
+            };
+
+            int             client_fd;
+            HTTPRequest     request;
+            HTTPError       error;
+            ElementParser   element_parser;
+            RequestManager  request_manager;
+            ResponseManager response_manager;
+            Status          status;
+            int             error_retry_count;
+            HTTPRequest     original_request;
+
+            ClientState(int client_fd);
+
+            bool isRequestComplete() const;
+            bool hasError() const;
+        
+            static std::map<int, ClientState*> client_states;
+            static ClientState* getOrCreateClientState(int client_fd);
+            static void cleanupClientState(int client_fd);
+            void changeStatus(Status new_status, const std::string& reason = "");
+            
+        private:
+            std::string statusToString(Status status);
     };
 
-    // Estructura para representar un socket de escucha único
     struct ListenSocket {
         int socket_fd;
         Listen listen_config;
-        std::vector<ServerConfig*> virtual_hosts;  // Múltiples configs por socket
+        std::vector<ServerConfig*> virtual_hosts;
         
         ListenSocket();
         ListenSocket(const Listen& config);
@@ -90,12 +99,28 @@ private:
     void handleEvent(const struct epoll_event& event);
     void handleNewConnection(ListenSocket* listen_socket);
     void handleClientData(int client_fd);
+
+    void handleReadingRequest(int client_fd, ClientState* client);
+    void handleProcessingRequest(int client_fd, ClientState* client);
+    void handleErrorHandling(int client_fd, ClientState* client);
+    void handleWritingResponse(int client_fd, ClientState* client);
+    void handleWaitingFile(int client_fd, ClientState* client);
+    void handleWaitingCGI(int client_fd, ClientState* client);
+    void handleClosing(int client_fd, ClientState* client);
+    void handleClosed(int client_fd, ClientState* client);
+
+    // Métodos aux de error
+    bool attemptErrorPageRewrite(int client_fd, ClientState* client);
+
+    // Cierre de fd - desconexion
     void disconnectClient(int client_fd);
+
+    // Status handlling
+    std::string statusToString(Status status);
     
     // Request processing
     void processCompleteRequest(int client_fd, HTTPRequest& request);
     ServerConfig* findServerConfigForRequest(const HTTPRequest& request, ListenSocket* listen_socket);
-    Location* findLocationForRequest(const HTTPRequest& request, const ServerConfig* server_config);
     bool isMethodAllowed(const ServerConfig* server_config, const Location* location, HTTPMethod method);
     
     // Response handling
@@ -121,6 +146,8 @@ public:
     // Debug/información
     void printVirtualHostsInfo() const;
     void printListenSocketsInfo() const;
+
+    static const int MAX_ERROR_RETRIES = 1;
 };
 
 #endif

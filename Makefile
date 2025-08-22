@@ -1,7 +1,7 @@
 VPATH = src src/util src/http src/parse src/buffer
 
 # Variables
-NAME = webserver
+NAME = webserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 INCLUDES = -Iinc
@@ -44,6 +44,7 @@ SRCS = main.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \
        util/ParsingUtil.cpp \
+       util/DebugView.cpp \
        
 
 

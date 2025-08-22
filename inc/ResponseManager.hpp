@@ -27,14 +27,16 @@ public:
     ResponseManager(HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
     ~ResponseManager();
 
-    void set_virtual_server(ServerConfig const * config); // Cambiado: Server -> ServerConfig
+    void set_virtual_server(ServerConfig const * config); 
     void set_location(Location const * location);
     void generate_response();
     // void generate_response(CGIResponse & response);
     void process();
     bool response_done();
 
+    void reset();
     ActiveFileDescriptor get_active_file_descriptor();
+    RM_status get_status() const { return _status; }
 
 private:
     static const size_t _WRITE_BUFFER_SIZE = 2000;
@@ -44,17 +46,20 @@ private:
     HTTPRequest & _request;
     HTTPError & _error;    
     RM_status _status;
-    ServerConfig const * _server; // Cambiado: Server -> ServerConfig
+    ServerConfig const * _server; 
     Location const * _location;
     SysBuffer * _sys_buffer;
     HTTPResponseBuffer _buffer;
     File _file;
     std::string::iterator _wr_file_it;
 
+
     void generate_status_response();
+    std::string generate_default_error_html();
     void generate_get_response();
     void generate_post_response();
     void generate_delete_response();
+
     void read_file();
     void write_file();
     void write_response();

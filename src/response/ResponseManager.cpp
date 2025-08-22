@@ -39,6 +39,10 @@ void ResponseManager::set_virtual_server(ServerConfig const * config){_server = 
 
 void ResponseManager::set_location(Location const * location){_location = location;}
 
+void ResponseManager::reset() {
+    new_response();
+}
+
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
     switch (_status)
@@ -295,6 +299,7 @@ void ResponseManager::read_directory()
     _status = WRITING_RESPONSE;
 }
 
+// TODO como manejar la jerarquia de rutas? si un error page viene de location está en el mismo sitio que si viene de server
 void ResponseManager::generate_status_response()
 {
     Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
@@ -307,7 +312,6 @@ void ResponseManager::generate_status_response()
     if (_error.status() == METHOD_NOT_ALLOWED)
     {
         std::vector<HTTPMethod> methods = get_allowed_methods();
-
         std::string allowed;
         for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it ++)
         {
@@ -318,11 +322,54 @@ void ResponseManager::generate_status_response()
         _buffer.put_header("Allow", allowed);
     }
 
-    _buffer.put_new_line();
-    // Put headers
+    if (_error.status() >= 400) {
+        _buffer.put_header("Connection", "close");
+    }
 
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+    // Intentar obtener path de custom error page
+    // Lo usaremos cuando este listo el epoll con fd del error page custom, ahora lo dejo aqui y paso a custom...
+    if (_server) {
+        std::string error_page_path = _server->getErrorPage(_error.status(), _location);
+        if (!error_page_path.empty()) {
+            Logger::getInstance().info("Custom error page configured: " + error_page_path + " (using default for now)");
+            // TODO: implement lectura fichero error page path y meterlo en budfer
+        }
+    }
+    
+    // fallback a default error page
+    std::string error_body = generate_default_error_html();
+    _buffer.put_header_number("Content-Length", error_body.size());
+
+    _buffer.put_new_line();
+    _buffer.put_body(error_body);
+    
+    // Intentar obtener path de custom error page
+
+    Logger::getInstance() 
+    << wss::ui_to_dec( _sys_buffer->_fd) 
+    + ". Full planned response: \n" 
+    + std::string(_buffer.itbegin(), _buffer.itend()) 
+    << std::endl;
+
     _status = WRITING_RESPONSE;
+}
+
+std::string ResponseManager::generate_default_error_html()
+{
+    std::ostringstream html;
+    int code = static_cast<int>(_error.status());
+    
+    html << "<!DOCTYPE html>\n"
+         << "<html>\n"
+         << "<head><title>Error " << code << "</title></head>\n"
+         << "<body>\n"
+         << "<h1>" << code << " " << status::status_to_text(_error.status()) << "</h1>\n"
+         << "<p>" << _error.msg() << "</p>\n"
+         << "<hr><p>webserv/1.0</p>\n"
+         << "</body>\n"
+         << "</html>";
+    
+    return html.str();
 }
 
 void ResponseManager::process()
@@ -442,8 +489,10 @@ bool ResponseManager::is_autoindex()
         return _location->getAutoindex() == AINDX_LOC_ON;
     }
     
-    if (_server && _server->getAutoindex() != AINDX_DEF_OFF) {
-        return _server->getAutoindex() == AINDX_SERV_ON;
+    if (_server) {
+        AutoIndexState serv_state = _server->getAutoindex(NULL);
+        if (serv_state == AINDX_SERV_ON) return true;
+        if (serv_state == AINDX_SERV_OFF) return false;
     }
     
     return false;  // DEFAULT: FALSE

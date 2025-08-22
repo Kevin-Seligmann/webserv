@@ -1,7 +1,0 @@
-1
-400
-POST / HTTP/1.1
-Host: Example.com
-Content-Type: text/html; a=b; e=d;       aeqweq=asdqw?eqwe   ;    qqqwewrrr="hola, amigos \" \\ "; cookie=food  
-
-

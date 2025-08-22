@@ -1,8 +1,0 @@
-1
-200
-GET / HTTP/1.1
-Host: example.org
-Content-Length: 7, 7, 7
-Content-Length: 7, 7
-
-abcdefg

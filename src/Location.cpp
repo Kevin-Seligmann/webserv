@@ -1,23 +1,31 @@
 #include "Location.hpp"
 
-Location::Location() 
+Location::Location()
     : _path("/")
+    , _match_type(PREFIX)  // ← AÑADIDO - esta era la causa del bug
+    , _methods()
     , _root("")
     , _index("index.html")
-	, _autoindex(AINDX_DEF_OFF)
+    , _autoindex(AINDX_DEF_OFF)
     , _redirect("")
     , _cgi_extension("")
-{}
-    
+    , _allow_upload(false)  // ← AÑADIDO - faltaba
+{
+}
+
 Location::Location(const Location& other)
     : _path(other._path)
+    , _match_type(other._match_type)  // ← AÑADIDO - crítico para copy constructor
     , _methods(other._methods)
     , _root(other._root)
     , _index(other._index)
-	, _autoindex(other._autoindex)
+    , _autoindex(other._autoindex)
     , _redirect(other._redirect)
     , _cgi_extension(other._cgi_extension)
-{}
+    , _allow_upload(other._allow_upload)  // ← AÑADIDO - faltaba
+    , _error_pages(other._error_pages)    // ← AÑADIDO - faltaba
+{
+}
 
 Location::~Location() {}
 
@@ -29,4 +37,12 @@ bool Location::matchesPath(const std::string& path) const {
         return (path.length() == _path.length() || path[_path.length()] == '/');
 
     return false;
+}
+
+std::string Location::getErrorPage(int error_code) const {
+    std::map<int, std::string>::const_iterator it = _error_pages.find(error_code);
+    if(it != _error_pages.end()) {
+        return it->second;
+    }
+    return "";
 }
