@@ -1,17 +1,7 @@
 #ifndef VIRTUAL_SERVERS_MANAGER_HPP
 #define VIRTUAL_SERVERS_MANAGER_HPP
 
-#include "ServerConfig.hpp"
-#include "HTTPRequest.hpp"
-#include "RequestManager.hpp"
-#include "HTTPError.hpp"
-#include "ElementParser.hpp"
-#include "SysBufferFactory.hpp"
-#include "ResponseManager.hpp"
-#include "Location.hpp"
-#include "HTTPMethod.hpp"
-#include "Status.hpp"
-#include "Listen.hpp"
+
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -24,6 +14,25 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <sys/epoll.h>
+#include "HTTPRequest.hpp"
+#include "RequestManager.hpp"
+#include "HTTPError.hpp"
+#include "ElementParser.hpp"
+#include "SysBufferFactory.hpp"
+#include "ResponseManager.hpp"
+#include "Location.hpp"
+#include "HTTPMethod.hpp"
+#include "Status.hpp"
+#include "Client.hpp"
+#include "HTTPRequest.hpp"
+#include "RequestManager.hpp"
+#include "HTTPError.hpp"
+#include "ElementParser.hpp"
+#include "SysBufferFactory.hpp"
+#include "ResponseManager.hpp"
+#include "Location.hpp"
+#include "HTTPMethod.hpp"
+#include "Status.hpp"
 
 class VirtualServersManager {
 public:
@@ -135,12 +144,28 @@ private:
     bool isCgiRequest(const Location* location, const std::string& path);
     void processCgiRequest(int client_fd, HTTPRequest& request, const Location* location);
     void processStaticRequest(int client_fd, const ServerConfig* server_config, const Location* location);
+    std::map<int, Client *>		 	_clients;
+	std::vector<Server>             _servers;
+	int                             _epoll_fd;
+	std::vector<struct epoll_event> _events;
+	std::vector<int>                _client_fds;
+
+	void setupEpoll();
+	bool isServerFD(int fd) const;
+	int findServerIndex(int fd) const;
+	void disconnectClient(int client_fd);
+	void handleEvent(const struct epoll_event& event);
+	void handleNewConnection(int server_index);
+	
+    Client * searchClient(int client_fd);
+    void cleanupClientState(int client_fd);
 
 public:
     VirtualServersManager();
     VirtualServersManager(const ParsedServers& configs);
     ~VirtualServersManager();
     
+
     void run();
     
     // Debug/información
@@ -148,6 +173,9 @@ public:
     void printListenSocketsInfo() const;
 
     static const int MAX_ERROR_RETRIES = 1;
+	void hookFileDescriptor(ActiveFileDescriptor const & actf);
+	void unhookFileDescriptor(ActiveFileDescriptor const & actf);
+	void swapFileDescriptor(ActiveFileDescriptor const & oldfd, ActiveFileDescriptor const & newfd);
 };
 
 #endif

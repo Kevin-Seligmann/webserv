@@ -25,26 +25,26 @@ bool VirtualServersManager::ClientState::isRequestComplete() const {
 bool VirtualServersManager::ClientState::hasError() const {
     return error.status() != OK;
 }
-
-VirtualServersManager::ClientState* VirtualServersManager::ClientState::getOrCreateClientState(int client_fd) {
-    std::map<int, ClientState*>::iterator it = client_states.find(client_fd);
-    if (it != client_states.end()) {
+Client* VirtualServersManager::searchClient(int client_fd) {
+    std::map<int, Client *>::iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
         return it->second;
     }
 
-    ClientState* state = new ClientState(client_fd);
-    client_states[client_fd] = state;
-    return state;
+	ClientState* state = new ClientState(client_fd);
+	client_states[client_fd] = state;
+	return state;
 }
 
-void VirtualServersManager::ClientState::cleanupClientState(int client_fd) {
-    std::map<int, ClientState*>::iterator it = client_states.find(client_fd);
-    if (it != client_states.end()) {
+void VirtualServersManager::cleanupClientState(int client_fd) {
+    std::map<int, Client*>::iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
         delete it->second;
-        client_states.erase(it);
+        _clients.erase(it);
+		return ;
     }
+	CODE_ERR("The server tried to find a client that does not exists. This is not possible.");
 }
-
 void VirtualServersManager::ClientState::changeStatus(Status new_status, const std::string& reason) {
     Status old_status = status;
     status = new_status;
@@ -337,6 +337,34 @@ void VirtualServersManager::handleNewConnection(ListenSocket* listen_socket) {
     }
     
     _client_fds.push_back(client_fd);
+void VirtualServersManager::handleNewConnection(int server_index) {
+	std::cout << "New connection at server " << server_index << std::endl;
+
+	int server_fd = _servers[server_index].getSocketFD();
+
+	struct sockaddr_in client_addr;
+	memset(&client_addr, 0, sizeof(client_addr));
+	socklen_t client_len = sizeof(client_addr);
+	int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+
+	if (client_fd < 0) {
+		std::cerr << "Failed to accept connection on server " << server_index << std::endl;
+		return ;
+	}
+	
+	std::cout << "Client connected @ FD: " << client_fd << std::endl;
+
+	// struct epoll_event event;
+	// event.events = EPOLLIN;
+	// event.data.fd = client_fd;
+
+	// if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &event) < 0) {
+	// 	close(client_fd);
+	// 	return;
+	// }
+
+	_client_fds.push_back(client_fd);
+	_clients[client_fd] = new Client(*this, _servers, client_fd);
 }
 
 void VirtualServersManager::handleClientData(int client_fd) {
@@ -760,6 +788,15 @@ void VirtualServersManager::disconnectClient(int client_fd) {
     if (it != _client_fds.end()) {
         _client_fds.erase(it);
     }
+	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
+	
+	cleanupClientState(client_fd);
+		
+	std::vector<int>::iterator it = std::find(_client_fds.begin(), _client_fds.end(), client_fd);
+	if (it != _client_fds.end())
+		_client_fds.erase(it);
+	
+	std::cout << "Client FD: " << client_fd << " cleaned up" << std::endl;
 }
 
 // ================ REQUEST PROCESSING ================
@@ -1001,6 +1038,62 @@ void VirtualServersManager::printVirtualHostsInfo() const {
     }
     DebugView::printBox("VIRTUAL HOSTS", lines);
 }
+// ================ FD MANAGEMENT ================
+void VirtualServersManager::hookFileDescriptor(ActiveFileDescriptor const & actf)
+{
+    struct epoll_event event;
+
+	event.events = actf.mode;
+	event.data.fd = actf.fd;
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, actf.fd, &event) < 0)
+	{
+		throw std::runtime_error("Epoll hook failed: " + std::string(strerror(errno)));
+	}
+	Logger::getInstance() << "Hooked " + wss::i_to_dec(actf.fd) + ", " + wss::i_to_dec(actf.mode) << std::endl;
+}
+
+void VirtualServersManager::unhookFileDescriptor(ActiveFileDescriptor const & actf)
+{
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, actf.fd, NULL) < 0)
+	{
+		throw std::runtime_error("Epoll unhook failed: " + std::string(strerror(errno)));
+	}
+	Logger::getInstance() << "Unhooked " + wss::i_to_dec(actf.fd) + ", " + wss::i_to_dec(actf.mode) << std::endl;
+}
+
+void VirtualServersManager::swapFileDescriptor(ActiveFileDescriptor const & oldfd, ActiveFileDescriptor const & newfd)
+{
+	if (oldfd == newfd)
+		return;
+	Logger::getInstance() << "Swap " + wss::i_to_dec(oldfd.fd) + ", " + wss::i_to_dec(oldfd.mode) << 
+	+ ". For " + wss::i_to_dec(newfd.fd) + ", " + wss::i_to_dec(newfd.mode) << std::endl;
+	if (oldfd.fd == newfd.fd)
+	{
+		struct epoll_event event;
+
+		event.events = newfd.mode;
+		event.data.fd = newfd.fd;
+		if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, newfd.fd, &event) < 0)
+		{
+			throw std::runtime_error("Epoll change failed: " + std::string(strerror(errno)));
+		}
+	}
+	else 
+	{
+		unhookFileDescriptor(oldfd);
+		hookFileDescriptor(newfd);
+	}
+}
+
+// Other
+int VirtualServersManager::findServerIndex(int fd) const {
+    // Busca el índice del server con el fd dado, o -1 si no existe
+    for (size_t i = 0; i < _servers.size(); ++i) {
+        if (_servers[i].getSocketFD() == fd)
+            return static_cast<int>(i);
+    }
+    return -1;
+}
 
 void VirtualServersManager::printListenSocketsInfo() const {
     std::cout << "\n📊 Listen Sockets Information:" << std::endl;
@@ -1012,4 +1105,4 @@ void VirtualServersManager::printListenSocketsInfo() const {
                   << " (FD: " << it->second.socket_fd << ")" 
                   << " - " << it->second.virtual_hosts.size() << " virtual hosts" << std::endl;
     }
-}
+}	

@@ -1,27 +1,37 @@
-VPATH = src src/util src/http src/parse src/buffer
 
-# Variables
+
+VPATH = src src/util src/http src/parse src/buffer src/response
+
+# Files
+OBJ = main.o Logger.o  HTTPMethod.o FieldSection.o \
+	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
+	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
+	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
+	SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
+	File.o HTTPResponseBuffer.o Server.o VirtualServersManager.o \
+       Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
+	Client.o ConfigInheritance.o ServerConfig.o DebugView.o \
+
+# Target
 NAME = webserv
-CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-INCLUDES = -Iinc
+
+# Project
+PROJ = Webserv
 
 # Directories
-SRC_DIR = src
 OBJ_DIR = obj
 
 # Source files
 SRCS = main.cpp \
+       Server.cpp \
        VirtualServersManager.cpp \
        Parsed.cpp \
-	ConfigInheritance.cpp \
        Listen.cpp \
        Utils.cpp \
        Location.cpp \
        ServerValidator.cpp \
        File.cpp \
        MediaType.cpp \
-       ServerConfig.cpp \
        http/HTTPRequest.cpp \
        http/HTTPBody.cpp \
        http/HTTPError.cpp \
@@ -44,7 +54,6 @@ SRCS = main.cpp \
        util/Status.cpp \
        util/StringUtil.cpp \
        util/ParsingUtil.cpp \
-       util/DebugView.cpp \
        
 
 
@@ -56,21 +65,28 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 # Rules
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
+$(NAME): $(OBJ_PATH) Makefile
+	@$(CC) $(FLAGS) $(OBJ_PATH) -o $(NAME)
+	@echo $(YELLOW)$(PROJ) - Creating exec:$(NO_COLOR) $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+# Compilation
+$(OBJ_DIR)/%.o:%.cpp
+	@$(CC) -MMD $(INCLUDES) $(FLAGS) -c $< -o $@
+	@echo $(YELLOW)$(PROJ) - Compiling object file:$(NO_COLOR) $(notdir $@)
+
+# Utils
+-include $(DEPS)
 
 $(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -rf $(OBJ_DIR)
+	@rm -rf $(OBJ_DIR)
+	@echo $(YELLOW)$(PROJ) - Removing:$(NO_COLOR) Object and dependency files
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -rf $(NAME) $(NAME_B)
+	@echo $(YELLOW)$(PROJ) - Rem	oving:$(NO_COLOR) $(NAME) $(NAME_B)
 
 re: fclean all
 
