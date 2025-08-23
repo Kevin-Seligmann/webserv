@@ -13,7 +13,7 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 
     // TESTING LOCATION CONFIG.
     lc->setPath("/def/");
-    lc->setRoot("/home/kevin/42/webserv/test-nginx/www");
+    lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
 
     std::vector<std::string> m;
     m.push_back("GET");
@@ -28,7 +28,10 @@ ResponseManager::~ResponseManager(){delete _sys_buffer;}
 
 void ResponseManager::set_virtual_server(Server const * config){_server = config;}
 
-void ResponseManager::set_location(Location const * location){_location = location;}
+void ResponseManager::set_location(Location const * location)
+{
+    // _location = location;
+}
 
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
@@ -40,7 +43,7 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
             CODE_ERR("Trying to get active file descriptor from an invalid status");
         case READING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLIN);
         case WRITING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLOUT);
-        case WRITING_RESPONSE: return ActiveFileDescriptor(_sys_buffer->_fd, EPOLLOUT);
+        case WRITING_RESPONSE: return ActiveFileDescriptor(_sys_buffer->_fd, EPOLLOUT | EPOLLRDHUP);
         default: CODE_ERR("Trying to get active file descriptor from an invalid status");
     }
 }
@@ -50,7 +53,7 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 */
 void ResponseManager::generate_response()
 {
-    Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;;
+    Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     switch (::status::status_type(_error.status()))
     {
@@ -260,6 +263,8 @@ void ResponseManager::read_directory()
     dirs += "<!DOCTYPE html><html><body>";
     while (struct dirent * dir = _file.dir_next())
         if (dir->d_type == DT_DIR)
+            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
+        else
             dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
     dirs += "</html></body>";
 

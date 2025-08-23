@@ -79,4 +79,9 @@ void RequestManager::new_request()
     _error.set("", OK); _request.reset(); _request_parser.new_request();
 }
 
+bool RequestManager::has_error() const 
+{
+    return _error.status() != OK;
+}
+
 HTTPError & RequestManager::gerError(){return _error;}
