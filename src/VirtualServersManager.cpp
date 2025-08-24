@@ -427,26 +427,6 @@ void VirtualServersManager::handleProcessingRequest(int client_fd, ClientState* 
             return;
         }
 
-        // DEBUG PARA ENCONTRAR EL ERROR DE ERRO 500
-
-        // Antes de buscar location
-        Logger::getInstance().error("DEBE DAR: 'PATH_DE_LOCATION' ");
-        Logger::getInstance().info("Searching location for path: '" + client->request.get_path() + "'");
-
-        Logger::getInstance().info("Available locations in server config:");
-        std::map<std::string, Location>::const_iterator l_it = server_config->locations.begin();
-        for (;l_it != server_config->locations.end(); ++l_it) {
-            Logger::getInstance().info("  - '" + l_it->first + "' (match_type: " + 
-            std::string(l_it->second.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX") + ")");
-        }
-
-        Location* location2 = server_config->findLocation(client->request.get_path());
-        if (!location2) {
-            Logger::getInstance().error("CRITICAL: No location found for path '" + client->request.get_path() + "'");
-        }
-
-        // FIN DEBUG PARA ERROR DE ERROR 500
-
         Location* location = server_config->findLocation(client->request.get_path());
         if (!location) {
             location = server_config->findLocation("/", false);
@@ -456,8 +436,6 @@ void VirtualServersManager::handleProcessingRequest(int client_fd, ClientState* 
                 return;
             }
         }
-
-        Logger::getInstance().error(location2->getPath() == location->getPath() ? "\n\nSON IGUALES" : "\n\nsNO SON IGUALES");
 
         if (!isMethodAllowed(server_config, location, client->request.method)) {
             client->error.set("Method not allowed", METHOD_NOT_ALLOWED);
@@ -478,26 +456,36 @@ void VirtualServersManager::handleProcessingRequest(int client_fd, ClientState* 
         client->response_manager.generate_response();
         ResponseManager::RM_status rm_status = client->response_manager.get_status();
 
-        // Miramos si el ResponseManager nos pide operar sobre un archivo
+        // Pedir a ResponseManager fd activo si hay (lee o escribe un fichero)
         ActiveFileDescriptor afd = client->response_manager.get_active_file_descriptor();
         if (afd.fd != -1) {
-            Logger::getInstance().info("Registering file FD " + wss::i_to_dec(afd.fd));
-            struct epoll_event ev;
-            ev.data.fd = afd.fd;
-            ev.events = afd.mode;
-            if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, afd.fd, &ev) == -1) {
-                Logger::getInstance().error("epoll_ctl ADD failed for file fd: " + std::string(strerror(errno)));
+            if (afd.fd == client_fd) {
+                // Modificar socket existente del cliente
+                struct epoll_event ev;
+                ev.data.fd = afd.fd;
+                ev.events = afd.mode;
+                if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, afd.fd, &ev) == -1) {
+                    Logger::getInstance().error("epoll_ctl MOD failed for client fd: " + std::string(strerror(errno)));
+                }
+            } else {
+                // Añadir nuevo file descriptor (archivo)
+                struct epoll_event ev;
+                ev.data.fd = afd.fd;
+                ev.events = afd.mode;
+                if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, afd.fd, &ev) == -1) {
+                    Logger::getInstance().error("epoll_ctl ADD failed for file fd: " + std::string(strerror(errno)));
+                }
             }
             client->status = ClientState::WAITING_FILE;
             return;
         }
 
-        // Si no hay archivo pendiente, miramos si toca escribir al socket
+        // Si llega aquí no hay fd activo, por tanto, toca escribir enel socket
         if (rm_status == ResponseManager::WRITING_RESPONSE) {
             Logger::getInstance().info("Registering client FD " + wss::i_to_dec(client_fd) + " for EPOLLOUT");
             struct epoll_event ev;
             ev.data.fd = client_fd;
-            ev.events = EPOLLOUT;
+            ev.events = EPOLLIN;
             if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, client_fd, &ev) == -1) {
                 Logger::getInstance().error("epoll_ctl MOD failed for client fd: " + std::string(strerror(errno)));
             }
@@ -505,7 +493,7 @@ void VirtualServersManager::handleProcessingRequest(int client_fd, ClientState* 
             return;
         }
 
-        // Caso por defecto: cerramos con error
+        // Fallback: cierre por error
         Logger::getInstance().warning("Unexpected ResponseManager status after generate_response");
         client->status = ClientState::ERROR_HANDLING;
 
@@ -563,26 +551,35 @@ void VirtualServersManager::handleWritingResponse(int client_fd, ClientState* cl
     Logger::getInstance().info("Writing response for client " + wss::i_to_dec(client_fd));
     
     try {
-        client->response_manager.process(); // QUESTION donde mas se usa, que hace? Checkear
+        client->response_manager.process();
         
         if (client->response_manager.response_done()) {
             Logger::getInstance().info("Response sending complete for client " + wss::i_to_dec(client_fd));
             
-            if (client->request.headers.close_status == RCS_CLOSE) { // QUESTION que codigo es este, que otros hay, su contexto, usos de su familia, checkear
+            if (client->request.headers.close_status == RCS_CLOSE) {
                 client->status = ClientState::CLOSING;
             } else {
                 // Keep-alive: preparar para nueva request
-                client->request_manager.new_request(); // QUESTION que hace, checkear
-                client->response_manager.reset(); // Acceso público a new_request()
+                client->request_manager.new_request();
+                client->response_manager.reset();
                 client->error.set("", OK);
                 client->error_retry_count = 0;
-                client->status = ClientState::READING_REQUEST; // QUESTION que pasa si en la siguiente iteracion del bucle principal no hay datos en el socket?
+                
+                // Restaurar EPOLLIN
+                struct epoll_event ev;
+                ev.data.fd = client_fd;
+                ev.events = EPOLLIN;
+                if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, client_fd, &ev) == -1) {
+                    Logger::getInstance().error("epoll_ctl MOD to EPOLLIN failed: " + std::string(strerror(errno)));
+                }
+                
+                client->status = ClientState::READING_REQUEST;
             }
             return;
         }
-
-    Logger::getInstance().info("Continue writing response");
-    
+        
+        Logger::getInstance().info("Continue writing response");
+        
     } catch (const std::exception& e) {
         std::ostringstream oss;
         oss << "Exception in handleWritingResponse: " << e.what();
@@ -598,8 +595,38 @@ void VirtualServersManager::handleWaitingFile(int client_fd, ClientState* client
         ActiveFileDescriptor afd = client->response_manager.get_active_file_descriptor(); // QUESTION que es ActiveFileDescripto, contexto checkear
         
         if (afd.fd == -1) {
-            Logger::getInstance().warning("No active file descriptor, switching to response");
+            Logger::getInstance().warning("No active file descriptor, switching to writing response");
             client->status = ClientState::WRITING_RESPONSE;
+            return;
+        }
+
+        if (afd.fd == client_fd) {
+            Logger::getInstance().info("Socket ready for writing response");
+            client->response_manager.process();
+
+            if (client->response_manager.response_done()) {
+                Logger::getInstance().info("Response sending complete for cliente " + wss::i_to_dec(client_fd));
+
+                if (client->request.headers.close_status == RCS_CLOSE) {
+                    client->status = ClientState::CLOSING;
+                } else {
+                    // Keep-alice: preparar para nueva request
+                    client->request_manager.new_request();
+                    client->response_manager.reset();
+                    client->error_retry_count = 0;
+
+                    // Volver a epollin
+                    struct epoll_event ev;
+                    ev.data.fd = client_fd;
+                    ev.events = EPOLLIN;
+                    if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, client_fd, &ev) == -1) {
+                        Logger::getInstance().error("epoll_ctl MOD to EPOLLIN failed: "
+                                                    + std::string(strerror(errno)));
+                    }
+
+                    client->status = ClientState::READING_REQUEST;
+                }
+            }
             return;
         }
 

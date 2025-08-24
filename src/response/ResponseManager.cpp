@@ -2,7 +2,7 @@
 #include "ServerConfig.hpp"
 
 // I UNDERSTAND THIS IS FOR TESTING ONLY... POSSIBLE MEMORY LEAK IF NOT REMOVED
-Location * lc = new Location();
+// Location * lc = new Location();
 
 /*
     Remember status with content, should put C.L 0 or send error page.
@@ -393,6 +393,11 @@ void ResponseManager::write_response()
     if (written_bytes > 0)
     {
         _buffer.consume_bytes(written_bytes);
+
+        if (_buffer.size() == 0) {
+            _file.close();
+            _status = DONE;
+        }
     }
     else if (written_bytes == 0)
     {
@@ -464,10 +469,6 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 
 bool ResponseManager::allow_upload()
 {
-    // If allow set on Location, return location
-    // Else if set on server, return server
-    // Else, return default
-
     // USING SERVER->GetAllowUpload() FOR NO LOCATION CASES, then DEFAULT
     if (_location) {
         return _location->getAllowUpload();
@@ -480,10 +481,6 @@ bool ResponseManager::allow_upload()
     
 bool ResponseManager::is_autoindex()
 {
-    // If autoindex is set on Location, return location
-    // Else if autoindex is set on server, return server
-    // Else, return default.
-
     // USING getAutoindex() for LOCATION, then SERVER, then DEFAULT
     if (_location && _location->getAutoindex() != AINDX_DEF_OFF) {
         return _location->getAutoindex() == AINDX_LOC_ON;
