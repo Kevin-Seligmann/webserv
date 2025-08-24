@@ -9,8 +9,8 @@ OBJ = main.o Logger.o  HTTPMethod.o FieldSection.o \
 	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
 	SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
 	File.o HTTPResponseBuffer.o Server.o VirtualServersManager.o \
-       Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
-	Client.o ConfigInheritance.o ServerConfig.o DebugView.o \
+    Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
+	Client.o \
 
 # Target
 NAME = webserv
@@ -21,49 +21,28 @@ PROJ = Webserv
 # Directories
 OBJ_DIR = obj
 
-# Source files
-SRCS = main.cpp \
-       Server.cpp \
-       VirtualServersManager.cpp \
-       Parsed.cpp \
-       Listen.cpp \
-       Utils.cpp \
-       Location.cpp \
-       ServerValidator.cpp \
-       File.cpp \
-       MediaType.cpp \
-       http/HTTPRequest.cpp \
-       http/HTTPBody.cpp \
-       http/HTTPError.cpp \
-       http/HTTPMethod.cpp \
-       http/FieldSection.cpp \
-       http/URI.cpp \
-       http/RequestValidator.cpp \
-       response/ResponseManager.cpp \
-       parse/ElementParser.cpp \
-       parse/RequestManager.cpp \
-       parse/RequestParser.cpp \
-       buffer/HTTPRequestBuffer.cpp \
-       buffer/ReadNetBuffer.cpp \
-       buffer/SysBuffer.cpp \
-       buffer/SysBufferFactory.cpp \
-       buffer/SysFileBuffer.cpp \
-       buffer/SysNetBuffer.cpp \
-       buffer/HTTPResponseBuffer.cpp\
-       util/Logger.cpp \
-       util/Status.cpp \
-       util/StringUtil.cpp \
-       util/ParsingUtil.cpp \
-       
+INC_DIR = inc
 
+OBJ_PATH = $(addprefix $(OBJ_DIR)/, $(OBJ))
 
+DEPS = $(OBJ_PATH:.o=.d)
 
-# Add src/ prefix and generate object file paths
-SRC_FILES = $(addprefix $(SRC_DIR)/, $(SRCS))
-OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
+# Include
+INCLUDES = -I./$(INC_DIR)
 
-# Rules
-all: $(NAME)
+# Flags -Wall -Wextra -Werror 
+FLAGS = -std=c++98 -g3
+
+# Compiler
+CC = c++
+
+# Colors
+YELLOW = "\e[33m"
+GREEN = "\e[32m"
+NO_COLOR = "\e[0m"
+
+# Linking
+all: $(OBJ_DIR) $(NAME)
 
 $(NAME): $(OBJ_PATH) Makefile
 	@$(CC) $(FLAGS) $(OBJ_PATH) -o $(NAME)
@@ -90,10 +69,4 @@ fclean: clean
 
 re: fclean all
 
-test: $(NAME)
-	./$(NAME)
-
-interactive: $(NAME)
-	./$(NAME) --interactive
-
-.PHONY: all clean fclean re test interactive
+.PHONY: clean fclean all re $(OBJ_DIR)
