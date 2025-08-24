@@ -13,7 +13,7 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 
     // TESTING LOCATION CONFIG.
     lc->setPath("/def/");
-    lc->setRoot("/home/kevin/42/webserv/test-nginx/www");
+    lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
 
     std::vector<std::string> m;
     m.push_back("GET");
@@ -26,9 +26,12 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 
 ResponseManager::~ResponseManager(){delete _sys_buffer;}
 
-void ResponseManager::set_virtual_server(Server const * config){_server = config;}
+void ResponseManager::set_virtual_server(ServerConfig const * config){_server = config;}
 
-void ResponseManager::set_location(Location const * location){_location = location;}
+void ResponseManager::set_location(Location const * location)
+{
+    // _location = location;
+}
 
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
@@ -40,7 +43,7 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
             CODE_ERR("Trying to get active file descriptor from an invalid status");
         case READING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLIN);
         case WRITING_FILE: return ActiveFileDescriptor(_file.fd, EPOLLOUT);
-        case WRITING_RESPONSE: return ActiveFileDescriptor(_sys_buffer->_fd, EPOLLOUT);
+        case WRITING_RESPONSE: return ActiveFileDescriptor(_sys_buffer->_fd, EPOLLOUT | EPOLLRDHUP);
         default: CODE_ERR("Trying to get active file descriptor from an invalid status");
     }
 }
@@ -50,7 +53,7 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 */
 void ResponseManager::generate_response()
 {
-    Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;;
+    Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     switch (::status::status_type(_error.status()))
     {
@@ -245,8 +248,8 @@ void ResponseManager::read_directory()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header("Content-Type", "text/html");
 
-    // if (!_location->hasAutoindex())
-    //     return _error.set("Directory listing is forbidden", FORBIDDEN);
+    if (!is_autoindex())
+        return _error.set("Directory listing is forbidden", FORBIDDEN);
 
     std::string final_path = get_host_path();
     std::string dir_prefix = "";
@@ -260,6 +263,8 @@ void ResponseManager::read_directory()
     dirs += "<!DOCTYPE html><html><body>";
     while (struct dirent * dir = _file.dir_next())
         if (dir->d_type == DT_DIR)
+            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
+        else
             dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
     dirs += "</html></body>";
 
@@ -293,6 +298,7 @@ void ResponseManager::generate_status_response()
         }
         _buffer.put_header("Allow", allowed);
     }
+
 
     _buffer.put_new_line();
     // Put headers
@@ -342,20 +348,33 @@ bool ResponseManager::response_done(){return _buffer.size() == 0;}
 
 std::string const ResponseManager::get_host_path()
 {
-    // Same problem as always. Was it set? Was it empty?
-    
-    // Temp (Instead of doing this many times, could be better to pre calculate it)
+    // DEFAULT. Default should be set in config, not here.
+    // Removed null check because they should never be empty.
+    // root_path = "/var/www/html";
+
+    // if (!_location->getRoot().empty()) {
+    //     return _location->getRoot();
+    // } else if (!_server->getRoot().empty()) {
+    //     return _server->getRoot();
+    // } else {
+    //     CODE_ERR("No root path found")
+    // }
+
     return _location->getRoot() + _request.uri.path;
 }
 
 std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 {
-    // Hard to tell because both vectors could be empty, meaning... Not allowed or not set?
-    // Probably better if they parse the methods to the ENUMS.
-
-    // Temp
     std::vector<std::string> const & methods = _location->getMethods();
     std::vector<HTTPMethod> real_methods;
+
+    // if (!_location->getMethods().empty()) {
+    //     methods = _location->getMethods();
+    // } else if (!_server->getAllowMethods().empty()) {
+    //     methods = _server->getAllowMethods();
+    // } else {
+    //  CODE_ERR("No methods found")
+    // }
 
     // Tempx2 (Parse to enums just once)
     for (std::vector<std::string>::const_iterator it = methods.begin(); it != methods.end(); it ++)
@@ -370,22 +389,22 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 
 bool ResponseManager::allow_upload()
 {
-    // If allow set on Location, return location
-    // Else if set on server, return server
-    // Else, return default
-
-    // Temp
-    // return _location->allowsUpload(); (Doesn't exists)
-    // return _server->getConfig(). ?? (Doesn't exists)
+    // return _location->getAllowUpload();
     return true;
 }
     
 bool ResponseManager::is_autoindex()
 {
-    // If autoindex is set on Location, return location
-    // Else if autoindex is set on server, return server
-    // Else, return default.
-
-    // Temp
+    // if (_location->getAutoindex() != AINDX_DEF_OFF) {
+    //     return _location->getAutoindex() == AINDX_LOC_ON;
+    // }
+    
+    // if (_server) {
+    //     AutoIndexState serv_state = _server->getAutoindex(NULL);
+    //     if (serv_state == AINDX_SERV_ON) return true;
+    //     if (serv_state == AINDX_SERV_OFF) return false;
+    // }
+    
+    // return false;  // DEFAULT: FALSE
     return _location->hasAutoindex();
 }

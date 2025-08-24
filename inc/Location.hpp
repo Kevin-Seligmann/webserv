@@ -8,7 +8,6 @@
 #include <map>
 
 // TODO: La clase Location no está terminada - falta implementar:
-// - Error pages específicas por location (jerarquía: location -> server -> default)
 // - Validación completa de configuración
 // - Manejo de herencia de configuración desde el server padre
 // - Implementación completa de CGI configuration
@@ -33,8 +32,7 @@ private:
 	std::string                             _redirect;
 	std::string 							_cgi_extension;
 	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
-	// Pagina de errores
-
+	std::map<int, std::string> 				_error_pages;
 
 public:
 	Location();
@@ -44,15 +42,26 @@ public:
 	bool matchesPath(const std::string& path) const;
 
 	const std::string& getPath() const { return _path; }
+
 	const MatchType& getMatchType() const { return _match_type; }
+
 	const std::string& getRoot() const { return _root; }
+
     const std::string& getIndex() const { return _index; }
+
 	AutoIndexState getAutoindex() const { return _autoindex; }
+
     const std::vector<std::string>& getMethods() const { return _methods; }
-    bool hasAutoindex() const { return _autoindex; }
+
     const std::string& getRedirect() const { return _redirect; }
+
     const std::string& getCgiExtension() const { return _cgi_extension; }
+
 	bool getAllowUpload() const { return _allow_upload; }
+	
+	std::string getErrorPage(int error_code) const;
+	
+    bool hasAutoindex() const { return _autoindex; }
 
 	void setPath(const std::string& path) { _path = path; }
 	void setMatchType(const MatchType& match_type) { _match_type = match_type; }
@@ -60,10 +69,10 @@ public:
     void setRoot(const std::string& root) { _root = root; }
 	void setIndex(const std::string& index) { _index = index; }
 	void setAutoindex(AutoIndexState state) { _autoindex = state; }
-//	void setDirectoryListing(const bool dl) { _autoindex = dl; }
 	void setRedirect(const std::string& redirect) { _redirect = redirect; }
 	void setCgixtension(const std::string cgi_extension) { _cgi_extension = cgi_extension; }
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
+	void setErrorPage(int code, const std::string& path) { _error_pages[code]=path; }
 };
 
 #endif

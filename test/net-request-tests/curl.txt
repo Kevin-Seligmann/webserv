@@ -8,13 +8,13 @@ ipv4
 noproxy *
 
 # Request
-url = localhost:1234
-request-target = http://localhost:1234/s2
+url = localhost:8080
+request-target = http://localhost:8080/
 header = "Host: s3:82"
 header = "Content-Type: application/javascript"
 
 # Post request  
-request = DELETE
+request = GET
 # data-binary = @post-data
 
 

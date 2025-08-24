@@ -10,6 +10,7 @@ ServerConfig::ServerConfig()
     : root("/var/www/html")
     , autoindex(AINDX_DEF_OFF)
     , client_max_body_size(1048576)
+    , allow_upload(false)
 {
     index_files.push_back("index.html");
     index_files.push_back("index.htm");
@@ -27,6 +28,7 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
     , autoindex(parsed.autoindex)
     , client_max_body_size(parseBodySize(parsed.client_max_body_size))
     , locations(parsed.locations)
+    , allow_upload(false) // falta el allow_upload en ParsedServer
 {
     if (index_files.empty()) {
         index_files.push_back("index.html");
@@ -45,6 +47,13 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
     if (root.empty()) {
         root = "/var/www/html";
     }
+
+    if (locations.empty()) {
+        Location default_location;
+        default_location.setPath("/");
+        default_location.setMatchType(Location::PREFIX); // QUESTION como va esto del setMatchType, contexto otrs tipos, donde se consume
+        locations["/"] = default_location;
+    }
 }
 
 ServerConfig::ServerConfig(const ServerConfig& other)
@@ -56,6 +65,7 @@ ServerConfig::ServerConfig(const ServerConfig& other)
     , autoindex(other.autoindex)
     , client_max_body_size(other.client_max_body_size)
     , locations(other.locations)
+    , allow_upload(other.allow_upload)
 {
 }
 
@@ -73,6 +83,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& other) {
     return *this;
 }
 
+// matchesServerName
 bool ServerConfig::matchesServerName(const std::string& hostname) const {
     if (server_names.empty()) {
         return true;
@@ -93,18 +104,63 @@ bool ServerConfig::matchesServerName(const std::string& hostname) const {
     return false;
 }
 
+
+
+
+// findLocation
+// Función auxiliar para debug (pon static antes de esta función)
+static void debugLocationSearch(const std::string& path, const std::map<std::string, Location>& locations, 
+                        const Location& location, const std::string& key) {
+    Logger::getInstance().info("DEBUG: iterating key='" + key + "'");
+    (void) locations;
+    
+    // DEBUG CRÍTICO: valores raw del enum
+    Logger::getInstance().info("DEBUG: location._match_type raw value = " + 
+        wss::i_to_dec(static_cast<int>(location.getMatchType())));
+    Logger::getInstance().info("DEBUG: Location::PREFIX enum value = " + 
+        wss::i_to_dec(static_cast<int>(Location::PREFIX)));
+    Logger::getInstance().info("DEBUG: Location::EXACT enum value = " + 
+        wss::i_to_dec(static_cast<int>(Location::EXACT)));
+    
+    bool match_type_ok = (location.getMatchType() == Location::PREFIX);
+    bool matches_path_ok = location.matchesPath(path);
+    
+    Logger::getInstance().info("DEBUG: match_type_ok=" + 
+        std::string(match_type_ok ? "TRUE" : "FALSE"));
+    Logger::getInstance().info("DEBUG: matches_path_ok=" + 
+        std::string(matches_path_ok ? "TRUE" : "FALSE"));
+    
+    if (match_type_ok && matches_path_ok) {
+        Logger::getInstance().info("DEBUG: ENTERING IF BLOCK!");
+    } else {
+        Logger::getInstance().info("DEBUG: NOT ENTERING IF - one condition failed");
+    }
+}
+
 Location* ServerConfig::findLocation(const std::string& path, bool resolve_index) const {
+    // Debug inicial
+    Logger::getInstance().info("DEBUG findLocation: searching for '" + path + "'");
+    Logger::getInstance().info("DEBUG: map size = " + wss::i_to_dec(locations.size()));
+    
+    // Buscar match exacto primero
     std::map<std::string, Location>::const_iterator exact_it = locations.find(path);
     if (exact_it != locations.end() && exact_it->second.getMatchType() == Location::EXACT) {
+        Logger::getInstance().info("DEBUG: found EXACT match");
         Location* exact_location = const_cast<Location*>(&exact_it->second);
         
         if (resolve_index && !path.empty() && path[path.length() - 1] == '/') {
             return resolveIndexAndRematch(path, exact_location);
         }
-        
         return exact_location;
     }
     
+    // Debug para map entry encontrado
+    if (exact_it != locations.end()) {
+        Logger::getInstance().info("DEBUG: found map entry, match_type = " + 
+            std::string(exact_it->second.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX"));
+    }
+    
+    // Buscar PREFIX matches
     Location* best_match = NULL;
     size_t best_length = 0;
     
@@ -113,9 +169,21 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
         
         const Location& location = it->second;
         
+        // Debug call
+        debugLocationSearch(path, locations, location, it->first);
+        
+        // Lógica funcional
         if (location.getMatchType() == Location::PREFIX && location.matchesPath(path)) {
             size_t match_length = it->first.length();
+            
+            // Debug interno del match
+            Logger::getInstance().info("DEBUG: match_length=" + wss::i_to_dec(match_length));
+            Logger::getInstance().info("DEBUG: best_length=" + wss::i_to_dec(best_length));
+            Logger::getInstance().info("DEBUG: (match_length > best_length)=" + 
+                std::string(match_length > best_length ? "TRUE" : "FALSE"));
+            
             if (match_length > best_length) {
+                Logger::getInstance().info("DEBUG: ASSIGNING best_match!");
                 best_match = const_cast<Location*>(&location);
                 best_length = match_length;
             }
@@ -126,17 +194,34 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
         return resolveIndexAndRematch(path, best_match);
     }
     
+    // Debug final
+    Logger::getInstance().info("DEBUG: final best_match=" + 
+        std::string(best_match ? "NOT_NULL" : "NULL"));
+    
     return best_match;
 }
 
-std::string ServerConfig::getErrorPage(int error_code) const {
+
+
+
+// getErrorPage
+std::string ServerConfig::getErrorPage(int error_code, const Location* location) const {
+    
+    if (location) {
+        std::string loc_page = location->getErrorPage(error_code);
+        if (!loc_page.empty())
+            return loc_page;
+    }
+
     std::map<int, std::string>::const_iterator it = error_pages.find(error_code);
     if (it != error_pages.end()) {
         return it->second;
     }
-    return "";
+
+    return ""; // TODO implementar paginas default, reemplazar aqui
 }
 
+// isMethodAllowed
 bool ServerConfig::isMethodAllowed(const std::string& method) const {
     if (allow_methods.empty()) {
         return true;
@@ -152,12 +237,34 @@ bool ServerConfig::isMethodAllowed(const std::string& method) const {
     return false;
 }
 
-bool ServerConfig::isAutoIndexEnabled() const {
-    return autoindex == AINDX_DEF_ON || 
-           autoindex == AINDX_SERV_ON || 
-           autoindex == AINDX_LOC_ON;
+// getAllowMethods
+const std::vector<std::string>& ServerConfig::getAllowMethods(const Location* location) const {
+    if (location && !location->getMethods().empty()) {
+        return location->getMethods();
+    }
+    
+    return allow_methods;
 }
 
+
+// getAutoindex methods
+bool ServerConfig::getAutoindex() const {
+    return autoindex == AINDX_DEF_ON;
+}
+
+AutoIndexState ServerConfig::getAutoindex(const Location* location) const {
+    if (location) {
+        AutoIndexState loc_state = location->getAutoindex();
+        
+        if (loc_state == AINDX_LOC_ON || loc_state == AINDX_LOC_OFF) {
+            return loc_state;
+        }
+    }
+    
+    return autoindex;
+}
+
+// getClientMaxBodySizeString
 std::string ServerConfig::getClientMaxBodySizeString() const {
     if (client_max_body_size >= 1024 * 1024 * 1024) {
         return wss::i_to_dec(client_max_body_size / (1024 * 1024 * 1024)) + "G";
@@ -170,6 +277,7 @@ std::string ServerConfig::getClientMaxBodySizeString() const {
     }
 }
 
+// getDebugInfo
 std::string ServerConfig::getDebugInfo() const {
     std::stringstream ss;
     
@@ -182,7 +290,7 @@ std::string ServerConfig::getDebugInfo() const {
     ss << "]\n";
     
     ss << "  root: \"" << root << "\"\n";
-    ss << "  autoindex: " << (isAutoIndexEnabled() ? "enabled" : "disabled") << "\n";
+    ss << "  autoindex: " << (getAutoindex() ? "enabled" : "disabled") << "\n";
     ss << "  client_max_body_size: " << getClientMaxBodySizeString() << "\n";
     
     ss << "  index_files: [";
@@ -207,35 +315,54 @@ std::string ServerConfig::getDebugInfo() const {
 }
 
 size_t ServerConfig::parseBodySize(const std::string& size_str) const {
+    static const size_t DEFAULT_SIZE = 1048576;  // 1MB default
+    static const size_t MAX_SIZE = ~(static_cast<size_t>(0));  // MAX size_t
+
     if (size_str.empty()) {
-        return 1048576;
+        return DEFAULT_SIZE;
     }
     
     std::string number_part;
-    char unit = '\0';
+    std::string unit_part;
+    size_t i;
     
-    for (size_t i = 0; i < size_str.length(); ++i) {
-        if (std::isdigit(size_str[i])) {
-            number_part += size_str[i];
-        } else {
-            unit = std::toupper(size_str[i]);
-            break;
-        }
+    // EXTRACT NUMBER
+    for (i = 0; i < size_str.length() && (std::isdigit(size_str[i]) || size_str[i] == '.'); ++i) {
+        number_part += size_str[i];
+    }
+    
+    // EXTRACT UNIT
+    while (i < size_str.length()) {
+        unit_part += std::toupper(size_str[i]);
+        ++i;
     }
     
     if (number_part.empty()) {
-        return 1048576;
+        return DEFAULT_SIZE;
     }
     
     size_t base_size = static_cast<size_t>(std::atoll(number_part.c_str()));
     
-    switch (unit) {
-        case 'K': return base_size * 1024;
-        case 'M': return base_size * 1024 * 1024;
-        case 'G': return base_size * 1024 * 1024 * 1024;
-        case '\0': return base_size;
-        default: return 1048576;
+    // PROTECT FROM VALUE = 0
+    if (base_size == 0) {
+        return DEFAULT_SIZE;
     }
+    
+    // UNIT CONVERTION
+    if (unit_part.empty() || unit_part == "B" || unit_part == "BYTES") {
+        return base_size;
+    } else if (unit_part == "K" || unit_part == "KB" || unit_part == "KIB") {
+        if (base_size > MAX_SIZE / 1024) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024;
+    } else if (unit_part == "M" || unit_part == "MB" || unit_part == "MIB") {
+        if (base_size > MAX_SIZE / (1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024 * 1024;
+    } else if (unit_part == "G" || unit_part == "GB" || unit_part == "GIB") {
+        if (base_size > MAX_SIZE / (1024 * 1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
+        return base_size * 1024 * 1024 * 1024;
+    }
+    
+    return DEFAULT_SIZE;  // UNKNOWN UNIT
 }
 
 Location* ServerConfig::resolveIndexAndRematch(const std::string& path, Location* original_location) const {
@@ -256,4 +383,24 @@ Location* ServerConfig::resolveIndexAndRematch(const std::string& path, Location
 std::ostream& operator<<(std::ostream& os, const ServerConfig& config) {
     os << config.getDebugInfo();
     return os;
+}
+
+// para debug
+std::string ServerConfig::getServerNamesString() const {
+    if (server_names.empty()) {
+        return "_";
+    }
+    std::string result;
+    for (size_t i = 0; i < server_names.size(); ++i) {
+        result += server_names[i];
+        if (i < server_names.size() - 1) {
+            result += ", ";
+        }
+    }
+    return result;
+}
+
+bool ServerConfig::isDefaultServer() const {
+    return server_names.empty() || 
+            (server_names.size() == 1 && server_names[0] == "_");
 }

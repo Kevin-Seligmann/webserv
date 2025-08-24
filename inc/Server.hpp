@@ -1,5 +1,4 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -71,4 +70,3 @@ public:
 	void printConfigLayer() const;
 };
 
-#endif

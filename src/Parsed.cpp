@@ -109,6 +109,13 @@ size_t expect(const std::vector<std::string>& tokens, size_t i, const std::strin
 	return (i + 1);
 }
 
+/*
+TODO
+En parseLocation
+error_page
+debería validar que los archivos existan al parsear el path
+
+*/
 Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
 	Location loc;
@@ -124,6 +131,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	}
 	else {
 		loc.setPath(tokens[i]);
+		loc.setMatchType(Location::PREFIX);
 		++i;
 	}
 
@@ -179,12 +187,46 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
                 loc.setAllowUpload(value == "on" || value == "true");
             }
         }
+		else if (key == "error_page")
+		{
+			std::vector<int> codes;
+			while (i < tokens.size() && tokens[i] != ";" && isdigit(tokens[i][0]))
+				codes.push_back(to_int(tokens[i++]));
+			
+			if (i < tokens.size() && tokens[i] != ";") {
+				std::string error_page_path = tokens[i++];
+				for (size_t j = 0; j < codes.size(); ++j) {
+					loc.setErrorPage(codes[j], error_page_path); 
+				}
+			}
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+		}
         else
 		{
             if (i < tokens.size() && tokens[i] == ";") ++i;
         }
 	}
 	if (i < tokens.size() && tokens[i] == "}") ++i;
+
+
+// debug
+
+	Logger::getInstance().info("=== PARSED LOCATION DEBUG ===");
+	Logger::getInstance().info("  path: '" + loc.getPath() + "'");
+	Logger::getInstance().info("  match_type: " + std::string(loc.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX"));
+	Logger::getInstance().info("  methods count: " + wss::i_to_dec(loc.getMethods().size()));
+	for (size_t j = 0; j < loc.getMethods().size(); ++j) {
+		Logger::getInstance().info("    method[" + wss::i_to_dec(j) + "]: " + loc.getMethods()[j]);
+	}
+	Logger::getInstance().info("  root: '" + loc.getRoot() + "'");
+	Logger::getInstance().info("  index: '" + loc.getIndex() + "'");
+	Logger::getInstance().info("  autoindex: " + wss::i_to_dec(static_cast<int>(loc.getAutoindex())));
+	Logger::getInstance().info("  redirect: '" + loc.getRedirect() + "'");
+	Logger::getInstance().info("  cgi_extension: '" + loc.getCgiExtension() + "'");
+	Logger::getInstance().info("  allow_upload: " + std::string(loc.getAllowUpload() ? "TRUE" : "FALSE"));
+	Logger::getInstance().info("=== END PARSED LOCATION DEBUG ===");
+
+//end debug
 
 	return loc;
 }
@@ -324,7 +366,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			Location loc = parseLocation(tokens, i);
 			server.locations[loc.getPath()] = loc;
 		}
-		if (tokens[i] == ";") ++i;
+		if (i < tokens.size() && tokens[i] == ";") ++i;
 	}
 	++i;
 
