@@ -11,13 +11,9 @@ class VirtualServersManager;
 class Client 
 {
 public:
-
-    static const int TIMEOUT_SECONDS = 30;
     Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
-
-    time_t getLastActivity() const { return _last_activity; }
 
     void process(int fd, int mode);
     int  getSocket() const;
@@ -43,7 +39,6 @@ private:
     int                     _socket;
     id_t                    _error_retry_count;
     ActiveFileDescriptor    _active_fd;
-    time_t                  _last_activity;
     // int             error_retry_count;
 
 
@@ -52,15 +47,15 @@ private:
     void handle_processing_response();
     void handle_closing();
 
-    void handleRequestDone();
-    void handleRequestError();
-
-    void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
+    void prepareResponse(ServerConfig * server, Location * location);
     void prepareRequest();
 
     bool isCgiRequest(Location* location, const std::string& path);
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
+    void changeStatus(Status new_status, const std::string& reason = "");
+    std::string statusToString(Status status);
+    void process_status_error();
 	void get_config(ServerConfig ** server, Location ** location);
-    void get_status_config(ServerConfig ** ptr_server_config, Location ** ptr_location);
+
 };

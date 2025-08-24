@@ -114,6 +114,7 @@ TODO
 En parseLocation
 error_page
 debería validar que los archivos existan al parsear el path
+
 */
 Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
@@ -128,9 +129,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	else if (tokens[i] == "~" || tokens[i] == "~*") {
 		throw std::runtime_error("Invalid regex location");
 	}
-	else if (loc.getMatchType() == Location::UNSET) {
-		loc.setMatchType(Location::PREFIX);
+	else {
 		loc.setPath(tokens[i]);
+		loc.setMatchType(Location::PREFIX);
 		++i;
 	}
 
@@ -156,15 +157,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "index")
 		{
-			std::vector<std::string> index_vec;
-			while (i < tokens.size() && tokens[i] != ";") {
-				index_vec.push_back(tokens[i++]);
-			}
-			if (index_vec.empty()) {
-				index_vec.push_back("index.html");
-			}
-			loc.setIndex(index_vec);
-			if (i < tokens.size() && tokens[i] != ";") ++i;
+			if (i < tokens.size()) loc.setIndex(tokens[i++]);
 		}
 		else if (key == "autoindex")
 		{
@@ -200,20 +193,12 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			while (i < tokens.size() && tokens[i] != ";" && isdigit(tokens[i][0]))
 				codes.push_back(to_int(tokens[i++]));
 			
-			if (i < tokens.size() && tokens[i] != ";")
-			{
+			if (i < tokens.size() && tokens[i] != ";") {
 				std::string error_page_path = tokens[i++];
 				for (size_t j = 0; j < codes.size(); ++j) {
 					loc.setErrorPage(codes[j], error_page_path); 
 				}
 			}
-			if (i < tokens.size() && tokens[i] == ";") ++i;
-		}
-		else if (key == "body_size") {
-
-			std::string value = tokens[i++];
-			size_t limit = str_to_sizet(value, ULONG_MAX);
-			loc.setMaxBodySize(limit);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 		}
         else
@@ -224,7 +209,6 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	if (i < tokens.size() && tokens[i] == "}") ++i;
 
 
-/* TO_DELETE
 // debug
 
 	Logger::getInstance().info("=== PARSED LOCATION DEBUG ===");
@@ -235,19 +219,14 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		Logger::getInstance().info("    method[" + wss::i_to_dec(j) + "]: " + loc.getMethods()[j]);
 	}
 	Logger::getInstance().info("  root: '" + loc.getRoot() + "'");
-
-	std::ostringstream oss;
-	for (size_t i = 0; i < loc.getIndex().size(); ++i) {
-		oss << loc.getIndex()[i] << (i + 1 < loc.getIndex().size() ? " " : "");
-	}
-	Logger::getInstance().info(std::string("  index: '") + oss.str() + "'");
+	Logger::getInstance().info("  index: '" + loc.getIndex() + "'");
 	Logger::getInstance().info("  autoindex: " + wss::i_to_dec(static_cast<int>(loc.getAutoindex())));
 	Logger::getInstance().info("  redirect: '" + loc.getRedirect() + "'");
 	Logger::getInstance().info("  cgi_extension: '" + loc.getCgiExtension() + "'");
 	Logger::getInstance().info("  allow_upload: " + std::string(loc.getAllowUpload() ? "TRUE" : "FALSE"));
 	Logger::getInstance().info("=== END PARSED LOCATION DEBUG ===");
 
-//end debug */
+//end debug
 
 	return loc;
 }
@@ -385,10 +364,6 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		else if (key == "location")
 		{
 			Location loc = parseLocation(tokens, i);
-			std::string map_key = loc.getPath();
-			if (loc.getMatchType() == Location::EXACT) {
-				map_key = "=" + map_key;
-			}
 			server.locations[loc.getPath()] = loc;
 		}
 		if (i < tokens.size() && tokens[i] == ";") ++i;
@@ -397,7 +372,6 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 	applyAutoindex(server);
 	applyAllowMethods(server);
-	applyIndexFiles(server);
 
 	return (server);
 }

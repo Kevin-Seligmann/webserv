@@ -18,23 +18,21 @@
 //     debe hacer redirect INTERNO (no 301) para usar la location exacta
 //   * El match maker debe resolver esto internamente sin informar al cliente
 //   * Necesita re-matching automático cuando se resuelve un index file
-
 class Location {
 public:
-	enum MatchType { EXACT, PREFIX, UNSET };
+	enum MatchType { EXACT, PREFIX };
 
 private:
 	std::string								_path;
 	MatchType								_match_type;
 	std::vector<std::string>				_methods;
 	std::string								_root;
-	std::vector<std::string>				_index;
-	AutoIndexState							_autoindex;
+	std::string								_index;
+	AutoIndexState							_autoindex; // que llegue heredado ya y que  no haga falta mirar server
 	std::string                             _redirect;
 	std::string 							_cgi_extension;
-	bool									_allow_upload;
+	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
 	std::map<int, std::string> 				_error_pages;
-	size_t 									_max_body_size;
 
 public:
 	Location();
@@ -49,7 +47,7 @@ public:
 
 	const std::string& getRoot() const { return _root; }
 
-    const std::vector<std::string>& getIndex() const { return _index; }
+    const std::string& getIndex() const { return _index; }
 
 	AutoIndexState getAutoindex() const { return _autoindex; }
 
@@ -62,8 +60,6 @@ public:
 	bool getAllowUpload() const { return _allow_upload; }
 	
 	std::string getErrorPage(int error_code) const;
-
-	size_t getMaxBodySize() const { return _max_body_size; }
 	
     bool hasAutoindex() const { return _autoindex; }
 
@@ -71,13 +67,12 @@ public:
 	void setMatchType(const MatchType& match_type) { _match_type = match_type; }
     void setMethods(const std::vector<std::string>& methods) { _methods = methods; }
     void setRoot(const std::string& root) { _root = root; }
-	void setIndex(const std::vector<std::string>& index) { _index = index; }
+	void setIndex(const std::string& index) { _index = index; }
 	void setAutoindex(AutoIndexState state) { _autoindex = state; }
 	void setRedirect(const std::string& redirect) { _redirect = redirect; }
 	void setCgixtension(const std::string cgi_extension) { _cgi_extension = cgi_extension; }
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
 	void setErrorPage(int code, const std::string& path) { _error_pages[code]=path; }
-	void setMaxBodySize(size_t max) { _max_body_size = max; }
 };
 
 #endif

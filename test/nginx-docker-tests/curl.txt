@@ -8,8 +8,13 @@ ipv4
 noproxy *
 
 # Request
+<<<<<<<< HEAD:test/nginx-docker-tests/curl.txt
 url = localhost:8081
 request-target = http://localhost:80
+========
+url = localhost:8080
+request-target = http://localhost:8080/
+>>>>>>>> df82db4 (pull):test/net-request-tests/curl.txt
 header = "Host: s3:82"
 
 # Post request  
