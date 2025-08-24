@@ -1,7 +1,7 @@
 #include "Client.hpp"
 #include "VirtualServersManager.hpp"
 
-Client::Client(VirtualServersManager & vsm, std::vector<ServerConfig> & servers, int client_fd)
+Client::Client(VirtualServersManager & vsm, std::vector<Server> & servers, int client_fd)
 :_vsm(vsm) 
 , _servers(servers)
 , _element_parser(_error)
@@ -48,7 +48,7 @@ void Client::request()
     {
         // Check and handle error if exists. 
 
-	    ServerConfig* target_server = findServerForRequest(_request);
+	    Server* target_server = findServerForRequest(_request);
         if (!target_server)
             _error.set("Server match not found", NOT_FOUND);
 
@@ -88,7 +88,7 @@ void Client::prepareRequest()
     _status = PROCESING_REQUEST;
 }
 
-void Client::prepareResponse(ServerConfig * server, Location * location)
+void Client::prepareResponse(Server * server, Location * location)
 {
     _response_manager.set_location(location);
     _response_manager.set_virtual_server(server);
@@ -115,7 +115,7 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
     _active_fd = newfd;
 }
 
-ServerConfig* Client::findServerForRequest(const HTTPRequest& request) {
+Server* Client::findServerForRequest(const HTTPRequest& request) {
 	// Implement match based on Host header and port
 	(void)request;
 	if (!_servers.empty()) {
@@ -124,12 +124,12 @@ ServerConfig* Client::findServerForRequest(const HTTPRequest& request) {
 	return NULL;
 }
 
-Location* Client::findLocationForRequest(const HTTPRequest& request, const ServerConfig* server) {
+Location* Client::findLocationForRequest(const HTTPRequest& request, const Server* server) {
     // Busca la Location adecuada para la request en el server dado
     if (!server)
         return NULL;
-    ServerConfig* no_const_server = const_cast<Server*>(server);
-    ServerConfig::ConfigLayer* config = &no_const_server->getConfig();
+    Server* no_const_server = const_cast<Server*>(server);
+    Server::ConfigLayer* config = &no_const_server->getConfig();
     Location* location_found = config->findLocation(request.get_path());
     return const_cast<Location*>(location_found);
 }
