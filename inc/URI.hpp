@@ -6,11 +6,12 @@
 
 struct URI : public HTTPElement
 {
-    std::string host;
-    std::string path;
-    std::string query;
-    std::string fragment;
-    std::string schema;
+    // http://localhost:8080/cgipath/script.php/algo/otra_cosa?a=b&c=d#fragment
+    std::string host; // 8080
+    std::string path; // /cgipath/script.php/algo/otra_cosa
+    std::string query; // ?a=b&c=d
+    std::string fragment; // #fragment
+    std::string schema; // http
     int port;
     
     size_t length;

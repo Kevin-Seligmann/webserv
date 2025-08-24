@@ -6,13 +6,12 @@
 #include "RequestManager.hpp"
 #include "ResponseManager.hpp"
 
-
 class VirtualServersManager;
 
 class Client 
 {
 public:
-    Client(VirtualServersManager & vsm, std::vector<Server> & servers, int client_fd);
+    Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
 
@@ -22,14 +21,15 @@ public:
 
 private:
     enum Status {
-        PROCESING_REQUEST,
-        PROCESING_RESPONSE,
-        CLOSING,
-        CLOSED
+        PROCESSING_REQUEST,
+        PROCESSING_RESPONSE,
+        PROCESSING_CGI,
+        CLOSING
     };
 
+    static const int MAX_ERROR_RETRIES = 1;
+
     VirtualServersManager & _vsm;
-	std::vector<Server> &   _servers;
     Status                  _status;
     HTTPError	            _error;
     HTTPRequest 	        _request;
@@ -37,17 +37,25 @@ private:
     RequestManager          _request_manager;
     ResponseManager         _response_manager;
     int                     _socket;
+    id_t                    _error_retry_count;
     ActiveFileDescriptor    _active_fd;
-    
+    // int             error_retry_count;
 
-	Server* findServerForRequest(const HTTPRequest& request);
-	Location* findLocationForRequest(const HTTPRequest& request, const Server* server);
-    bool isCgiRequest(Location* location, const std::string& path);
-    void processCgiRequest(Location* location);
-    void request();
-    void response();
-    void prepareResponse(Server * server, Location * location);
+
+    void handle_cgi_request();
+    void handle_processing_request();
+    void handle_processing_response();
+    void handle_closing();
+
+    void prepareResponse(ServerConfig * server, Location * location);
     void prepareRequest();
+
+    bool isCgiRequest(Location* location, const std::string& path);
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
+    void changeStatus(Status new_status, const std::string& reason = "");
+    std::string statusToString(Status status);
+    void process_status_error();
+	void get_config(ServerConfig ** server, Location ** location);
+
 };

@@ -10,8 +10,8 @@ OBJ = main.o Logger.o  HTTPMethod.o FieldSection.o \
 	SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
 	File.o HTTPResponseBuffer.o Server.o VirtualServersManager.o \
     Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
-	Client.o \
-
+	Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
+	
 # Target
 NAME = webserv
 

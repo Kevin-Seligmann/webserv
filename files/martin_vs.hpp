@@ -25,52 +25,17 @@
 #include <cstring>
 #include <sys/epoll.h>
 
+/*
+    Host 1 <-> 1 socket
+
+    Socket/Host m <-> m ServerConfig
+*/
 class VirtualServersManager {
 public:
-    // Estructura para manejar el estado de los clientes
-    struct ClientState {
-
-        public:
-
-            enum Status {
-                READING_REQUEST,
-                PROCESSING_REQUEST,
-                ERROR_HANDLING,
-                WRITING_RESPONSE,
-                WAITING_FILE,
-                WAITING_CGI,
-                CLOSING,
-                CLOSED
-            };
-
-            int             client_fd;
-            HTTPRequest     request;
-            HTTPError       error;
-            ElementParser   element_parser;
-            RequestManager  request_manager;
-            ResponseManager response_manager;
-            Status          status;
-            int             error_retry_count;
-            HTTPRequest     original_request;
-
-            ClientState(int client_fd);
-
-            bool isRequestComplete() const;
-            bool hasError() const;
-        
-            static std::map<int, ClientState*> client_states;
-            static ClientState* getOrCreateClientState(int client_fd);
-            static void cleanupClientState(int client_fd);
-            void changeStatus(Status new_status, const std::string& reason = "");
-            
-        private:
-            std::string statusToString(Status status);
-    };
-
     struct ListenSocket {
-        int socket_fd;
-        Listen listen_config;
-        std::vector<ServerConfig*> virtual_hosts;
+        int socket_fd;        // Listen socket
+        Listen listen_config; // Host and port
+        // std::vector<ServerConfig*> virtual_hosts; // Configurations associated to a host, port and listen socket.
         
         ListenSocket();
         ListenSocket(const Listen& config);
@@ -84,7 +49,7 @@ private:
     std::vector<struct epoll_event>                 _events;
     std::vector<int>                                _client_fds;
     std::map<int, ListenSocket*>                    _client_to_listen_socket;
-
+ 
     // Métodos privados de socket management
     void setupEpoll();
     void createListenSockets();
@@ -99,18 +64,6 @@ private:
     void handleEvent(const struct epoll_event& event);
     void handleNewConnection(ListenSocket* listen_socket);
     void handleClientData(int client_fd);
-
-    void handleReadingRequest(int client_fd, ClientState* client);
-    void handleProcessingRequest(int client_fd, ClientState* client);
-    void handleErrorHandling(int client_fd, ClientState* client);
-    void handleWritingResponse(int client_fd, ClientState* client);
-    void handleWaitingFile(int client_fd, ClientState* client);
-    void handleWaitingCGI(int client_fd, ClientState* client);
-    void handleClosing(int client_fd, ClientState* client);
-    void handleClosed(int client_fd, ClientState* client);
-
-    // Métodos aux de error
-    bool attemptErrorPageRewrite(int client_fd, ClientState* client);
 
     // Cierre de fd - desconexion
     void disconnectClient(int client_fd);
@@ -147,7 +100,6 @@ public:
     void printVirtualHostsInfo() const;
     void printListenSocketsInfo() const;
 
-    static const int MAX_ERROR_RETRIES = 1;
-};
+}; 
 
 #endif

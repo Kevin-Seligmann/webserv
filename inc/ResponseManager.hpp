@@ -9,7 +9,7 @@
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "SysBufferFactory.hpp"
-#include "Server.hpp"
+#include "ServerConfig.hpp"
 #include "HTTPResponseBuffer.hpp"
 #include "File.hpp"
 #include "ActiveFileDescriptor.hpp"
@@ -24,10 +24,13 @@ public:
     ResponseManager(HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
     ~ResponseManager();
 
-    void set_virtual_server(Server const * config);
+    void set_virtual_server(ServerConfig const * config);
     void set_location(Location const * location);
-    void generate_response();
     // void generate_response(CGIResponse & response);
+
+
+
+    void generate_response();
     void process();
     bool response_done();
 
@@ -40,7 +43,7 @@ private:
 
     HTTPRequest & _request;
     HTTPError & _error;    
-    Server const * _server;
+    ServerConfig const * _server;
     Location const * _location;
     SysBuffer * _sys_buffer;
     HTTPResponseBuffer _buffer;
@@ -58,8 +61,9 @@ private:
     void read_directory();
     void prepare_file_reading();
     void prepare_file_writing();
-    void new_response();
     bool validate_method();
+    
+    // std::string generate_default_error_html();
 
     std::string const get_host_path();
     std::vector<HTTPMethod> get_allowed_methods();
