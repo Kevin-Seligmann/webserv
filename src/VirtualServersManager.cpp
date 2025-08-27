@@ -152,24 +152,19 @@ Client* VirtualServersManager::searchClient(int client_fd) {
 	return NULL;
 }
 
+void VirtualServersManager::disconnectClient(int client_fd) {
+	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
+	
+	_client_to_listen.erase(client_fd);
 
-void VirtualServersManager::cleanupClientState(int client_fd) {
 	std::map<int, Client*>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
 		delete it->second;
 		_clients.erase(it);
 		return ;
 	}
+
 	CODE_ERR("The server tried to find a client that does not exists. This is not possible.");
-}
-
-void VirtualServersManager::disconnectClient(int client_fd) {
-	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
-	
-	_client_to_listen.erase(client_fd);
-	cleanupClientState(client_fd);
-
-	std::cout << "Client FD: " << client_fd << " cleaned up" << std::endl;
 }
 
 // ================ EVENT ================
@@ -309,46 +304,43 @@ ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPReques
 // ================ MAIN LOOP ================
 
 void VirtualServersManager::run() {
-	std::cout << std::string(10, '=') << " Starting WEBSERVER " << std::string(10, '=') << std::endl;
+	Logger::getInstance().info("=========== Starting WEBSERVER ===========");
 
 	try {
 		setupEpoll();
 	} catch (const std::exception& e) {
-		std::cerr << "Setup falied: " << e.what() << std::endl;
+		Logger::getInstance().error("Setup falied: " + std::string(e.what()));
 		return;
 	}
 
-	std::cout << std::string(10, '=') << " Starting EVENT LOOP " << std::string(10, '=') << std::endl;
+	Logger::getInstance().info("=========== WEBSERVER Started. Listening to new requests ===========");
 
 	while (1) {
 
 		int incoming = epoll_wait(_epoll_fd, _events.data(), _events.size(), 1000);
 		
-		if (incoming = 0) {
+		if (incoming == 0) {
 			checkTimeouts();
 			continue;
 		}
 
 		if (incoming < 0) {
-			std::cerr << "epoll_wait failed: " << strerror(errno) << std::endl;
+			Logger::getInstance().error("epoll_wait failed: " + std::string(strerror(errno)));
 			break;
 		}
 
-/*		if (incoming == 0) {
-			continue;
-		} // nunca habrá timeout // deberia haber timeout?? */
-
-		std::cout << "Starting to process: " << incoming << " events" << std::endl;
+		Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
 
 		for (int i = 0; i < incoming; ++i) {
 			try {
 				handleEvent(_events[i]);
 			} catch (const std::exception& e) {
-				std::cerr << "Error handling event: " << e.what() << std::endl;
+				Logger::getInstance().error("Error handling event: " + std::string(e.what()));
 			}
 		}
 	}
-	std::cout << std::string(10, '=') << " Closing EVENT LOOP " << std::string(10, '=') << std::endl;
+
+	Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
 }
 
 void VirtualServersManager::checkTimeouts() {

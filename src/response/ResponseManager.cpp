@@ -11,17 +11,17 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 {
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
 
-    // TESTING LOCATION CONFIG.
-    lc->setPath("/def/");
-    lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
+    // // TESTING LOCATION CONFIG.
+    // lc->setPath("/def/");
+    // lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
 
-    std::vector<std::string> m;
-    m.push_back("GET");
-    m.push_back("POST");
-    m.push_back("DELETE");
-    lc->setMethods(m);
+    // std::vector<std::string> m;
+    // m.push_back("GET");
+    // m.push_back("POST");
+    // m.push_back("DELETE");
+    // lc->setMethods(m);
 
-    this->_location = lc;
+    // this->_location = lc;
 }
 
 ResponseManager::~ResponseManager(){delete _sys_buffer;}
@@ -352,13 +352,13 @@ std::string const ResponseManager::get_host_path()
     // Removed null check because they should never be empty.
     // root_path = "/var/www/html";
 
-    // if (!_location->getRoot().empty()) {
-    //     return _location->getRoot();
-    // } else if (!_server->getRoot().empty()) {
-    //     return _server->getRoot();
-    // } else {
-    //     CODE_ERR("No root path found")
-    // }
+    if (!_location->getRoot().empty()) {
+        return _location->getRoot();
+    } else if (!_server->getRoot().empty()) {
+        return _server->getRoot();
+    } else {
+        CODE_ERR("No root path found");
+    }
 
     return _location->getRoot() + _request.uri.path;
 }
@@ -368,13 +368,13 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
     std::vector<std::string> const & methods = _location->getMethods();
     std::vector<HTTPMethod> real_methods;
 
-    // if (!_location->getMethods().empty()) {
-    //     methods = _location->getMethods();
-    // } else if (!_server->getAllowMethods().empty()) {
-    //     methods = _server->getAllowMethods();
-    // } else {
-    //  CODE_ERR("No methods found")
-    // }
+    if (!_location->getMethods().empty()) {
+        methods == _location->getMethods();
+    } else if (!_server->getAllowMethods().empty()) {
+        methods == _server->getAllowMethods();
+    } else {
+        CODE_ERR("No methods found");
+    }
 
     // Tempx2 (Parse to enums just once)
     for (std::vector<std::string>::const_iterator it = methods.begin(); it != methods.end(); it ++)
@@ -389,22 +389,22 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 
 bool ResponseManager::allow_upload()
 {
-    // return _location->getAllowUpload();
-    return true;
+    return _location->getAllowUpload();
+    // return true;
 }
     
 bool ResponseManager::is_autoindex()
 {
-    // if (_location->getAutoindex() != AINDX_DEF_OFF) {
-    //     return _location->getAutoindex() == AINDX_LOC_ON;
-    // }
+    if (_location->getAutoindex() != AINDX_DEF_OFF) {
+        return _location->getAutoindex() == AINDX_LOC_ON;
+    }
     
-    // if (_server) {
-    //     AutoIndexState serv_state = _server->getAutoindex(NULL);
-    //     if (serv_state == AINDX_SERV_ON) return true;
-    //     if (serv_state == AINDX_SERV_OFF) return false;
-    // }
+    if (_server) {
+        AutoIndexState serv_state = _server->getAutoindex(NULL);
+        if (serv_state == AINDX_SERV_ON) return true;
+        if (serv_state == AINDX_SERV_OFF) return false;
+    }
     
-    // return false;  // DEFAULT: FALSE
-    return _location->hasAutoindex();
+    return false;  // DEFAULT: FALSE
+    // return _location->hasAutoindex();
 }

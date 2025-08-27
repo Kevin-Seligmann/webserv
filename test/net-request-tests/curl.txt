@@ -11,7 +11,6 @@ noproxy *
 url = localhost:8080
 request-target = http://localhost:8080/
 header = "Host: s3:82"
-header = "Content-Type: application/javascript"
 
 # Post request  
 request = GET

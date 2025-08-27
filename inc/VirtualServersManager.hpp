@@ -41,15 +41,14 @@ private:
 	// Métodos privados de socket management
 	int createAndBindSocket(const Listen& listen);
     bool isListenSocket(int fd) const;
-	Listen* findListenBySocketFd(int fd);
+	// Listen* findListenBySocketFd(int fd);
     void handleEvent(const struct epoll_event& event);
 	void handleNewConnection(int listen_fd);
 	void setupEpoll();
 	void disconnectClient(int client_fd);
-    ServerConfig* matchServerConfig(const std::vector<ServerConfig*>& vhost, const std::string& hostname);
+    // ServerConfig* matchServerConfig(const std::vector<ServerConfig*>& vhost, const std::string& hostname);
 	
     Client* searchClient(int client_fd);
-    void cleanupClientState(int client_fd);
 
 public:
     VirtualServersManager();

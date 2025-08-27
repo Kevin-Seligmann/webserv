@@ -3,6 +3,11 @@
 SysFileBuffer::SysFileBuffer(int fd)
 :SysBuffer(fd){}
 
+SysFileBuffer::~SysFileBuffer()
+{
+    close(_fd);
+}
+
 ssize_t SysFileBuffer::write(uint8_t *buff, size_t size)
 {
     return ::write(_fd, buff, size);
