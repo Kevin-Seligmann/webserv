@@ -4,3 +4,4 @@ webserv_test
 obj
 *.o
 *.d
+*.txt

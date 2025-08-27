@@ -11,9 +11,13 @@ class VirtualServersManager;
 class Client 
 {
 public:
+
+    static const int TIMEOUT_SECONDS = 30;
     Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
+
+    time_t getLastActivity() const { return _last_activity; }
 
     void process(int fd, int mode);
     int  getSocket() const;
@@ -39,6 +43,7 @@ private:
     int                     _socket;
     id_t                    _error_retry_count;
     ActiveFileDescriptor    _active_fd;
+    time_t                  _last_activity;
     // int             error_retry_count;
 
 
@@ -57,5 +62,4 @@ private:
     std::string statusToString(Status status);
     void process_status_error();
 	void get_config(ServerConfig ** server, Location ** location);
-
 };

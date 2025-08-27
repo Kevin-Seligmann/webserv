@@ -2,28 +2,28 @@
 
 Location::Location()
     : _path("/")
-    , _match_type(PREFIX)  // ← AÑADIDO - esta era la causa del bug
+    , _match_type(UNSET)
     , _methods()
     , _root("")
     , _index("index.html")
     , _autoindex(AINDX_DEF_OFF)
     , _redirect("")
     , _cgi_extension("")
-    , _allow_upload(false)  // ← AÑADIDO - faltaba
+    , _allow_upload(false)
 {
 }
 
 Location::Location(const Location& other)
     : _path(other._path)
-    , _match_type(other._match_type)  // ← AÑADIDO - crítico para copy constructor
+    , _match_type(other._match_type) 
     , _methods(other._methods)
     , _root(other._root)
     , _index(other._index)
     , _autoindex(other._autoindex)
     , _redirect(other._redirect)
     , _cgi_extension(other._cgi_extension)
-    , _allow_upload(other._allow_upload)  // ← AÑADIDO - faltaba
-    , _error_pages(other._error_pages)    // ← AÑADIDO - faltaba
+    , _allow_upload(other._allow_upload)
+    , _error_pages(other._error_pages)
 {
 }
 

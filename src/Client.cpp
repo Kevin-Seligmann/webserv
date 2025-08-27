@@ -258,6 +258,7 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 , _status(PROCESSING_REQUEST)
 , _socket(client_fd)
 , _active_fd(client_fd, EPOLLIN | EPOLLRDHUP)
+, _last_activity(time(NULL))
 {
     _vsm.hookFileDescriptor(_active_fd);
 }
@@ -314,27 +315,21 @@ bool Client::isCgiRequest(Location* location, const std::string& path) {
 	return path.find(".cgi") != std::string::npos; // true si uri de la request termina en cgi
 }
 
-// void VirtualServersManager::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
-// {
-// 	std::map<int, ListenSocket*>::iterator map_it = _client_to_listen_socket.find(client_fd);
-// 	if (map_it == _client_to_listen_socket.end()) {
-// 		*ptr_server_config = NULL;
-// 		*ptr_location = NULL;
-// 		return;
-// 	}
+void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
+{
+    // Server
+    *ptr_server_config = _vsm.findServerConfigForRequest(_request, _socket);
 
-// 	ListenSocket* listen_socket = map_it->second;
-// 	ServerConfig* server_config = findServerConfigForRequest(client->request, listen_socket);
-// 	if (!server_config) {
-// 		*ptr_server_config = NULL;
-// 		*ptr_location = NULL;
-// 		return;
-// 	}
+    if (!*ptr_server_config) {
+        *ptr_location = NULL;
+        return;
+    }
 
-// 	Location* location = server_config->findLocation(client->request.get_path());
-// 	// What happens if there are no locations.
-// 	if (!location)
-// 		location = server_config->findLocation("/", false);
-// 	*ptr_server_config = server_config;
-// 	*ptr_location = location; 
-// }
+    // Location
+    *ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
+    
+    // Fallback a root
+    if (!*ptr_location) {
+        *ptr_location = (*ptr_server_config)->findLocation("/", false);
+    }
+}

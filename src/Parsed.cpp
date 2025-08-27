@@ -129,9 +129,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	else if (tokens[i] == "~" || tokens[i] == "~*") {
 		throw std::runtime_error("Invalid regex location");
 	}
-	else {
-		loc.setPath(tokens[i]);
+	else if (loc.getMatchType() == Location::UNSET) {
 		loc.setMatchType(Location::PREFIX);
+		loc.setPath(tokens[i]);
 		++i;
 	}
 
@@ -364,6 +364,10 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		else if (key == "location")
 		{
 			Location loc = parseLocation(tokens, i);
+			std::string map_key = loc.getPath();
+			if (loc.getMatchType() == Location::EXACT) {
+				map_key = "=" + map_key;
+			}
 			server.locations[loc.getPath()] = loc;
 		}
 		if (i < tokens.size() && tokens[i] == ";") ++i;

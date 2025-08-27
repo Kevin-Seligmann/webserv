@@ -28,11 +28,10 @@ public:
     void set_location(Location const * location);
     // void generate_response(CGIResponse & response);
 
-
-
     void generate_response();
     void process();
     bool response_done();
+    void new_response();
 
     ActiveFileDescriptor get_active_file_descriptor();
 

@@ -20,7 +20,7 @@
 //   * Necesita re-matching automático cuando se resuelve un index file
 class Location {
 public:
-	enum MatchType { EXACT, PREFIX };
+	enum MatchType { EXACT, PREFIX, UNSET };
 
 private:
 	std::string								_path;
