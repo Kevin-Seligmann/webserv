@@ -26,6 +26,7 @@ public:
     void del(int fd);
     int wait();
     int size();
+    bool is_full();
     Wspoll_event const & operator[](int fd);
 
 private:

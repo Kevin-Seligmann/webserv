@@ -209,6 +209,8 @@ void ResponseManager::prepare_file_reading()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header_number("Content-Length", _file.size());
     _buffer.put_header("Content-Type", MediaType::filename_to_type(final_path));
+    if (_error.status() == MOVED_PERMANENTLY)
+        _buffer.put_header("Location", _redirecting_location);
     _buffer.put_new_line();
     _status = READING_FILE;
 }
@@ -266,6 +268,15 @@ void ResponseManager::write_file()
 
 void ResponseManager::read_directory()
 {
+    std::string final_path = get_host_path();
+
+    if (_request.get_path().at(_request.get_path().size() - 1) != '/')
+    {
+        set_error("The user requested a directory that is a file but doesn't end with a backslash", MOVED_PERMANENTLY);
+        _redirecting_location = _request.get_path() + "/";
+        return ;
+    }            
+
     _buffer.put_protocol("HTTP/1.1");
     _buffer.put_status(_error);
     _buffer.put_header("Server", "Webserv");
@@ -276,7 +287,6 @@ void ResponseManager::read_directory()
     if (!is_autoindex())
         return set_error("Directory listing is forbidden", FORBIDDEN);
 
-    std::string final_path = get_host_path();
     std::string dir_prefix = "";
     if (!_request.uri.path.empty() && _request.uri.path[_request.uri.path.size() - 1] != '/')
         dir_prefix = _request.uri.path + "/";
@@ -320,6 +330,8 @@ void ResponseManager::generate_default_status_response()
         std::string error_page = "Error with status: " + status::status_to_text(_error.status());
         _buffer.put_header_number("Content-Length", error_page.size());
         _buffer.put_header("Content-Type", MediaType::filename_to_type(".txt"));
+        if (_error.status() == MOVED_PERMANENTLY)
+            _buffer.put_header("Location", _redirecting_location);
         _buffer.put_new_line();
         _buffer.put_body(error_page);
     }

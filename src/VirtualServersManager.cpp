@@ -205,6 +205,12 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 		return;
 	}
 
+	if (_wspoll.is_full())
+	{
+		close(client_fd);
+		return ;
+	}
+
 	_client_to_listen[client_fd] = *listen;
 	_clients[client_fd] = new Client(*this, client_fd);
 }

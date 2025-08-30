@@ -56,6 +56,7 @@ private:
     File _file;
     std::string::iterator _wr_file_it;
     RM_error_action _error_action;
+    std::string _redirecting_location;
 
     void generate_default_status_response();
     void generate_get_response();

@@ -79,6 +79,7 @@ void Client::handle_processing_request()
     else if (_error.status() != OK)
     {
         Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
+        Logger::getInstance() << "Request: " << _request << std::endl;
         handleRequestError();
     }
 }
@@ -228,6 +229,43 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
     // Location
     *ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
     
+    if (_request.method == GET && _error.status() == OK && _request.get_path().at(_request.get_path().size() - 1) == '/')
+    {
+        std::string index, path;
+
+        // This index should be an array
+        if (*ptr_location && !(*ptr_location)->getIndex().empty())
+            index = _request.uri.path + (*ptr_location)->getIndex();
+        else if ((*ptr_server_config)->index_files.size() > 0)
+            index = _request.uri.path + ((*ptr_server_config)->index_files)[0]; // [0] hasta que sea un array
+        else
+            index = _request.uri.path + "index.html"; // Default should not be here
+
+        if (!index.empty())
+        {
+            Logger::getInstance()<< "Index to try: " + index<< std::endl;
+            *ptr_location = (*ptr_server_config)->findLocation(index);
+
+            if (*ptr_location && !(*ptr_location)->getRoot().empty()) 
+                path = (*ptr_location)->getRoot() ;
+            else if (!(*ptr_server_config)->getRoot().empty()) 
+                path = (*ptr_server_config)->getRoot() ;
+            else 
+                CODE_ERR("No root path found");
+            
+            Logger::getInstance()<< "Root for index: " + path << std::endl;
+            // Index relocation if index exists
+            if (access((path + index).c_str(), F_OK) == 0)
+            {
+                Logger::getInstance()<< "exists: " + path + index << std::endl;
+                _request.uri.path = index;
+                *ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
+            }
+            else
+                Logger::getInstance( )<< "Does not exists: " + path + index << std::endl;
+
+        }
+    }
     // Fallback a root
     // DOes this make sense?
     // if (!*ptr_location) {

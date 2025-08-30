@@ -135,3 +135,5 @@ Wspoll_event const & Wspoll::operator[](int index)
     event.events = _fds[index].revents;
     return event;
 }
+
+bool Wspoll::is_full(){return _size == POLLING_SIZE;}

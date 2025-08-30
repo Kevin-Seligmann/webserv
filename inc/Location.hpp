@@ -27,7 +27,7 @@ private:
 	MatchType								_match_type;
 	std::vector<std::string>				_methods;
 	std::string								_root;
-	std::string								_index;
+	std::string								_index; // Debería ser un array
 	AutoIndexState							_autoindex; // que llegue heredado ya y que  no haga falta mirar server
 	std::string                             _redirect;
 	std::string 							_cgi_extension;

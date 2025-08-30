@@ -32,7 +32,10 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_header_line();
                 if (_error.status() == OK && _request_parser.get_status() != RequestParser::PRS_HEADER_LINE)
+                {
+                    _request_parser.process_headers();
                     _validator.validate_headers(_request, _request.headers);
+                }
                 break ;
             case RequestParser::PRS_BODY:
                 parse = _request_parser.test_body();

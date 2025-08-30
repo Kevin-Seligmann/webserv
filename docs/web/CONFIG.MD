@@ -117,7 +117,7 @@ Allos POST requests that upload content natively (Not through CGI)
 
 ### upload_dir: Server, Location; Default: all
 
-Not implemented
+Not implemented (To be done)
 
 ### Return: Server, Location
 
@@ -126,6 +126,8 @@ Not implemented
 ### allow_methods: Server, Location; Default: GET
 
 Methods allowed.
+
+### upload_max_size: Location (TO be done).
 
 
 
