@@ -5,14 +5,10 @@
 
 // ================ CONSTRUCTORS & DESTRUCTOR ================
 
-VirtualServersManager::VirtualServersManager()
-	: _epoll_fd(-1) {
-	_events.resize(64);
+VirtualServersManager::VirtualServersManager(){
 }
 
-VirtualServersManager::VirtualServersManager(const ParsedServers& configs)
-	: _epoll_fd(-1) {
-	_events.resize(64);
+VirtualServersManager::VirtualServersManager(const ParsedServers& configs){
 
 	std::vector<ParsedServer>::const_iterator it = configs.begin();
 	for (;it!= configs.end(); ++it) {
@@ -31,7 +27,7 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs)
 
 			// Par único listen - socket (será creado)
 			if (_listen_sockets.find(listen) == _listen_sockets.end()) {
-				_listen_sockets[listen] = -1; // Asignar socket en crearción de epoll
+				_listen_sockets[listen] = -1; // Asignar socket en POLLING
 			} 
 		}
 	}
@@ -55,24 +51,14 @@ VirtualServersManager::~VirtualServersManager() {
 	}
 	_clients.clear();
 
-	// _epoll_fd
-	if (_epoll_fd >= 0) {
-		close(_epoll_fd);
-	}
-
 	Logger::getInstance().info("VirtualServersManager destroyed");
 }
 
-// ================ SOCKETS / EPOLL =================
+// ================ SOCKETS / POLL =================
 
-void VirtualServersManager::setupEpoll() {
-    Logger::getInstance().info("Starting epoll configuration (setupEpoll)");
-    _epoll_fd = epoll_create(1);
-    if (_epoll_fd < 0) {
-        throw std::runtime_error("Failed to create epoll fd");
-    }
+void VirtualServersManager::setPolling() {
+    Logger::getInstance().info("Starting polling configuration (setPolling)");
     
-	Logger::getInstance() << "Epoll created with fd: " << _epoll_fd;
     Logger::getInstance() << "Creating sockets for " << _server_configs.size() << " servers" << std::endl;
     
 	for (std::map<Listen, int>::iterator it = _listen_sockets.begin();
@@ -81,19 +67,11 @@ void VirtualServersManager::setupEpoll() {
 		it->second = createAndBindSocket(it->first);
 		Logger::getInstance() << "Server " << it->first.host << ":" << it->first.port 
 							  << " started on socket FD: " << it->second;
-		
-		struct epoll_event event;
-		std::memset(&event, 0, sizeof(event));
-		event.events = EPOLLIN;
-		event.data.fd = it->second;
 
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, it->second, &event) < 0) {
-			Logger::getInstance().error("Failed to add server " + it->first.host + wss::i_to_dec(it->first.port) + " to epoll");
-			throw std::runtime_error("Failure at epoll_ctl ADD");
-		}
-		Logger::getInstance().info("Socket created and added to epoll");
+		_wspoll.add(it->second, POLLIN);
+		Logger::getInstance().info("Socket created and added to poll");
     }
-	Logger::getInstance().info("Setup of epoll complete");
+	Logger::getInstance().info("Setup of poll complete");
 }	
 
 int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
@@ -169,10 +147,11 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 
 // ================ EVENT ================
 
-void VirtualServersManager::handleEvent(const struct epoll_event& event) {
-	int socket_fd = event.data.fd;
+void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
+	int socket_fd = event.fd;
+	Logger::getInstance() << "Handling " << socket_fd << std::endl;
 
-	if (event.events & EPOLLIN && isListenSocket(socket_fd)) {
+	if (event.events & POLLIN && isListenSocket(socket_fd)) {
 		handleNewConnection(socket_fd);
 	} else {
 		try {
@@ -180,13 +159,13 @@ void VirtualServersManager::handleEvent(const struct epoll_event& event) {
 			if (!client)
 				CODE_ERR("A file descriptor that doesn't belong to any client has been found");
 
-			if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+			if (event.events & (POLLRDHUP | POLLHUP | POLLERR))
 			{
-				if (event.events & EPOLLRDHUP) // Better to set up a close routine. Client might still waits for a response.
+				if (event.events & POLLRDHUP) // Better to set up a close routine. Client might still waits for a response.
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection." << std::endl;
-				else if (event.events & EPOLLHUP)
+				else if (event.events & POLLHUP)
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection abrutply." << std::endl;
-				if (event.events & EPOLLRDHUP)
+				if (event.events & POLLRDHUP)
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " socket error. Closing connection abruptly." << std::endl;
 
 				disconnectClient(socket_fd);
@@ -196,7 +175,7 @@ void VirtualServersManager::handleEvent(const struct epoll_event& event) {
 				client->process(socket_fd, event.events);
 			}
 				
-		} catch (const std::exception& e) {
+		} catch (const std::runtime_error& e) {
 			std::cerr << "Exception processing client data: " << e.what() << std::endl;
 			disconnectClient(socket_fd);
 		}
@@ -230,47 +209,24 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	_clients[client_fd] = new Client(*this, client_fd);
 }
 
-// ================ EPOLL FD MANAGEMENT ================
+// ================ POLL FD MANAGEMENT ================
 
 void VirtualServersManager::hookFileDescriptor(ActiveFileDescriptor const & actf)
 {
-    struct epoll_event event;
-
-	event.events = actf.mode;
-	event.data.fd = actf.fd;
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, actf.fd, &event) < 0)
-	{
-		throw std::runtime_error("Epoll hook failed: " + std::string(strerror(errno)));
-	}
-	Logger::getInstance() << "Hooked " + wss::i_to_dec(actf.fd) + ", " + wss::i_to_dec(actf.mode) << std::endl;
+	_wspoll.add(actf.fd, actf.mode);
 }
 
 void VirtualServersManager::unhookFileDescriptor(ActiveFileDescriptor const & actf)
 {
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, actf.fd, NULL) < 0)
-	{
-		throw std::runtime_error("Epoll unhook failed: " + std::string(strerror(errno)));
-	}
-	Logger::getInstance() << "Unhooked " + wss::i_to_dec(actf.fd) + ", " + wss::i_to_dec(actf.mode) << std::endl;
+	_wspoll.del(actf.fd);
 }
 
 void VirtualServersManager::swapFileDescriptor(ActiveFileDescriptor const & oldfd, ActiveFileDescriptor const & newfd)
 {
 	if (oldfd == newfd)
 		return;
-	Logger::getInstance() << "Swap " + wss::i_to_dec(oldfd.fd) + ", " + wss::i_to_dec(oldfd.mode) << 
-	+ ". For " + wss::i_to_dec(newfd.fd) + ", " + wss::i_to_dec(newfd.mode) << std::endl;
 	if (oldfd.fd == newfd.fd)
-	{
-		struct epoll_event event;
-
-		event.events = newfd.mode;
-		event.data.fd = newfd.fd;
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, newfd.fd, &event) < 0)
-		{
-			throw std::runtime_error("Epoll change failed: " + std::string(strerror(errno)));
-		}
-	}
+		_wspoll.mod(newfd.fd, newfd.mode);
 	else 
 	{
 		unhookFileDescriptor(oldfd);
@@ -282,14 +238,12 @@ void VirtualServersManager::swapFileDescriptor(ActiveFileDescriptor const & oldf
 
 ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPRequest& request, int client_fd) {
 	std::map<int, Listen>::iterator it = _client_to_listen.find(client_fd);
-	if (it == _client_to_listen.end()) {
-		return NULL;
-	}
+	if (it == _client_to_listen.end())
+		CODE_ERR("Impossible error trying to find server for client " + wss::i_to_dec(client_fd));
 
 	std::map<Listen, std::vector<ServerConfig*> >::iterator vh_it = _virtual_hosts.find(it->second);
-	if (vh_it == _virtual_hosts.end()) {
-		return NULL;
-	}
+	if (vh_it == _virtual_hosts.end())
+		CODE_ERR("Impossible error trying to find server for client " + wss::i_to_dec(client_fd));
 
 	std::string hostname = request.get_host();
 	for (size_t i = 0; i < vh_it->second.size(); ++i){
@@ -307,7 +261,7 @@ void VirtualServersManager::run() {
 	Logger::getInstance().info("=========== Starting WEBSERVER ===========");
 
 	try {
-		setupEpoll();
+		setPolling();
 	} catch (const std::exception& e) {
 		Logger::getInstance().error("Setup falied: " + std::string(e.what()));
 		return;
@@ -317,26 +271,33 @@ void VirtualServersManager::run() {
 
 	while (1) {
 
-		int incoming = epoll_wait(_epoll_fd, _events.data(), _events.size(), 1000);
-		
+		int incoming = _wspoll.wait();
+	
+		Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
+
 		if (incoming == 0) {
 			checkTimeouts();
 			continue;
 		}
 
 		if (incoming < 0) {
-			Logger::getInstance().error("epoll_wait failed: " + std::string(strerror(errno)));
+			Logger::getInstance().error("Wspoll failed: " + std::string(strerror(errno)));
 			break;
 		}
 
-		Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
 
-		for (int i = 0; i < incoming; ++i) {
-			try {
-				handleEvent(_events[i]);
-			} catch (const std::exception& e) {
-				Logger::getInstance().error("Error handling event: " + std::string(e.what()));
+		for (int i = 0; i < _wspoll.size(); ++i) {
+			if (_wspoll[i].events)
+			{
+				try {
+					handleEvent(_wspoll[i]);
+					} 
+				catch (const std::exception& e) {
+					Logger::getInstance().error("Critial error handling event: " + std::string(e.what()) + " The server must close. ");
+					throw std::exception();
+				}
 			}
+
 		}
 	}
 

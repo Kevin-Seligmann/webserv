@@ -105,42 +105,43 @@ bool ServerConfig::matchesServerName(const std::string& hostname) const {
 // Función auxiliar para debug (pon static antes de esta función)
 static void debugLocationSearch(const std::string& path, const std::map<std::string, Location>& locations, 
                         const Location& location, const std::string& key) {
-    Logger::getInstance().info("DEBUG: iterating key='" + key + "'");
+                            return ;
+    Logger::getInstance()<<("DEBUG: iterating key='" + key + "'")<< std::endl;
     (void) locations;
     
     // DEBUG CRÍTICO: valores raw del enum
-    Logger::getInstance().info("DEBUG: location._match_type raw value = " + 
-        wss::i_to_dec(static_cast<int>(location.getMatchType())));
-    Logger::getInstance().info("DEBUG: Location::PREFIX enum value = " + 
-        wss::i_to_dec(static_cast<int>(Location::PREFIX)));
-    Logger::getInstance().info("DEBUG: Location::EXACT enum value = " + 
-        wss::i_to_dec(static_cast<int>(Location::EXACT)));
+    Logger::getInstance()<<("DEBUG: location._match_type raw value = " + 
+        wss::i_to_dec(static_cast<int>(location.getMatchType())))<< std::endl;
+    Logger::getInstance()<<("DEBUG: Location::PREFIX enum value = " + 
+        wss::i_to_dec(static_cast<int>(Location::PREFIX)))<< std::endl;
+    Logger::getInstance()<<("DEBUG: Location::EXACT enum value = " + 
+        wss::i_to_dec(static_cast<int>(Location::EXACT)))<< std::endl;
     
     bool match_type_ok = (location.getMatchType() == Location::PREFIX);
     bool matches_path_ok = location.matchesPath(path);
     
-    Logger::getInstance().info("DEBUG: match_type_ok=" + 
-        std::string(match_type_ok ? "TRUE" : "FALSE"));
-    Logger::getInstance().info("DEBUG: matches_path_ok=" + 
-        std::string(matches_path_ok ? "TRUE" : "FALSE"));
+    Logger::getInstance() << ("DEBUG: match_type_ok=" + 
+        std::string(match_type_ok ? "TRUE" : "FALSE"))<< std::endl;
+    Logger::getInstance() << ("DEBUG: matches_path_ok=" + 
+        std::string(matches_path_ok ? "TRUE" : "FALSE"))<< std::endl;
     
     if (match_type_ok && matches_path_ok) {
-        Logger::getInstance().info("DEBUG: ENTERING IF BLOCK!");
+        Logger::getInstance() << ("DEBUG: ENTERING IF BLOCK!")<< std::endl;
     } else {
-        Logger::getInstance().info("DEBUG: NOT ENTERING IF - one condition failed");
+        Logger::getInstance() << ("DEBUG: NOT ENTERING IF - one condition failed")<< std::endl;
     }
 }
 
 Location* ServerConfig::findLocation(const std::string& path, bool resolve_index) const {
     // Debug inicial
-    Logger::getInstance() << ("DEBUG findLocation: searching for '" + path + "'");
-    Logger::getInstance() << ("DEBUG: map size = " + wss::i_to_dec(locations.size()));
+    // Logger::getInstance() << ("findLocation: searching for '" + path + "'") << std::endl;
+    // Logger::getInstance() << ("map size = " + wss::i_to_dec(locations.size())) << std::endl;
     
     // Buscar match exacto primero
     std::string exact_key = "=" + path;
     std::map<std::string, Location>::const_iterator exact_it = locations.find(exact_key);
     if (exact_it != locations.end() && exact_it->second.getMatchType() == Location::EXACT) {
-        Logger::getInstance() << ("DEBUG: found EXACT match");
+        // Logger::getInstance() << ("found EXACT match")<< std::endl;
         Location* exact_location = const_cast<Location*>(&exact_it->second);
         
         if (resolve_index && !path.empty() && path[path.length() - 1] == '/') {
@@ -151,8 +152,8 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
     
     // Debug para map entry encontrado
     if (exact_it != locations.end()) {
-        Logger::getInstance() << ("DEBUG: found map entry, match_type = " + 
-            std::string(exact_it->second.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX"));
+        // Logger::getInstance() << ("found map entry, match_type = " + 
+        //     std::string(exact_it->second.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX"))<< std::endl;
     }
     
     // Buscar PREFIX matches
@@ -172,13 +173,13 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
             size_t match_length = it->first.length();
             
             // Debug interno del match
-            Logger::getInstance() << "DEBUG: match_length=" + wss::i_to_dec(match_length);
-            Logger::getInstance() << "DEBUG: best_length=" + wss::i_to_dec(best_length);
-            Logger::getInstance() << "DEBUG: (match_length > best_length)=" + 
-                std::string(match_length > best_length ? "TRUE" : "FALSE");
+            // Logger::getInstance() << " match_length=" + wss::i_to_dec(match_length) << std::endl;
+            // Logger::getInstance() << " best_length=" + wss::i_to_dec(best_length) << std::endl;
+            // Logger::getInstance() << " (match_length > best_length)=" + 
+                // std::string(match_length > best_length ? "TRUE" : "FALSE")<< std::endl;
             
             if (match_length > best_length) {
-                Logger::getInstance() << "DEBUG: ASSIGNING best_match!";
+                // Logger::getInstance() << " ASSIGNING best_match!"<< std::endl;
                 best_match = const_cast<Location*>(&location);
                 best_length = match_length;
             }
@@ -190,8 +191,8 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
     }
     
     // Debug final
-    Logger::getInstance() << "DEBUG: final best_match=" + 
-        std::string(best_match ? "NOT_NULL" : "NULL");
+    // Logger::getInstance() << "DEBUG: final best_match=" + 
+    //     std::string(best_match ? "NOT_NULL" : "NULL")<< std::endl;
     
     return best_match;
 }

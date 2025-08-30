@@ -21,8 +21,9 @@ enum Status {
 };
 
 enum StatusType {
-    STYPE_IMMEDIATE_RESPONSE,
-    STYPE_GENERATE_RESPONSE
+    STYPE_EMPTY_ERROR_RESPONSE,
+    STYPE_BODY_ERROR_RESPONSE,
+    STYPE_REGULAR_RESPONSE
 };
 
 namespace status {

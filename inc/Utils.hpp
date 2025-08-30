@@ -34,7 +34,7 @@ class Location;
 struct ParsedServer;
 # include "StringUtil.hpp"
 
-# define CODE_ERR(str) (throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
+# define CODE_ERR(str) (throw std::logic_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
 
 enum ParsingMessageType {
     DEFAULT_SERVER,

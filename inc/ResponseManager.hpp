@@ -3,9 +3,9 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/epoll.h>
 #include <unistd.h>
 #include <cstdio>
+#include <poll.h>
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "SysBufferFactory.hpp"
@@ -18,7 +18,11 @@ class ResponseManager
 {
 public:
     enum RM_status {
-        WAITING_REQUEST, READING_FILE, WRITING_FILE, WRITING_RESPONSE, ERROR, DONE
+        WAITING_REQUEST, READING_FILE, WRITING_FILE, WRITING_RESPONSE, ERROR, IDLE
+    };
+
+    enum RM_error_action {
+        GENERATING_DEFAULT_ERROR_PAGE, GENERATING_LOCATION_ERROR_PAGE
     };
 
     ResponseManager(HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
@@ -28,10 +32,12 @@ public:
     void set_location(Location const * location);
     // void generate_response(CGIResponse & response);
 
-    void generate_response();
+    void generate_response(RM_error_action action);
     void process();
     bool response_done();
     void new_response();
+    void set_error_action(RM_error_action action);
+    bool is_error();
 
     ActiveFileDescriptor get_active_file_descriptor();
 
@@ -49,8 +55,9 @@ private:
     RM_status _status;
     File _file;
     std::string::iterator _wr_file_it;
+    RM_error_action _error_action;
 
-    void generate_status_response();
+    void generate_default_status_response();
     void generate_get_response();
     void generate_post_response();
     void generate_delete_response();
@@ -61,7 +68,8 @@ private:
     void prepare_file_reading();
     void prepare_file_writing();
     bool validate_method();
-    
+    void set_error(const std::string & description, Status status);
+    void generate_file_status_response();
     // std::string generate_default_error_html();
 
     std::string const get_host_path();

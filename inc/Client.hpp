@@ -52,14 +52,15 @@ private:
     void handle_processing_response();
     void handle_closing();
 
-    void prepareResponse(ServerConfig * server, Location * location);
+    void handleRequestDone();
+    void handleRequestError();
+
+    void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
     void prepareRequest();
 
     bool isCgiRequest(Location* location, const std::string& path);
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
-    void changeStatus(Status new_status, const std::string& reason = "");
-    std::string statusToString(Status status);
-    void process_status_error();
 	void get_config(ServerConfig ** server, Location ** location);
+    void get_status_config(ServerConfig ** ptr_server_config, Location ** ptr_location);
 };

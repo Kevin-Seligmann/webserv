@@ -16,8 +16,6 @@ header = "Host: s3:82"
 request = GET
 # data-binary = @post-data
 
-
-
 # Post request  
 
 # Cookie output

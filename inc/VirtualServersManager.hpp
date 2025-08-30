@@ -1,6 +1,18 @@
 #ifndef VIRTUAL_SERVERS_MANAGER_HPP
 #define VIRTUAL_SERVERS_MANAGER_HPP
 
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <arpa/inet.h>
+#include <stdexcept>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstring>
+#include "Wspoll.hpp"
 #include "ServerConfig.hpp"
 #include "HTTPRequest.hpp"
 #include "RequestManager.hpp"
@@ -13,18 +25,6 @@
 #include "Status.hpp"
 #include "Listen.hpp"
 #include "Client.hpp"
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-#include <arpa/inet.h>
-#include <stdexcept>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <sys/epoll.h>
 
 class VirtualServersManager {
 
@@ -35,16 +35,15 @@ private:
 	std::map<int, Listen>							_client_to_listen; // client_fd to Listen, para llegar al vhost
     std::map<int, Client*>                          _clients;
 
-	int												_epoll_fd;
-	std::vector<struct epoll_event>					_events;
+	Wspoll                                          _wspoll;
  
 	// Métodos privados de socket management
 	int createAndBindSocket(const Listen& listen);
     bool isListenSocket(int fd) const;
 	// Listen* findListenBySocketFd(int fd);
-    void handleEvent(const struct epoll_event& event);
+    void handleEvent(const struct Wspoll_event event);
 	void handleNewConnection(int listen_fd);
-	void setupEpoll();
+	void setPolling();
 	void disconnectClient(int client_fd);
     // ServerConfig* matchServerConfig(const std::vector<ServerConfig*>& vhost, const std::string& hostname);
 	
