@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/23 17:08:41 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/30 16:34:31 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class CGI
 		CGIMap                              _map;
 
 		std::string methodToString(HTTPMethod method) const;
+		std::map<std::string, std::string> pathToBlocks(const std::string& path) const;
 
 	public:
 
