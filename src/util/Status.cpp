@@ -78,6 +78,7 @@ StatusType status_type(Status const & status)
     switch (status)
     {
         case OK:
+            return STYPE_REGULAR_RESPONSE;
         case NO_STATUS:
         case BAD_REQUEST:
         case CONTENT_TOO_LARGE:
@@ -91,7 +92,7 @@ StatusType status_type(Status const & status)
         case NOT_FOUND:
         case METHOD_NOT_ALLOWED:
         case INTERNAL_SERVER_ERROR:
-            return STYPE_REGULAR_RESPONSE;
+            return STYPE_BODY_ERROR_RESPONSE;
         // 100+, No content, Not modified 
             return STYPE_EMPTY_ERROR_RESPONSE;
     }

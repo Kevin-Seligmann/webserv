@@ -45,7 +45,7 @@ private:
 
     const static int POLLING_SIZE = 64;
     const static int TIMEOUT = 1000;
-    const static int WSPOLL_DEBUG = 1;
+    const static int WSPOLL_DEBUG = 0;
 
     struct pollfd * _fds;
     std::queue<Wspoll::Wspoll_request> _requests;

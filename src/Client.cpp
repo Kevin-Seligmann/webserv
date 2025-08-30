@@ -76,7 +76,7 @@ void Client::handle_processing_request()
         Logger::getInstance() <<  "Request processed: " << _error.to_string() + ". " + _error.msg() << std::endl;
         handleRequestDone();
     }
-    if (_error.status() != OK)
+    else if (_error.status() != OK)
     {
         Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
         handleRequestError();
@@ -164,14 +164,14 @@ void Client::handleRequestDone()
 
 void Client::handleRequestError() 
 {
-    Logger::getInstance() << "Handling request error" << std::endl;
+    Logger::getInstance() << "Handling request error. Retry count " << _error_retry_count << std::endl;
     _error_retry_count ++;
 
     ServerConfig * server_config = NULL;
     Location * location = NULL;
     get_config(&server_config, &location);
 
-    if (_error_retry_count > MAX_ERROR_RETRIES || ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
+    if (_error_retry_count == MAX_ERROR_RETRIES + 1 || ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
         return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
     else if (_error_retry_count > MAX_ERROR_RETRIES + 1)
         throw std::runtime_error("Too many internal redirects, can't resolve the request successfuly. Client " + wss::i_to_dec(_socket));

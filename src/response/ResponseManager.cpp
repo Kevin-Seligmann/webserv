@@ -65,6 +65,7 @@ void ResponseManager::generate_response(RM_error_action action)
                 generate_default_status_response();
             else
                 generate_file_status_response();
+            break ;
         case STYPE_EMPTY_ERROR_RESPONSE: generate_default_status_response(); break ;
         case STYPE_REGULAR_RESPONSE:
             if (!validate_method())
@@ -433,9 +434,9 @@ bool ResponseManager::is_autoindex()
 
 void ResponseManager::set_error(const std::string & description, Status status)
 {
-    Logger::getInstance() << "Error responding: " + description + ". " + status::status_to_text(status);
+    Logger::getInstance() << "Error responding: " + description + ". " + status::status_to_text(status) << std::endl;
     _error.set(description, status);
-    if (_error_action == GENERATING_LOCATION_ERROR_PAGE)
+    // if (_error_action == GENERATING_LOCATION_ERROR_PAGE)
         _status = ERROR;
 }
 

@@ -149,7 +149,7 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 
 void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 	int socket_fd = event.fd;
-	Logger::getInstance() << "Handling " << socket_fd << std::endl;
+	Logger::getInstance() << "Handling event with file descriptor " << socket_fd << std::endl;
 
 	if (event.events & POLLIN && isListenSocket(socket_fd)) {
 		handleNewConnection(socket_fd);
