@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/30 16:34:31 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/08/31 19:55:29 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <algorithm>
 # include <fcntl.h>
 # include <map>
+# include <sstream>
 # include <string>
 # include <strings.h>
 # include <sys/types.h>
@@ -48,14 +49,13 @@ class CGI
 
 //	std::string resp;
 
-	CGI(const HTTPRequest& req, const ParsedServer& server);
+	CGI(int client_fd, const HTTPRequest& req, const ServerConfig* server);
 	~CGI();
 
 	void buildEnv(const HTTPRequest &req, const ParsedServer& server);
 	CGIEnv& getEnv();
 
 	void reset();
-//	std::string findHeaderIgnoreCase(const HTTPRequest& req_headers, const std::string& headerToFind);
 //	void readCGIOut(int fd);
 //	bool setPipeFlags(int fd);
 //	void runCGI();
