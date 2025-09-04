@@ -16,6 +16,7 @@
 # pragma once
 
 # include <arpa/inet.h>
+# include <climits>
 # include <cstring>
 # include <fstream>
 # include <ifaddrs.h>
@@ -56,5 +57,8 @@ void printParsingMessage(ParsingMessageType type);
 /* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);
 void ERRORlogsEntry(const std::string& title, const std::string& str);
+
+// String to size_t
+size_t str_to_sizet(const std::string& str, size_t max_value);
 
 #endif

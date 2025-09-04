@@ -201,12 +201,20 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			while (i < tokens.size() && tokens[i] != ";" && isdigit(tokens[i][0]))
 				codes.push_back(to_int(tokens[i++]));
 			
-			if (i < tokens.size() && tokens[i] != ";") {
+			if (i < tokens.size() && tokens[i] != ";")
+			{
 				std::string error_page_path = tokens[i++];
 				for (size_t j = 0; j < codes.size(); ++j) {
 					loc.setErrorPage(codes[j], error_page_path); 
 				}
 			}
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+		}
+		else if (key == "body_size") {
+
+			std::string value = tokens[i++];
+			size_t limit = str_to_sizet(value, ULONG_MAX);
+			loc.setMaxBodySize(limit);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 		}
         else

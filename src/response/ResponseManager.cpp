@@ -427,7 +427,8 @@ bool ResponseManager::allow_upload()
     return _location && _location->getAllowUpload();
     // return true;
 }
-    
+
+// fixed at ConfigInheritance.cpp  applyAutoindex
 bool ResponseManager::is_autoindex()
 {
     if (_location && _location->getAutoindex() != AINDX_DEF_OFF) {

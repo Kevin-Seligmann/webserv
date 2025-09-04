@@ -34,6 +34,7 @@ private:
 	std::string 							_cgi_extension;
 	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
 	std::map<int, std::string> 				_error_pages;
+	size_t 									_max_body_size;
 
 public:
 	Location();
@@ -61,6 +62,8 @@ public:
 	bool getAllowUpload() const { return _allow_upload; }
 	
 	std::string getErrorPage(int error_code) const;
+
+	size_t getMaxBodySize() const { return _max_body_size; }
 	
     bool hasAutoindex() const { return _autoindex; }
 
@@ -74,6 +77,7 @@ public:
 	void setCgixtension(const std::string cgi_extension) { _cgi_extension = cgi_extension; }
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
 	void setErrorPage(int code, const std::string& path) { _error_pages[code]=path; }
+	void setMaxBodySize(size_t max) { _max_body_size = max; }
 };
 
 #endif
