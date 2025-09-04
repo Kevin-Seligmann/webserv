@@ -48,7 +48,7 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
     if (locations.empty()) {
         Location default_location;
         default_location.setPath("/");
-        default_location.setMatchType(Location::PREFIX); // QUESTION como va esto del setMatchType, contexto otrs tipos, donde se consume
+        default_location.setMatchType(Location::PREFIX);
         locations["/"] = default_location;
     }
 }
@@ -133,6 +133,7 @@ static void debugLocationSearch(const std::string& path, const std::map<std::str
 }
 
 Location* ServerConfig::findLocation(const std::string& path, bool resolve_index) const {
+    /* TO_DELETE */
     // Debug inicial
     // Logger::getInstance() << ("findLocation: searching for '" + path + "'") << std::endl;
     // Logger::getInstance() << ("map size = " + wss::i_to_dec(locations.size())) << std::endl;
@@ -150,6 +151,7 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
         return exact_location;
     }
     
+    /* TO_DELETE */
     // Debug para map entry encontrado
     if (exact_it != locations.end()) {
         // Logger::getInstance() << ("found map entry, match_type = " + 
@@ -172,6 +174,7 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
         if (location.getMatchType() == Location::PREFIX && location.matchesPath(path)) {
             size_t match_length = it->first.length();
             
+            /* TO_DELETE */
             // Debug interno del match
             // Logger::getInstance() << " match_length=" + wss::i_to_dec(match_length) << std::endl;
             // Logger::getInstance() << " best_length=" + wss::i_to_dec(best_length) << std::endl;
@@ -190,6 +193,7 @@ Location* ServerConfig::findLocation(const std::string& path, bool resolve_index
         return resolveIndexAndRematch(path, best_match);
     }
     
+    /* TO_DELETE */
     // Debug final
     // Logger::getInstance() << "DEBUG: final best_match=" + 
     //     std::string(best_match ? "NOT_NULL" : "NULL")<< std::endl;

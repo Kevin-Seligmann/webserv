@@ -92,9 +92,10 @@ void Client::handle_processing_response()
 		handleRequestError();
 	else if (_response_manager.response_done()) // Handle error
 	{
-		// QUESTION que codigo es este, que otros hay, su contexto, usos de su familia, checkear
+		
 		/*
 			Si la request "obliga" a cerrar la conexión por algun motivo. Por ejemplo Connection:close.
+			ACTIVARLO o TO_DELETE ?
 		*/
 
 		// if (client->request.headers.close_status == RCS_CLOSE)
@@ -155,6 +156,7 @@ void Client::handleRequestDone()
 
 	if (!server_config)
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
+	/* TO_DELETE ? UNCOMMENT */
 	// else if (isCgiRequest(location, _request.get_path())) {
 	//     prepareCgiResponse(target_server, location);
 	// }
@@ -188,9 +190,6 @@ void Client::handleRequestError()
 	location = server_config->findLocation(_request.get_path());
 	prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
-
-
-
 
 // Util, getters, setters, etc
 int Client::getSocket() const {return _socket;}
@@ -264,6 +263,8 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			if (try_index[i].empty()) {
 				continue;
 			}
+
+			_request.uri.path = try_index[i];
 			
 			// Eliminar posibles doble slash por la concatenacion "//"
 			bool root_end = root_path[root_path.size() - 1] == '/';
@@ -300,7 +301,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 				Logger::getInstance() << "Found: " + full_file_path << std::endl;
 				
 				// Guardar index encontrado
-				_request.uri.path = try_index[i];
+				_request.uri.path += try_index[i];
 /*				Para un location con configuración para el archivo index en sí 
 				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
 				if (new_loc) {

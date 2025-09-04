@@ -114,7 +114,6 @@ TODO
 En parseLocation
 error_page
 debería validar que los archivos existan al parsear el path
-
 */
 Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
@@ -225,6 +224,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	if (i < tokens.size() && tokens[i] == "}") ++i;
 
 
+/* TO_DELETE
 // debug
 
 	Logger::getInstance().info("=== PARSED LOCATION DEBUG ===");
@@ -247,7 +247,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	Logger::getInstance().info("  allow_upload: " + std::string(loc.getAllowUpload() ? "TRUE" : "FALSE"));
 	Logger::getInstance().info("=== END PARSED LOCATION DEBUG ===");
 
-//end debug 
+//end debug */
 
 	return loc;
 }

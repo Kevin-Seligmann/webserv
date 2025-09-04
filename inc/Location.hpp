@@ -28,11 +28,11 @@ private:
 	MatchType								_match_type;
 	std::vector<std::string>				_methods;
 	std::string								_root;
-	std::vector<std::string>				_index; // Debería ser un array
-	AutoIndexState							_autoindex; // que llegue heredado ya y que  no haga falta mirar server
+	std::vector<std::string>				_index;
+	AutoIndexState							_autoindex;
 	std::string                             _redirect;
 	std::string 							_cgi_extension;
-	bool									_allow_upload; // mirar el constructor que todo pase de parseo de location al objeto
+	bool									_allow_upload;
 	std::map<int, std::string> 				_error_pages;
 	size_t 									_max_body_size;
 

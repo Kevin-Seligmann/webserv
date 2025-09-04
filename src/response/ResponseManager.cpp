@@ -1,5 +1,6 @@
 #include "ResponseManager.hpp"
 
+/* TO_DELETE ya no es necearia la location fake */
 Location * lc = new Location();
 
 /*
@@ -11,7 +12,8 @@ ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBu
 {
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
 
-    // // TESTING LOCATION CONFIG.
+    // TO_DELETE
+    // TESTING LOCATION CONFIG.
     // lc->setPath("/def/");
     // lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
 
