@@ -5,12 +5,12 @@ Location::Location()
     , _match_type(UNSET)
     , _methods()
     , _root("")
-    , _index("index.html")
     , _autoindex(AINDX_DEF_OFF)
     , _redirect("")
     , _cgi_extension("")
     , _allow_upload(false)
 {
+    _index.push_back("index.html");
 }
 
 Location::Location(const Location& other)

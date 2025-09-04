@@ -157,7 +157,15 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "index")
 		{
-			if (i < tokens.size()) loc.setIndex(tokens[i++]);
+			std::vector<std::string> index_vec;
+			while (i < tokens.size() && tokens[i] != ";") {
+				index_vec.push_back(tokens[i++]);
+			}
+			if (index_vec.empty()) {
+				index_vec.push_back("index.html");
+			}
+			loc.setIndex(index_vec);
+			if (i < tokens.size() && tokens[i] != ";") ++i;
 		}
 		else if (key == "autoindex")
 		{
@@ -219,14 +227,19 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		Logger::getInstance().info("    method[" + wss::i_to_dec(j) + "]: " + loc.getMethods()[j]);
 	}
 	Logger::getInstance().info("  root: '" + loc.getRoot() + "'");
-	Logger::getInstance().info("  index: '" + loc.getIndex() + "'");
+
+	std::ostringstream oss;
+	for (size_t i = 0; i < loc.getIndex().size(); ++i) {
+		oss << loc.getIndex()[i] << (i + 1 < loc.getIndex().size() ? " " : "");
+	}
+	Logger::getInstance().info(std::string("  index: '") + oss.str() + "'");
 	Logger::getInstance().info("  autoindex: " + wss::i_to_dec(static_cast<int>(loc.getAutoindex())));
 	Logger::getInstance().info("  redirect: '" + loc.getRedirect() + "'");
 	Logger::getInstance().info("  cgi_extension: '" + loc.getCgiExtension() + "'");
 	Logger::getInstance().info("  allow_upload: " + std::string(loc.getAllowUpload() ? "TRUE" : "FALSE"));
 	Logger::getInstance().info("=== END PARSED LOCATION DEBUG ===");
 
-//end debug
+//end debug 
 
 	return loc;
 }
@@ -376,6 +389,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 	applyAutoindex(server);
 	applyAllowMethods(server);
+	applyIndexFiles(server);
 
 	return (server);
 }
