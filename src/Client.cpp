@@ -235,7 +235,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 	
 	// Procesar index files solo para GET con request OK
-	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK && !_request.get_path().empty() &&
+	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK &&
 		_request.get_path().at(_request.get_path().size() - 1) == '/')
 	{
 		std::string root_path;
@@ -270,48 +270,48 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 				continue;
 			}
 
-			_request.uri.path = try_index[i];
+			// _request.uri.path += try_index[i];
 			
 			// Eliminar posibles doble slash por la concatenacion "//"
-			bool root_end = root_path[root_path.size() - 1] == '/';
-			bool req_start = _request.get_path()[0] == '/';
-			bool req_end = _request.get_path()[_request.get_path().size() - 1] == '/';
-			bool try_index_start = try_index[i][0] == '/';
+			// bool root_end = root_path[root_path.size() - 1] == '/';
+			// bool req_start = _request.get_path()[0] == '/';
+			// bool req_end = _request.get_path()[_request.get_path().size() - 1] == '/';
+			// bool try_index_start = try_index[i][0] == '/';
 
-			std::string full_file_path;
+			std::string full_file_path = _request.uri.path + try_index[i];
 
-			if (root_end && req_start) {
-				full_file_path = root_path + _request.get_path().substr(1);
-			}
-			else if (root_end || req_start) {
-				full_file_path = root_path + _request.get_path();
-			}
-			else {
-				full_file_path = root_path + "/" + _request.get_path();
-			}
+			// if (root_end && req_start) {
+			// 	full_file_path = root_path + _request.get_path().substr(1);
+			// }
+			// else if (root_end || req_start) {
+			// 	full_file_path = root_path + _request.get_path();
+			// }
+			// else {
+			// 	full_file_path = root_path + "/" + _request.get_path();
+			// }
 
-			if (req_end && try_index_start) {
-				full_file_path += try_index[i].substr(1);
-			}
-			else if (req_end || try_index_start) {
-				full_file_path += try_index[i];
-			}
-			else {
-				full_file_path += "/" + try_index[i];
-			}
+			// if (req_end && try_index_start) {
+			// 	full_file_path += try_index[i].substr(1);
+			// }
+			// else if (req_end || try_index_start) {
+			// 	full_file_path += try_index[i];
+			// }
+			// else {
+			// 	full_file_path += "/" + try_index[i];
+			// }
 	
 			Logger::getInstance() << "Trying index: " + full_file_path << std::endl;
 
-			if (access(full_file_path.c_str(), F_OK) == 0) {
+			if (access((root_path + "/" + full_file_path).c_str(), F_OK) == 0) {
 
 				Logger::getInstance() << "Found: " + full_file_path << std::endl;
 				
 				// Guardar index encontrado
-				_request.uri.path += try_index[i];
+				_request.uri.path = full_file_path;
+				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 /*				Para un location con configuración para el archivo index en sí 
 				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
 				if (new_loc) {
-					*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 				}
 */
 				break;
