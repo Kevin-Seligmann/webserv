@@ -26,6 +26,7 @@ Wspoll::~Wspoll()
 }
 
 int Wspoll::size(){return _size;}
+
 void Wspoll::add(int fd, int mode)
 {
     if (_requests.size() + _size >= POLLING_SIZE)

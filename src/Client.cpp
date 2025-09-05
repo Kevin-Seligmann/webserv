@@ -92,16 +92,21 @@ void Client::handle_processing_response()
 		handleRequestError();
 	else if (_response_manager.response_done()) // Handle error
 	{
+		_last_activity = time(NULL);
 		
-		/*
-			Si la request "obliga" a cerrar la conexión por algun motivo. Por ejemplo Connection:close.
-			ACTIVARLO o TO_DELETE ?
+		// TODO
+		/*  https://man7.org/linux/man-pages/man2/shutdown.2.html SHUT_RD
+			Mientras no exista requestManager->close() usar error >= 400
 		*/
-
-		// if (client->request.headers.close_status == RCS_CLOSE)
-		//     client->status = ClientState::CLOSING;
-		// else
+		// if (true)  // SI requestManager->close()
+		// {
+		// 	//shutdown(socket, WRITE)
+		// 	//status = CLOSING
+		// }
+		// else 
+		// {
 			prepareRequest();
+		// }
 	}
 	else 
 	{
@@ -185,7 +190,8 @@ void Client::handleRequestError()
 	if (err_page.empty())
 		err_page = server_config->getErrorPage(_error.status());
 
-	_request.method = GET;
+    if (_request.method != HEAD)
+	    _request.method = GET;
 	_request.uri.path = err_page;
 	location = server_config->findLocation(_request.get_path());
 	prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
@@ -229,7 +235,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 	
 	// Procesar index files solo para GET con request OK
-	if (_request.method == GET && _error.status() == OK && !_request.get_path().empty() &&
+	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK && !_request.get_path().empty() &&
 		_request.get_path().at(_request.get_path().size() - 1) == '/')
 	{
 		std::string root_path;

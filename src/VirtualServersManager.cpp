@@ -319,6 +319,8 @@ void VirtualServersManager::checkTimeouts() {
 		if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
 			to_disconnect.push_back(it->first);
 		}
+		// If t->second->getStatus() == CLOSING. && now - t->second->getLastActivity() > Client::CLOSING_TIMEOUT
+		// to_disconnect.push_back(it->first);
 	}
 
 	for (size_t i = 0; i < to_disconnect.size(); ++i) {

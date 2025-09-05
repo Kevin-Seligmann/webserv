@@ -24,6 +24,8 @@ HTTPMethod method::str_to_method(std::string const & str)
         return DELETE;
     else if (wss::casecmp(str, "PUT"))
         return PUT;
+    else if (wss::casecmp(str, "HEAD"))
+        return HEAD;
     else
         return NOMETHOD;
 }
@@ -36,6 +38,7 @@ std::string const method::method_to_str(HTTPMethod const & m)
         case POST: return "POST";
         case DELETE: return "DELETE";
         case PUT: return  "PUT";
+        case HEAD: return  "HEAD";
         default: CODE_ERR("Trying to transform an unknown method to string");
     }
 }

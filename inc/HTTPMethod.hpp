@@ -6,7 +6,7 @@
 
 enum HTTPMethod 
 {
-    NOMETHOD, GET, POST, DELETE, PUT
+    NOMETHOD, GET, POST, DELETE, PUT, HEAD
 };
 
 std::ostream & operator<<(std::ostream & os, HTTPMethod method);
