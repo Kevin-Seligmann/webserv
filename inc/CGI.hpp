@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/31 19:55:29 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/06 16:14:03 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,39 +26,39 @@
 # include <unistd.h>
 # include <vector>
 
+# include "CGIArg.hpp"
 # include "CGIEnv.hpp"
-# include "CGIMap.hpp"
 # include "HTTPRequest.hpp"
 
 class CGI
 {
 	private:
 		CGIEnv								_env;
-		CGIMap                              _map;
+		CGIArg                              _arg;
+		std::string							_req_body;
+		int 								_req_pipe[2];
+		int 								_cgi_pipe[2];
+		pid_t 								_pid;
 
 		std::string methodToString(HTTPMethod method) const;
 		std::map<std::string, std::string> pathToBlocks(const std::string& path) const;
 
 	public:
 
-//	std::string 						req_body;
 
-//	int req_pipe[2];
-//	int cgi_pipe[2];
-//	pid_t pid;
 
 //	std::string resp;
 
 	CGI(int client_fd, const HTTPRequest& req, const ServerConfig* server);
 	~CGI();
 
-	void buildEnv(const HTTPRequest &req, const ParsedServer& server);
+	void buildEnv(const HTTPRequest &req, const ServerConfig* server);
 	CGIEnv& getEnv();
 
 	void reset();
 //	void readCGIOut(int fd);
 //	bool setPipeFlags(int fd);
-//	void runCGI();
+	void runCGI();
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/31 19:55:26 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/06 18:24:15 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,12 @@
 CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server)
 {
 	buildEnv(req, server);
-//	pid = -1;
+	_arg(_env);
+	_req_pipe[0] = -1;
+	_req_pipe[1] = -1;
+	_cgi_pipe[0] = -1;
+	_cgi_pipe[1] = -1;
+	_pid = -1;
 
 }
 
@@ -93,6 +98,7 @@ void CGI::buildEnv(const HTTPRequest& req, const ServerConfig* server)
 	{
 		_env.setEnvValue("CONTENT_LENGTH", std::to_string(req.headers.content_length));
 		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.type + '/' + req.headers.content_type.subtype);
+		_req_body = req.body.content;
 	}
 	
 	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
@@ -115,7 +121,7 @@ void CGI::buildEnv(const HTTPRequest& req, const ServerConfig* server)
 
 	if (req.headers.port != -1)
 	{
-		_env.setEnvValue("SERVER_PORT", req.headers.port);
+		_env.setEnvValue("SERVER_PORT", std::to_string(req.headers.port));
 	}
 	else
 	{
@@ -124,10 +130,68 @@ void CGI::buildEnv(const HTTPRequest& req, const ServerConfig* server)
 
 	_env.setEnvValue("SERVER_PROTOCOL", req.protocol);
 	_env.setEnvValue("SERVER_SOFTWARE", "webserver"); // default
- 
 }
 
 CGIEnv& CGI::getEnv()
 {
     return (_env);
+}
+
+void CGI::runCGI()
+{
+	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
+	{
+		// TODO return error, think how to manage it, return status DONE and response 500 Server error
+	}
+	_pid = fork();
+
+	if (_pid < 0)
+	{
+		// TODO return error, think how to manage it, return status DONE and response 500 Server error
+	}
+
+	if (_pid == 0)
+	{
+		if (dup2(req_pipe[0], STDIN_FILENO) == -1 || 
+			dup2(cgi_pipe[1], STDOUT_FILENO) == -1)
+		{
+			// TODO return error, think how to manage it, return status DONE and response 500 Server error		
+		}
+
+		if (close(_req_pipe[1]) || close(_cgi_pipe[0]))
+		{
+		// TODO return error, think how to manage it, return status DONE and response 500 Server error
+		}
+
+		CGIArg	arg(_env);
+		char** argv = arg.getArgs();
+
+		char** envp = _env.getEnv();
+
+		execve(argv[0], argv, envp);
+
+		// TODO if here, return error, think how to manage it, return status DONE and response 500 Server error 
+	}
+	else
+	{
+		close(_req_pipe[0]);
+		close(_cgi_pipe[1]);
+
+		if (!req.body.empty())
+		{
+			ssize_t written = write(_req_pipe[1], _req_body.c_str(), _req_body.size());
+			if (written == -1) 
+			{
+               // TODO  perror("write to CGI stdin failed");
+			}
+		}
+		close(_req_pipe[1]);
+
+		char buffer[4096];
+		ssize_t n;
+		std::string cgi_output;
+		while ((n = read(_cgi_pipe[0], buffer, sizeof(buffer))) > 0)
+		{
+			cgi_output.append(buffer, n);
+		}
 }
