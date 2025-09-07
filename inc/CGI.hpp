@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/06 16:14:03 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/07 18:43:10 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,13 @@
 
 # include "CGIArg.hpp"
 # include "CGIEnv.hpp"
+# include "CGIResponse.hpp"
 # include "HTTPRequest.hpp"
 
 class CGI
 {
 	private:
 		CGIEnv								_env;
-		CGIArg                              _arg;
 		std::string							_req_body;
 		int 								_req_pipe[2];
 		int 								_cgi_pipe[2];
@@ -45,20 +45,14 @@ class CGI
 
 	public:
 
+		CGI(int client_fd, const HTTPRequest& req, const ServerConfig* server);
+		~CGI();
 
+		void buildEnv(const HTTPRequest &req, const ServerConfig* server);
+		CGIEnv& getEnv();
 
-//	std::string resp;
-
-	CGI(int client_fd, const HTTPRequest& req, const ServerConfig* server);
-	~CGI();
-
-	void buildEnv(const HTTPRequest &req, const ServerConfig* server);
-	CGIEnv& getEnv();
-
-	void reset();
-//	void readCGIOut(int fd);
-//	bool setPipeFlags(int fd);
-	void runCGI();
+		void runCGI();
 };
+
 
 #endif

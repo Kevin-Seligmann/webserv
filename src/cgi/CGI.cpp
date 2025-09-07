@@ -6,22 +6,48 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/06 18:24:15 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/07 18:41:06 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
 
-CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server)
+CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server) : _env()
 {
 	buildEnv(req, server);
-	_arg(_env);
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
 
+}
+
+CGI::~CGI()
+{
+	if (_req_pipe[0] != -1)
+	{
+		close(_req_pipe[0]);
+		_req_pipe[0] = -1;
+	}
+	if (_req_pipe[1] != -1)
+	{
+		close(_req_pipe[1]);
+		_req_pipe[1] = -1;
+	}
+	if (_cgi_pipe[0] != -1) 
+	{
+		close(_cgi_pipe[0]);
+		_cgi_pipe[0] = -1;
+	}
+	if (_cgi_pipe[1] != -1)
+	{
+		close(_cgi_pipe[1]);
+		_cgi_pipe[1] = -1;
+	}
+
+	int	status;
+	if (_pid > 0) { waitpid(_pid, &status, WNOHANG); }
 }
 
 std::string CGI::methodToString(HTTPMethod method) const 
@@ -47,8 +73,6 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path) co
 	std::vector<std::string> parts;
 	std::vector<std::string> exts;
 
-	exts.push_back(".cgi");
-	exts.push_back(".js");
 	exts.push_back(".php");
 	exts.push_back(".py");
 
@@ -139,15 +163,19 @@ CGIEnv& CGI::getEnv()
 
 void CGI::runCGI()
 {
+	CGIResponse response;
+
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
-		// TODO return error, think how to manage it, return status DONE and response 500 Server error
+		response.buildInternalErrorResponse();
+		return ;
 	}
 	_pid = fork();
 
 	if (_pid < 0)
 	{
-		// TODO return error, think how to manage it, return status DONE and response 500 Server error
+		response.buildInternalErrorResponse();
+		return ;
 	}
 
 	if (_pid == 0)
@@ -155,13 +183,12 @@ void CGI::runCGI()
 		if (dup2(req_pipe[0], STDIN_FILENO) == -1 || 
 			dup2(cgi_pipe[1], STDOUT_FILENO) == -1)
 		{
-			// TODO return error, think how to manage it, return status DONE and response 500 Server error		
+			response.buildInternalErrorResponse();
+			_exit(1);
 		}
 
-		if (close(_req_pipe[1]) || close(_cgi_pipe[0]))
-		{
-		// TODO return error, think how to manage it, return status DONE and response 500 Server error
-		}
+		close(_req_pipe[1]);
+		close(_cgi_pipe[0]);
 
 		CGIArg	arg(_env);
 		char** argv = arg.getArgs();
@@ -170,19 +197,22 @@ void CGI::runCGI()
 
 		execve(argv[0], argv, envp);
 
-		// TODO if here, return error, think how to manage it, return status DONE and response 500 Server error 
+		response.buildInternalErrorResponse();
+        _exit(1);
+
 	}
 	else
 	{
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
 
-		if (!req.body.empty())
+		if (!_req_body.empty())
 		{
 			ssize_t written = write(_req_pipe[1], _req_body.c_str(), _req_body.size());
 			if (written == -1) 
 			{
-               // TODO  perror("write to CGI stdin failed");
+				response.buildInternalErrorResponse();
+				return ;
 			}
 		}
 		close(_req_pipe[1]);
@@ -194,4 +224,12 @@ void CGI::runCGI()
 		{
 			cgi_output.append(buffer, n);
 		}
+
+		close(_cgi_pipe[0]);
+
+		int	status_cgi;
+		waitpid(_pid, &status_cgi, 0);
+
+		response.parseFromCGIOutput(cgi_output);
+		response.buildResponse();
 }

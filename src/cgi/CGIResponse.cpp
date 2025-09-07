@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/24 16:25:36 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/07 16:04:37 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,16 +110,49 @@ void parseFromCGIOutput(const std::string& cgiOutput)
 
 	_bodyStream << bodyTmp.str();
 
-	if (_status.empty()) _status = "200 OK";
-	if (_contentType.empty()) _contentType = "text/plain";
+	if (_status.empty()) { _status = "200 OK"; }
+	if (_contentType.empty()) { _contentType = "text/plain"; }
 }
 
-/*
-void buildResponse()
+
+void CGIResponse::buildResponse()
 {
-	std::
+	std::ostringstream response;
+
+	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
+
+	response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
+
+	if (!_location.empty())
+		response << "Location: " << _location << "\r\n";
+
+	for (std::map<std::string,std::string>::const_iterator it = ._cgiResponseHeadersbegin();
+		 it != _cgiResponseHeaders.end(); ++it)
+	{
+		response << it->first << ": " << it->second << "\r\n";
+	}
+
+	std::string body = _bodyStream.str();
+	response << "Content-Length: " << body.size() << "\r\n";
+
+	response << "\r\n";
+	response << body;
+
+    _responseBuffer = response.str();
+	_sentBytes = 0;
 }
-*/
+
+void CGIResponse::buildInternalErrorResponse()
+{
+	_status = "500 Internal Server Error";
+	_contentType = "text/plain";
+	_location.clear();
+	_CGIResponseHeaders.clear();
+	_bodyStream.str("");
+	_bodyStream << message;
+
+	buildResponse();
+}
 
 void CGIResponse::setContentType(const std::string& type)
 {

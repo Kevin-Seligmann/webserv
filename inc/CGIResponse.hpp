@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:39:00 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/24 16:46:36 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/07 16:09:07 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,8 @@ class CGIResponse
 		const std::map<std::string, std::string>& getCGIResponseHeaders() const;
 
 		void parseFromCGIOutput(const std::string& cgiOutput);
-//		void buildResponse();
+		void buildResponse();
+		void buildInternalErrorResponse();
 
 		void setContentType(const std::string& type);
 		void setStatus(const std::string& stat);
