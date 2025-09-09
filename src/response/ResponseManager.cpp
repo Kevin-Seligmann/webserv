@@ -1,8 +1,5 @@
 #include "ResponseManager.hpp"
 
-/* TO_DELETE ya no es necearia la location fake */
-Location * lc = new Location();
-
 /*
     Remember status with content, should put C.L 0 or send error page.
 */

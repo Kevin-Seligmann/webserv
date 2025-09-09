@@ -2,6 +2,35 @@
 #include <cstring>  // memset
 #include <unistd.h>  // close
 #include <arpa/inet.h>  // inet_pton
+#include <errno.h>  // inet_pton
+
+// ================ SIGNALS ================
+
+VirtualServersManager* VirtualServersManager::s_instance = NULL;
+volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
+
+void VirtualServersManager::setupSignals() {
+	s_instance = this;
+
+	signal(SIGPIPE, SIG_IGN);
+	struct sigaction sa;
+	sa.sa_handler = signal_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+
+	if (sigaction(SIGINT, &sa, NULL ) == -1) {
+		throw std::runtime_error("Failed to install SIGINT handler");
+	}
+	if (sigaction(SIGTERM, &sa, NULL) == -1) {
+		throw std::runtime_error("Failed to install SIGTERM handler");
+	}
+}
+
+void VirtualServersManager::signal_handler(int sig) {
+	if (sig == SIGINT || sig == SIGTERM) {
+		s_shutdown_requested = 1;	
+	}
+}
 
 // ================ CONSTRUCTORS & DESTRUCTOR ================
 
@@ -9,6 +38,8 @@ VirtualServersManager::VirtualServersManager(){
 }
 
 VirtualServersManager::VirtualServersManager(const ParsedServers& configs){
+
+	signal(SIGPIPE, SIG_IGN);
 
 	std::vector<ParsedServer>::const_iterator it = configs.begin();
 	for (;it!= configs.end(); ++it) {
@@ -264,6 +295,10 @@ ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPReques
 // ================ MAIN LOOP ================
 
 void VirtualServersManager::run() {
+
+	setupSignals();
+	s_shutdown_requested = 0;
+
 	Logger::getInstance().info("=========== Starting WEBSERVER ===========");
 
 	try {
@@ -275,18 +310,20 @@ void VirtualServersManager::run() {
 
 	Logger::getInstance().info("=========== WEBSERVER Started. Listening to new requests ===========");
 
-	while (1) {
+	while (!s_shutdown_requested) {
 
 		int incoming = _wspoll.wait();
 	
-		Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
-
-		if (incoming == 0) {
-			checkTimeouts();
-			continue;
-		}
+		// Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
 
 		if (incoming < 0) {
+			if (errno == EINTR){
+				if (s_shutdown_requested) {
+					break;
+				}
+				continue;
+			}
+
 			Logger::getInstance().error("Wspoll failed: " + std::string(strerror(errno)));
 			break;
 		}
@@ -303,10 +340,12 @@ void VirtualServersManager::run() {
 					throw std::exception();
 				}
 			}
-
 		}
+
+		checkTimeouts();
 	}
 
+	gracefulShutdown();
 	Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
 }
 
@@ -319,6 +358,7 @@ void VirtualServersManager::checkTimeouts() {
 		if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
 			to_disconnect.push_back(it->first);
 		}
+		// TODO revisar esto
 		// If t->second->getStatus() == CLOSING. && now - t->second->getLastActivity() > Client::CLOSING_TIMEOUT
 		// to_disconnect.push_back(it->first);
 	}
@@ -328,4 +368,43 @@ void VirtualServersManager::checkTimeouts() {
 									  + " timeout");
 		disconnectClient(to_disconnect[i]);
 	}
+}
+
+void VirtualServersManager::gracefulShutdown() {
+	Logger::getInstance().info("Shutdown signal received, closing server gracefully...");
+
+	std::map<Listen, int>::iterator it = _listen_sockets.begin();
+	for (; it != _listen_sockets.end(); ++it) {
+		if (it->second >= 0) {
+			shutdown(it->second, SHUT_RDWR);
+			close(it->second);
+		}
+	}
+
+	time_t start = time(NULL);
+	while (!_clients.empty()) {
+		time_t waiting = time(NULL) - start;
+		if (waiting > 5) {
+			Logger::getInstance().warning("Timeout. Shuting down.");
+			break;
+		}
+
+		_wspoll.wait();
+
+		for (int i = 0; i < _wspoll.size(); ++i) {
+			if (_wspoll[i].events) {
+				try {
+					handleEvent(_wspoll[i]);
+				} catch (...) { } // ignorar errores
+			}
+		}
+	}
+
+	std::map<int, Client*>::iterator client_it;
+	for (client_it = _clients.begin(); client_it != _clients.end(); ++client_it) {
+		delete client_it->second;
+	}
+	_clients.clear();
+
+	Logger::getInstance().info("Server shutdown complete");
 }

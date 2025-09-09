@@ -13,6 +13,9 @@ class Client
 public:
 
     static const int TIMEOUT_SECONDS = 30;
+    static const int CLOSING_TIMEOUT = 1;
+    static const int KEEP_ALIVE_TIMEOUT = 5;
+
     Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
@@ -59,6 +62,7 @@ private:
     void prepareRequest();
 
     bool isCgiRequest(Location* location, const std::string& path);
+    bool isKeepAlive() const;
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
 	void get_config(ServerConfig ** server, Location ** location);

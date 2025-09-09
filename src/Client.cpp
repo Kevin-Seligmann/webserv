@@ -34,7 +34,7 @@ void Client::process(int fd, int mode)
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
 		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
 		case Client::PROCESSING_CGI: handle_cgi_request(); break;
-		// case Client::CLOSING: handle_closing(client_fd, client); break;
+		case Client::CLOSING: handle_closing(); break;
 	}
 	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + " Done." << std::endl;
 }
@@ -86,31 +86,35 @@ void Client::handle_processing_request()
 
 void Client::handle_processing_response()
 {
-	// Check and handle error if exists. 
-	_response_manager.process();
-	if (_response_manager.is_error())
-		handleRequestError();
-	else if (_response_manager.response_done()) // Handle error
+	if (_response_manager.response_done()) {
+		
+		_last_activity = time(NULL);
+
+		if (_request.headers.close_status == RCS_CLOSE || _error.status() >= 400) // será que el method es HEAD?
+		{
+			shutdown(_socket, SHUT_RD);
+			_status = CLOSING;
+		}
+		else
+		{
+			prepareRequest();
+			updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
+		}
+	}
+	else
 	{
 		_last_activity = time(NULL);
-		
-		// TODO
-		/*  https://man7.org/linux/man-pages/man2/shutdown.2.html SHUT_RD
-			Mientras no exista requestManager->close() usar error >= 400
-		*/
-		// if (true)  // SI requestManager->close()
-		// {
-		// 	//shutdown(socket, WRITE)
-		// 	//status = CLOSING
-		// }
-		// else 
-		// {
-			prepareRequest();
-		// }
-	}
-	else 
-	{
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
+	}
+}
+
+void Client::handle_closing() {
+	sleep(CLOSING_TIMEOUT);
+	if (time(NULL) - _last_activity > CLOSING_TIMEOUT)
+		_vsm.disconnectClient(_socket); 
+
+	if (_response_manager.response_done()) {
+		_vsm.disconnectClient(_socket);
 	}
 }
 
@@ -217,6 +221,13 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 		return ;
 	_vsm.swapFileDescriptor(_active_fd, newfd);
 	_active_fd = newfd;
+}
+
+bool Client::isKeepAlive() const {
+	if (_request.protocol == "HTTP/1.1") {
+		return _request.headers.close_status != RCS_CLOSE;
+	}
+	return false;
 }
 
 bool Client::isCgiRequest(Location* location, const std::string& path) {

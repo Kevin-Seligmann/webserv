@@ -60,6 +60,10 @@ std::vector<std::string> tokenize(const std::string& content);
 
 size_t expect(const std::vector<std::string>& tokens, size_t i, const std::string& expected);
 
+bool isServerDirective(const std::string& token);
+
+bool isLocationDirective(const std::string& token);
+
 int to_int(const std::string& s);
 
 Listen parse_listen(const std::vector<std::string>& tokens);
