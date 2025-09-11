@@ -149,8 +149,6 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	loc.setPath(tokens[i]);
 	++i;
 
-	
-	
 	i = expect(tokens, i, "{");
 	while (i < tokens.size() && tokens[i] != "}")
 	{
@@ -168,6 +166,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			if (methods.empty())
 				CODE_ERR("allow_methods directive requires at least one method.");
 
+			std::cout << "OUT" << std::endl;
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
 				CODE_ERR("Missing ';' after 'allow_methods' directive");
@@ -382,7 +381,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 
 	return (ld);
 }
-
+ 
 ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 {
 	ParsedServer server;

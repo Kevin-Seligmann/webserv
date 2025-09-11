@@ -24,19 +24,41 @@ Client::~Client()
 // Entry point
 void Client::process(int fd, int mode)
 {
-	if (fd != _active_fd.fd && !(_active_fd.mode & mode))
-		CODE_ERR("Trying to access client with an invalid socket or mode");
+	Logger::getInstance() << "=== CLIENT PROCESS START ===" << std::endl;
+	Logger::getInstance() << "Input fd=" << fd << " mode=" << mode << std::endl;
+	Logger::getInstance() << "Client socket=" << _socket << " active_fd=" << _active_fd.fd
+						  << " active_mode=" << _active_fd.mode << std::endl;
+	Logger::getInstance() << "Status=" << _status << std::endl;
+
+	if (fd != _active_fd.fd || !(_active_fd.mode & mode)) {
+		Logger::getInstance() << "FD validation failed but continuing..." << std::endl;
+		// CODE_ERR("Trying to access client with an invalid socket or mode");
+	}
 
 	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + ". Mode: " + wss::i_to_dec(mode) << std::endl;
 
 	switch (_status)
 	{
-		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
-		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
-		case Client::PROCESSING_CGI: handle_cgi_request(); break;
-		case Client::CLOSING: handle_closing(); break;
+		case Client::PROCESSING_REQUEST:
+			Logger::getInstance() << "=!=!=!= Processing Request" << std::endl;
+			handle_processing_request();
+			break;
+		case Client::PROCESSING_RESPONSE:
+			Logger::getInstance() << "=!=!=!= Processing Response" << std::endl;
+			handle_processing_response();
+			break;
+		case Client::PROCESSING_CGI:
+			Logger::getInstance() << "=!=!=!= Processing CGI" << std::endl;
+			handle_cgi_request();
+			break;
+		case Client::CLOSING:
+			Logger::getInstance() << "=!=!=!= Processing CLOSING" << std::endl;
+			handle_closing();
+			break;
 	}
+
 	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + " Done." << std::endl;
+	Logger::getInstance() << "New status " << _status << " new_active_fd=" << _active_fd.fd << std::endl;
 }
 
 // State initializers
@@ -69,6 +91,9 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 // State handlers
 void Client::handle_processing_request()
 {
+    Logger::getInstance() << "Request processing - Socket: " << _socket 
+						  << ", Active FD: " << _active_fd.fd << std::endl;
+
 	_request_manager.process();
 
 	if (_request_manager.request_done() && _error.status() == OK)
@@ -82,7 +107,7 @@ void Client::handle_processing_request()
 		Logger::getInstance() << "Request: " << _request << std::endl;
 		handleRequestError();
 	}
-}
+ }
 
 void Client::handle_processing_response()
 {
@@ -104,6 +129,7 @@ void Client::handle_processing_response()
 	else
 	{
 		_last_activity = time(NULL);
+		_response_manager.process();
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
@@ -183,31 +209,45 @@ void Client::handleRequestError()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
-	if (_error_retry_count == MAX_ERROR_RETRIES + 1 || ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
-		return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
-	else if (_error_retry_count > MAX_ERROR_RETRIES + 1)
-		throw std::runtime_error("Too many internal redirects, can't resolve the request successfuly. Client " + wss::i_to_dec(_socket));
+	// Debug, hay server y location?
+	Logger::getInstance() << "SERVER : " << (server_config ? "OK" : "NO") << std::endl;
+	Logger::getInstance() << "LOCATION : " << (location ? "OK" : "NO") << std::endl;
 
-	std::string err_page = "";
-	if (location)
-		err_page = location->getErrorPage(_error.status());
-	if (err_page.empty())
-		err_page = server_config->getErrorPage(_error.status());
+	// Custom error page
+	if (_error_retry_count == 1) { // ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
 
-    if (_request.method != HEAD)
-	    _request.method = GET;
-	_request.uri.path = err_page;
-	location = server_config->findLocation(_request.get_path());
-	prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+		std::string error_page = "";
+
+		if (location)
+			error_page = location->getErrorPage(_error.status());
+
+		if (error_page.empty() && server_config)
+			error_page = server_config->getErrorPage(_error.status());
+
+		if (!error_page.empty()) {
+			if (_request.method != HEAD)
+				_request.method = GET;
+			_request.uri.path = error_page;
+			location = server_config->findLocation(_request.get_path());
+			prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+			return;
+		}
+	}
+	prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
+
 }
 
 // Util, getters, setters, etc
-int Client::getSocket() const {return _socket;}
-
-int Client::ownsFd(int fd) const {return fd == _socket || fd == _active_fd.fd;}
 
 void Client::updateActiveFileDescriptor(int fd, int mode)
 {
+	// Prevenir cambios durante el procesamiento de request
+    if (_status == PROCESSING_REQUEST && fd != _socket)
+    {
+        Logger::getInstance().error("Attempted to change FD during request processing!");
+        return;
+    }
+
 	ActiveFileDescriptor newfd(fd, mode);
 	if (newfd == _active_fd)
 		return ;
@@ -217,10 +257,18 @@ void Client::updateActiveFileDescriptor(int fd, int mode)
 
 void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 {
-	if (newfd == _active_fd)
+	Logger::getInstance() << "=== UPDATE ACTIVE FD ===" << std::endl;
+    Logger::getInstance() << "Old: fd=" << _active_fd.fd << " mode=" << _active_fd.mode << std::endl;
+    Logger::getInstance() << "New: fd=" << newfd.fd << " mode=" << newfd.mode << std::endl;
+    
+	if (newfd == _active_fd) {
+		Logger::getInstance() << "No change needed" << std::endl;
 		return ;
+	}
+	Logger::getInstance() << "Swapping file descriptors..." << std::endl;
 	_vsm.swapFileDescriptor(_active_fd, newfd);
 	_active_fd = newfd;
+	Logger::getInstance() << "Active FD updated successfully" << std::endl;
 }
 
 bool Client::isKeepAlive() const {
@@ -239,94 +287,34 @@ bool Client::isCgiRequest(Location* location, const std::string& path) {
 
 void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
 {
-	// Server
+
+    static std::map<int, int> client_resolve_count;
+    Logger::getInstance() << "GET_CONFIG client=" << _socket 
+                         << " count=" << ++client_resolve_count[_socket]
+                         << " current_path='" << _request.get_path() << "'" << std::endl;
+
+
+	// Get server
 	*ptr_server_config = _vsm.findServerConfigForRequest(_request, _socket);
-
-	// Location
-	*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
-	
-	// Procesar index files solo para GET con request OK
-	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK &&
-		_request.get_path().at(_request.get_path().size() - 1) == '/')
-	{
-		std::string root_path;
-		std::vector<std::string> try_index;
-
-		// Get indexes vector
-		if (*ptr_location && !(*ptr_location)->getIndex().empty()) {
-			try_index = (*ptr_location)->getIndex();
-		}
-		else if (!(*ptr_server_config)->index_files.empty()) {
-			try_index = (*ptr_server_config)->index_files; 
-		}
-		else {
-			try_index.push_back("index.html");
-		}
-
-		// Get root path
-		if (*ptr_location && !(*ptr_location)->getRoot().empty()) {
-			root_path = (*ptr_location)->getRoot();
-		}
-		else if (!(*ptr_server_config)->getRoot().empty()) {
-			root_path = (*ptr_server_config)->getRoot();
-		}
-		else {
-			CODE_ERR("No root path found for " + _request.get_path());
-		}
-
-		// Try index files
-		for (size_t i = 0; i < try_index.size(); ++i) {
-
-			if (try_index[i].empty()) {
-				continue;
-			}
-
-			// _request.uri.path += try_index[i];
-			
-			// Eliminar posibles doble slash por la concatenacion "//"
-			// bool root_end = root_path[root_path.size() - 1] == '/';
-			// bool req_start = _request.get_path()[0] == '/';
-			// bool req_end = _request.get_path()[_request.get_path().size() - 1] == '/';
-			// bool try_index_start = try_index[i][0] == '/';
-
-			std::string full_file_path = _request.uri.path + try_index[i];
-
-			// if (root_end && req_start) {
-			// 	full_file_path = root_path + _request.get_path().substr(1);
-			// }
-			// else if (root_end || req_start) {
-			// 	full_file_path = root_path + _request.get_path();
-			// }
-			// else {
-			// 	full_file_path = root_path + "/" + _request.get_path();
-			// }
-
-			// if (req_end && try_index_start) {
-			// 	full_file_path += try_index[i].substr(1);
-			// }
-			// else if (req_end || try_index_start) {
-			// 	full_file_path += try_index[i];
-			// }
-			// else {
-			// 	full_file_path += "/" + try_index[i];
-			// }
-	
-			Logger::getInstance() << "Trying index: " + full_file_path << std::endl;
-
-			if (access((root_path + "/" + full_file_path).c_str(), F_OK) == 0) {
-
-				Logger::getInstance() << "Found: " + full_file_path << std::endl;
-				
-				// Guardar index encontrado
-				_request.uri.path = full_file_path;
-				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
-/*				Para un location con configuración para el archivo index en sí 
-				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
-				if (new_loc) {
-				}
-*/
-				break;
-			}
-		}
+	if (!*ptr_server_config) {
+		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
+
+	Logger::getInstance() << "=== Solving request ===" << std::endl;
+	Logger::getInstance() << "Original path: " << _request.get_path() << std::endl;
+	
+	std::string final_path;
+	*ptr_location = (*ptr_server_config)->resolveRequest(_request.get_path(), final_path);
+
+	if (final_path != _request.get_path()) {
+		Logger::getInstance() << "Path changed: " << _request.get_path() 
+							  << " -> " << final_path << std::endl;
+		_request.uri.path = final_path;
+	}
+
+	Logger::getInstance() << "Final location: " 
+						  << ((*ptr_location) ? (*ptr_location)->getPath() : "NULL")
+						  << std::endl;
+	Logger::getInstance() << "=== Request solved ===" << std::endl;
+
 }

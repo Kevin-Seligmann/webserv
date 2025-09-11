@@ -23,8 +23,9 @@ public:
     time_t getLastActivity() const { return _last_activity; }
 
     void process(int fd, int mode);
-    int  getSocket() const;
-    int  ownsFd(int fd) const;
+
+    int getSocket() const { return _socket; }
+    int ownsFd(int fd) const { return fd == _socket || fd == _active_fd.fd; }
 
 private:
     enum Status {
@@ -65,6 +66,6 @@ private:
     bool isKeepAlive() const;
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
+
 	void get_config(ServerConfig ** server, Location ** location);
-    void get_status_config(ServerConfig ** ptr_server_config, Location ** ptr_location);
 };

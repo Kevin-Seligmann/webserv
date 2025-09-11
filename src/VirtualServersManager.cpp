@@ -150,14 +150,23 @@ bool VirtualServersManager::isListenSocket(int socket_fd) const {
 // ================ CLIENT ================
 
 Client* VirtualServersManager::searchClient(int client_fd) {
+	
+	Logger::getInstance() << "Searching for client ====" << std::endl;
+
 	std::map<int, Client *>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
+		Logger::getInstance() << "Found client in _clients" << std::endl;
 		return it->second;
 	}
 
-	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); it ++)
-		if (it->second->ownsFd(client_fd))
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); it ++) {
+		Logger::getInstance() << "Checking clients owned fds=" << it->second->ownsFd(client_fd) << std::endl;
+		if (it->second->ownsFd(client_fd)) {
+			Logger::getInstance() << "Found client owner of fds" << std::endl;
 			return it->second;
+		}
+	}
+	Logger::getInstance() << "No client found" << std::endl;
 	return NULL;
 }
 
@@ -274,22 +283,40 @@ void VirtualServersManager::swapFileDescriptor(ActiveFileDescriptor const & oldf
 // ================ REQUEST ROUTER ================
 
 ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPRequest& request, int client_fd) {
+	// Consigue cliente
 	std::map<int, Listen>::iterator it = _client_to_listen.find(client_fd);
 	if (it == _client_to_listen.end())
 		CODE_ERR("Impossible error trying to find server for client " + wss::i_to_dec(client_fd));
 
+	// Consigue el virtual host
 	std::map<Listen, std::vector<ServerConfig*> >::iterator vh_it = _virtual_hosts.find(it->second);
 	if (vh_it == _virtual_hosts.end())
-		CODE_ERR("Impossible error trying to find server for client " + wss::i_to_dec(client_fd));
+		CODE_ERR("Impossible error trying to find virtual host for client " + wss::i_to_dec(client_fd));
 
+
+	// Protección de vector de serverConfig vacío
+	if (vh_it->second.empty()) {
+		CODE_ERR("No server configurations found for " + it->second.host + ":" + wss::i_to_dec(it->second.port));
+	}
+	
+	// Match server con hostname
 	std::string hostname = request.get_host();
-	for (size_t i = 0; i < vh_it->second.size(); ++i){
+	for (size_t i = 0; i < vh_it->second.size(); ++i) {
+		if (!vh_it->second[i]) {
+			continue;
+		}
+
 		if (vh_it->second[i]->matchesServerName(hostname)) {
 			return vh_it->second[i];
 		}
 	}
 
-	return vh_it->second[0]; // First one is default
+	if (!vh_it->second[0]) {
+		CODE_ERR("Default server configuration not found for " + it->second.host + ":" + wss::i_to_dec(it->second.port));
+	}
+
+	// Retornar el primero (default)
+	return vh_it->second[0];
 }
 
 // ================ MAIN LOOP ================
@@ -312,9 +339,12 @@ void VirtualServersManager::run() {
 
 	while (!s_shutdown_requested) {
 
+		Logger::getInstance() << "POLL WAIT START" << std::endl;
+		Logger::getInstance() << "Poll size: " << _wspoll.size() << std::endl;
+
 		int incoming = _wspoll.wait();
-	
-		// Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
+
+		Logger::getInstance() << "POLL RETURNED: " << incoming << " events ===" << std::endl;
 
 		if (incoming < 0) {
 			if (errno == EINTR){
@@ -330,8 +360,15 @@ void VirtualServersManager::run() {
 
 
 		for (int i = 0; i < _wspoll.size(); ++i) {
+
+			Logger::getInstance() << "Checking slot " << i << ": fd=" << _wspoll[i].fd 
+                                  << " events=" << _wspoll[i].events << std::endl;
+
 			if (_wspoll[i].events)
 			{
+				Logger::getInstance() << "*** PROCESSING EVENT: fd=" << _wspoll[i].fd 
+                                      << " events=" << _wspoll[i].events << std::endl;
+
 				try {
 					handleEvent(_wspoll[i]);
 					} 
@@ -339,9 +376,9 @@ void VirtualServersManager::run() {
 					Logger::getInstance().error("Critial error handling event: " + std::string(e.what()) + " The server must close. ");
 					throw std::exception();
 				}
+				Logger::getInstance() << "*** EVENT PROCESSED: fd=" << _wspoll[i].fd << std::endl;
 			}
 		}
-
 		checkTimeouts();
 	}
 
@@ -384,7 +421,7 @@ void VirtualServersManager::gracefulShutdown() {
 	time_t start = time(NULL);
 	while (!_clients.empty()) {
 		time_t waiting = time(NULL) - start;
-		if (waiting > 5) {
+		if (waiting > 0.1) {
 			Logger::getInstance().warning("Timeout. Shuting down.");
 			break;
 		}
