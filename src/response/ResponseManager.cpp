@@ -148,7 +148,7 @@ void ResponseManager::generate_file_status_response()
 void ResponseManager::generate_post_response()
 {
     std::string final_path = get_host_path();
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) j+ ": Procesing POST. File: " + final_path << std::endl;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing POST. File: " + final_path << std::endl;
 
     _file.open(final_path, O_WRONLY | O_CREAT | O_APPEND, 0777);
     
