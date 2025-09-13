@@ -541,6 +541,8 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 	}
 
+	++i;
+
 	applyAutoindex(server);
 	applyAllowMethods(server);
 	applyIndexFiles(server);
