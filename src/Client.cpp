@@ -24,41 +24,25 @@ Client::~Client()
 // Entry point
 void Client::process(int fd, int mode)
 {
-	Logger::getInstance() << "=== CLIENT PROCESS START ===" << std::endl;
-	Logger::getInstance() << "Input fd=" << fd << " mode=" << mode << std::endl;
-	Logger::getInstance() << "Client socket=" << _socket << " active_fd=" << _active_fd.fd
-						  << " active_mode=" << _active_fd.mode << std::endl;
-	Logger::getInstance() << "Status=" << _status << std::endl;
-
 	if (fd != _active_fd.fd || !(_active_fd.mode & mode)) {
-		Logger::getInstance() << "FD validation failed but continuing..." << std::endl;
-		// CODE_ERR("Trying to access client with an invalid socket or mode");
+		CODE_ERR("Trying to access client with an invalid socket or mode");
 	}
-
-	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + ". Mode: " + wss::i_to_dec(mode) << std::endl;
 
 	switch (_status)
 	{
 		case Client::PROCESSING_REQUEST:
-			Logger::getInstance() << "=!=!=!= Processing Request" << std::endl;
 			handle_processing_request();
 			break;
 		case Client::PROCESSING_RESPONSE:
-			Logger::getInstance() << "=!=!=!= Processing Response" << std::endl;
 			handle_processing_response();
 			break;
 		case Client::PROCESSING_CGI:
-			Logger::getInstance() << "=!=!=!= Processing CGI" << std::endl;
 			handle_cgi_request();
 			break;
 		case Client::CLOSING:
-			Logger::getInstance() << "=!=!=!= Processing CLOSING" << std::endl;
 			handle_closing();
 			break;
 	}
-
-	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + " Done." << std::endl;
-	Logger::getInstance() << "New status " << _status << " new_active_fd=" << _active_fd.fd << std::endl;
 }
 
 // State initializers
@@ -91,20 +75,14 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 // State handlers
 void Client::handle_processing_request()
 {
-    Logger::getInstance() << "Request processing - Socket: " << _socket 
-						  << ", Active FD: " << _active_fd.fd << std::endl;
-
 	_request_manager.process();
 
 	if (_request_manager.request_done() && _error.status() == OK)
 	{
-		Logger::getInstance() <<  "Request processed: " << _error.to_string() + ". " + _error.msg() << std::endl;
 		handleRequestDone();
 	}
 	else if (_error.status() != OK)
 	{
-		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
-		Logger::getInstance() << "Request: " << _request << std::endl;
 		handleRequestError();
 	}
  }
@@ -213,10 +191,6 @@ void Client::handleRequestError()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
-	// Debug, hay server y location?
-	Logger::getInstance() << "SERVER : " << (server_config ? "OK" : "NO") << std::endl;
-	Logger::getInstance() << "LOCATION : " << (location ? "OK" : "NO") << std::endl;
-
 	// Custom error page
 	if (_error_retry_count == 1) { // ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
 
@@ -260,19 +234,13 @@ void Client::updateActiveFileDescriptor(int fd, int mode)
 }
 
 void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
-{
-	Logger::getInstance() << "=== UPDATE ACTIVE FD ===" << std::endl;
-    Logger::getInstance() << "Old: fd=" << _active_fd.fd << " mode=" << _active_fd.mode << std::endl;
-    Logger::getInstance() << "New: fd=" << newfd.fd << " mode=" << newfd.mode << std::endl;
-    
+{    
 	if (newfd == _active_fd) {
 		Logger::getInstance() << "No change needed" << std::endl;
 		return ;
 	}
-	Logger::getInstance() << "Swapping file descriptors..." << std::endl;
 	_vsm.swapFileDescriptor(_active_fd, newfd);
 	_active_fd = newfd;
-	Logger::getInstance() << "Active FD updated successfully" << std::endl;
 }
 
 bool Client::isKeepAlive() const {
@@ -291,34 +259,18 @@ bool Client::isCgiRequest(Location* location, const std::string& path) {
 
 void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
 {
-
     static std::map<int, int> client_resolve_count;
-    Logger::getInstance() << "GET_CONFIG client=" << _socket 
-                         << " count=" << ++client_resolve_count[_socket]
-                         << " current_path='" << _request.get_path() << "'" << std::endl;
-
-
+ 
 	// Get server
 	*ptr_server_config = _vsm.findServerConfigForRequest(_request, _socket);
 	if (!*ptr_server_config) {
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
 
-	Logger::getInstance() << "=== Solving request ===" << std::endl;
-	Logger::getInstance() << "Original path: " << _request.get_path() << std::endl;
-	
 	std::string final_path;
 	*ptr_location = (*ptr_server_config)->resolveRequest(_request.get_path(), final_path);
 
 	if (final_path != _request.get_path()) {
-		Logger::getInstance() << "Path changed: " << _request.get_path() 
-							  << " -> " << final_path << std::endl;
 		_request.uri.path = final_path;
 	}
-
-	Logger::getInstance() << "Final location: " 
-						  << ((*ptr_location) ? (*ptr_location)->getPath() : "NULL")
-						  << std::endl;
-	Logger::getInstance() << "=== Request solved ===" << std::endl;
-
 }

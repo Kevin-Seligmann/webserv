@@ -36,9 +36,6 @@ void ResponseManager::set_location(Location const * location)
 
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
-	Logger::getInstance() << "=== GET ACTIVE FD (ResponseManager) ===" << std::endl;
-	Logger::getInstance() << "Current status=" << _status << std::endl;
-
 	switch (_status)
 	{
 		case WAITING_REQUEST:
@@ -46,16 +43,12 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 		case IDLE:
 			CODE_ERR("Trying to get active file descriptor from an invalid status: " + wss::i_to_dec(_status));
 		case READING_FILE:
-			Logger::getInstance() << "Returning read file fd=" << _file.fd << std::endl;
 			return ActiveFileDescriptor(_file.fd, POLLIN);
 		case WRITING_FILE:
-			Logger::getInstance() << "Retruning write file fd=" << _file.fd << std::endl;
 			return ActiveFileDescriptor(_file.fd, POLLOUT);
 		case WRITING_RESPONSE:
-			Logger::getInstance() << "Returning socket fd=" << _sys_buffer->_fd << std::endl;
 			return ActiveFileDescriptor(_sys_buffer->_fd, POLLOUT | POLLRDHUP);
 		default:
-			Logger::getInstance() << "Invalid status" << std::endl;
 			CODE_ERR("Trying to get active file descriptor from an invalid status: " + wss::i_to_dec(_status));
 	}
 }
@@ -65,8 +58,6 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 */
 void ResponseManager::generate_response(RM_error_action action)
 {
-	Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
-
 	_error_action = action;
 	switch (::status::status_type(_error.status()))
 	{
@@ -76,7 +67,8 @@ void ResponseManager::generate_response(RM_error_action action)
 			else
 				generate_file_status_response();
 			break ;
-		case STYPE_EMPTY_ERROR_RESPONSE: generate_default_status_response(); break ;
+		case STYPE_EMPTY_ERROR_RESPONSE:
+			generate_default_status_response(); break ;
 		case STYPE_REGULAR_RESPONSE:
 			if (!validate_method())
 				return ;
@@ -95,30 +87,28 @@ void ResponseManager::generate_response(RM_error_action action)
 
 bool ResponseManager::validate_method()
 {
-
-	Logger::getInstance() << "=== =============== ===" << std::endl;
-	Logger::getInstance() << "=== VALIDATE METHOD ===" << std::endl;
-	Logger::getInstance() << "=== =============== ===" << std::endl;
-    Logger::getInstance() << "Request method: " << _request.method << std::endl;
-
 	std::vector<HTTPMethod> methods = get_allowed_methods();
 
-	Logger::getInstance() << "Allowed methods count: " << methods.size() << std::endl;
+// Debug methods
+/*	Logger::getInstance() << "Allowed methods count: " << methods.size() << std::endl;
     for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it++) {
         Logger::getInstance() << "  Allowed: " << method::method_to_str(*it) << std::endl;
     }
+*/
 
-	for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it ++) {
-		if (*it == _request.method) {
-			Logger::getInstance() << "Method directly matched!" << std::endl;
+	for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it ++)
+	{
+		if (*it == _request.method)
+		{
+//			Logger::getInstance() << "Method directly matched!" << std::endl;
 			return true;
 		}
-		if (*it == GET && _request.method == HEAD) {
-			Logger::getInstance() << "HEAD allowed because GET is present!" << std::endl;
+		if (*it == GET && _request.method == HEAD)
+		{
+//			Logger::getInstance() << "HEAD allowed because GET is present!" << std::endl;
 			return true;
 		}
 	}
-	Logger::getInstance() << "HEAD allowed because GET is present!" << std::endl;
 	set_error("Method not allowed", METHOD_NOT_ALLOWED);
 	return false;
 }
@@ -133,7 +123,7 @@ void ResponseManager::generate_get_response()
 {
 	std::string final_path = get_host_path();
 
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
 
 	struct stat statbuf;
     if (stat(final_path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
@@ -185,7 +175,7 @@ void ResponseManager::generate_file_status_response()
 {
 	std::string final_path = get_host_path();
 
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating status response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating status response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
 
 	_file.open(final_path, O_RDONLY);
 
@@ -201,7 +191,7 @@ void ResponseManager::generate_file_status_response()
 void ResponseManager::generate_post_response()
 {
 	std::string final_path = get_host_path();
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing POST. File: " + final_path << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing POST. File: " + final_path << std::endl;
 
 	_file.open(final_path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	// Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
@@ -229,7 +219,7 @@ void ResponseManager::generate_post_response()
 void ResponseManager::generate_delete_response()
 {
 	std::string final_path = get_host_path();
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing DELETE. File: " + final_path << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing DELETE. File: " + final_path << std::endl;
 	
 	_file.open(final_path, O_RDONLY);
 
@@ -281,11 +271,11 @@ void ResponseManager::prepare_file_reading()
 
 void ResponseManager::read_file()
 {
-	Logger::getInstance() << "ENTERING READ_FILE" << std::endl;
+//	Logger::getInstance() << "ENTERING READ_FILE" << std::endl;
 	ssize_t bytes_read = _buffer.write_from_fd(_file.fd, ResponseManager::_READ_FILE_BUFFER_SIZE);
 	if (bytes_read < 0)
 	{
-		Logger::getInstance() << "bytes_read =" << bytes_read << std::endl;
+//		Logger::getInstance() << "bytes_read =" << bytes_read << std::endl;
 		_buffer.clear();
 		_status = WAITING_REQUEST ;
 		set_error("Error reading file", INTERNAL_SERVER_ERROR);
@@ -293,8 +283,8 @@ void ResponseManager::read_file()
 	}
 	if (bytes_read == 0)
 	{
-		Logger::getInstance() << "bytes_read =" << bytes_read << std::endl;
-		Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File read. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+//		Logger::getInstance() << "bytes_read =" << bytes_read << std::endl;
+//		Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File read. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
 		_file.close();
 		_status = WRITING_RESPONSE;
 	}
@@ -321,7 +311,7 @@ void ResponseManager::write_file()
 		_buffer.put_status(_error);
 		_buffer.put_header("Server", "Webserv");
 		_buffer.put_header_time("Date", time(NULL));
-		Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+//		Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
 		_status = WRITING_RESPONSE;
 	}
 }
@@ -368,13 +358,13 @@ void ResponseManager::read_directory()
 	_buffer.put_new_line();
 	_buffer.put_body(dirs);
 
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
 	_status = WRITING_RESPONSE;
 }
 
 void ResponseManager::generate_default_status_response()
 {
-	Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
+//	Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
 
 	_buffer.put_protocol("HTTP/1.1");
 	_buffer.put_status(_error);
@@ -397,57 +387,40 @@ void ResponseManager::generate_default_status_response()
 		_buffer.put_body(error_page);
 	}
 
-
-	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
+//	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
 	_status = WRITING_RESPONSE;
 }
 
 void ResponseManager::process()
 {
-	Logger::getInstance() << "=== RESPONSE MANAGER PROCESS START ===" << std::endl;
-	Logger::getInstance() << "Status=" << _status << std::endl;
 	switch (_status)
 	{
 		case READING_FILE: 
-			Logger::getInstance() << "Calling read_file()" << std::endl;
 			read_file();
 			break; 
 		case WRITING_FILE:
-			Logger::getInstance() << "Calling write_file()" << std::endl;
 			write_file();
 			break;
 		case WRITING_RESPONSE:
-            Logger::getInstance() << "Calling write_response()" << std::endl;
 			write_response();
 			break;
 		case IDLE:
-			Logger::getInstance() << "Status is IDLE - throwing error" << std::endl;
 			throw std::runtime_error("Code error: ResponseManager is IDLE but tried to process");
 		default:
-			Logger::getInstance() << "Unknown status - throwing error" << std::endl;
 			throw std::runtime_error("Code error: Unknown ResponseManager status");
 	}
-    Logger::getInstance() << "New status=" << _status << std::endl;
-    Logger::getInstance() << "=== RESPONSE MANAGER PROCESS END ===" << std::endl;
 }
 
 void ResponseManager::write_response()
 {
-    Logger::getInstance() << "=== WRITE RESPONSE START ===" << std::endl;
-    Logger::getInstance() << "Buffer size=" << _buffer.size() << std::endl;
-
 	size_t max = _WRITE_BUFFER_SIZE;
 	size_t write_qty = std::min<size_t>(max, _buffer.size());
-
-	Logger::getInstance() << "Max write=" << max << " write_qty=" << write_qty << std::endl;
 
 	ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
 
 	if (written_bytes > 0)
 	{
-		Logger::getInstance() << "Consuming " << written_bytes << " bytes from buffer" << std::endl;
 		_buffer.consume_bytes(written_bytes);
-		Logger::getInstance() << "New buffer size=" << _buffer.size() << std::endl;
 	}
 	else if (written_bytes == 0)
 	{
@@ -457,17 +430,12 @@ void ResponseManager::write_response()
 	}
 	else
 	{
-        Logger::getInstance() << "Write error: " << strerror(errno) << std::endl;
-		Logger::getInstance().error("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close: " + std::string(strerror(errno)));
 		CODE_ERR("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close.");
 	}
-    Logger::getInstance() << "=== WRITE RESPONSE END ===" << std::endl;
 }
 
 bool ResponseManager::response_done() {
 	bool done = _buffer.size() == 0;
-	Logger::getInstance() << "=== RESPONSE DONE CHECK ===" << std::endl;
-    Logger::getInstance() << "Buffer size=" << _buffer.size() << " done=" << done << std::endl;
 	return done;
 }
 
@@ -493,31 +461,23 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 	std::vector<std::string> methods;
 	std::vector<HTTPMethod> real_methods;
 
-
-    Logger::getInstance() << "=== =================== ===" << std::endl;
-    Logger::getInstance() << "=== GET ALLOWED METHODS ===" << std::endl;
-    Logger::getInstance() << "=== =================== ===" << std::endl;
-
-	if (_location && !_location->getMethods().empty()) {
-       Logger::getInstance() << "Using location methods" << std::endl;
+	if (_location && !_location->getMethods().empty())
+	{
 		methods = _location->getMethods();
 	} 
-	else if (!_server->getAllowMethods().empty()) {
-		Logger::getInstance() << "Using server methods" << std::endl;
+	else if (!_server->getAllowMethods().empty())
+	{
 		methods = _server->getAllowMethods();
 	} 
-	else {
-		Logger::getInstance() << "ERROR: No methods found!" << std::endl;
+	else
+	{
 		CODE_ERR("No methods found");
 	}
 
-	Logger::getInstance() << "String methods count: " << methods.size() << std::endl;
 	for (std::vector<std::string>::const_iterator it = methods.begin(); it != methods.end(); it ++)
 	{
-		Logger::getInstance() << "  String method: '" << *it << "'" << std::endl;
 		HTTPMethod m = method::str_to_method(*it);
 		if (m != NOMETHOD) {
-			Logger::getInstance() << "  Converted to: " << method::method_to_str(m) << std::endl;
 			real_methods.push_back(m);
 		} else {
 			Logger::getInstance() << "  Failed to convert: '" << *it << "'" << std::endl;

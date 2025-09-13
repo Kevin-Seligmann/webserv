@@ -29,7 +29,7 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
 	, autoindex(parsed.autoindex)
 	, client_max_body_size(parseBodySize(parsed.client_max_body_size))
 	, locations(parsed.locations)
-	, allow_upload(false) // TODO: falta el allow_upload en ParsedServer
+	, allow_upload(false)
 {
 	if (index_files.empty()) {
 		index_files.push_back("index.html");
@@ -148,8 +148,8 @@ Location* ServerConfig::findLocation(const std::string& path) const {
 Location* ServerConfig::resolveRequest(const std::string& request_path, std::string& final_path) const {
 
 	static int resolve_count = 0;
-	Logger::getInstance() << "RESOLVE_REQUEST #" << ++resolve_count << " path = '" << request_path << "'" << std::endl; 
 
+	// Esto lo puse para encontrar un loop infinito, lo he dejado por si hay problemas con eso.
 	if (resolve_count > 10)
 	{
 		Logger::getInstance().error("RESOLVE REQUEST called too many times - KILLING");
@@ -158,9 +158,6 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 
 	final_path = request_path;
 	Location* location = findLocation(request_path);
-
-	Logger::getInstance() << "Matching inicial: " << request_path << " -> "
-						  << (location ? location->getPath() : "NULL") << std::endl;
 	
 	// Verificar si es un directorio física
 	if (!request_path.empty() && request_path[request_path.length() - 1] != '/') {
@@ -168,7 +165,6 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 		Location* dir_location = findLocation(try_dir_path);
 
 		if (dir_location && dir_location != location) {
-			Logger::getInstance() << "Found directory Location: " << try_dir_path << std::endl;
 
 			std::string phys_path = getDocRoot(dir_location) + request_path;
 			struct stat statbuf;
@@ -176,16 +172,12 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 				final_path = try_dir_path;
 				return dir_location;
 			}
-
-			Logger::getInstance() << "No necesita resolucion de indices (termina != '/')" << std::endl;
 			return location;
 		}
 	}
 
 	std::vector<std::string> indexes = getIndexes(location);
 	std::string doc_root = getDocRoot(location);
-
-	Logger::getInstance() << "Intentando con " << indexes.size() << " index files" << std::endl;
 
 	for (size_t i = 0; i < indexes.size(); ++i) {
 		if (indexes[i].empty()) continue;
@@ -195,23 +187,16 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 
 		if (access(try_physical_path.c_str(), F_OK) == 0) {
 			final_path = try_logic_path;
-			Logger::getInstance() << "Path resuelto a " << final_path << std::endl;
 
 			Location* new_location = findLocation(final_path);
 			if (new_location != location) {
-				Logger::getInstance() << "Rematching (location diferente para final_path): " 
-									  << final_path << " -> "
-									  << (new_location ? new_location->getPath() : "NULL")
-									  << std::endl;
 				return new_location;
 			}
 			else {
-				Logger::getInstance() << "Rematching con mismo location" << std::endl;
 				return location;
 			}
 		}
 	}
-	Logger::getInstance() << "No se encontró archivo índice." << std::endl;
 	return location;
 }
 
@@ -270,7 +255,7 @@ std::string ServerConfig::getErrorPage(int error_code, const Location* location)
 		return it->second;
 	}
 
-	return ""; // TODO implementar paginas default, reemplazar aqui
+	return "";
 }
 
 // getAllowMethods

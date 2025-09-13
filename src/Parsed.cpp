@@ -118,7 +118,7 @@ bool isServerDirective(const std::string& token) {
 bool isLocationDirective(const std::string& token) {
 	return (token == "allow_methods" || token == "root" || token == "index" || 
 			token == "autoindex" || token == "redirect" || token == "cgi_extension" ||
-			token == "allow_upload" || token == "error_page" || token == "body_size");
+			token == "allow_upload" || token == "error_page" || token == "client_max_body_size");
 }
 
 /*
@@ -267,20 +267,30 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 				CODE_ERR("Missing ';' after 'error_page' directive.");
 			}
 		}
-		else if (key == "body_size") {
+		else if (key == "max_body_body_size") {
 			std::string value = tokens[i++];
 			size_t limit = str_to_sizet(value, ULONG_MAX);
 			loc.setMaxBodySize(limit);
 
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
-				CODE_ERR("Missing ';' after 'body_size' directive.");
+				CODE_ERR("Missing ';' after 'client_max_body_size' directive.");
 			}
 		}
-        else
+		else
 		{
-            if (i < tokens.size() && tokens[i] == ";") ++i;
-        }
+			Logger::getInstance() << "Location directive not supported: " << key << std::endl;
+			
+			// Avanzar hasta ; o }
+			while (i < tokens.size() && tokens[i] != ";" && tokens[i] != "}") {
+				++i;
+			}
+			
+			// Saltar ; si existe
+			if (i < tokens.size() && tokens[i] == ";") {
+				++i;
+			}
+		}
 	}
 	if (i < tokens.size() && tokens[i] == "}") ++i;
 

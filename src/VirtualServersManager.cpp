@@ -90,14 +90,15 @@ VirtualServersManager::~VirtualServersManager() {
 void VirtualServersManager::setPolling() {
     Logger::getInstance().info("Starting polling configuration (setPolling)");
     
-    Logger::getInstance() << "Creating sockets for " << _server_configs.size() << " servers" << std::endl;
+//    Logger::getInstance() << "Creating sockets for " << _server_configs.size() << " servers" << std::endl;
     
 	for (std::map<Listen, int>::iterator it = _listen_sockets.begin();
 		it != _listen_sockets.end(); ++it) {
 
 		it->second = createAndBindSocket(it->first);
-		Logger::getInstance() << "Server " << it->first.host << ":" << it->first.port 
-							  << " started on socket FD: " << it->second;
+
+//		Logger::getInstance() << "Server " << it->first.host << ":" << it->first.port 
+//							  << " started on socket FD: " << it->second;
 
 		_wspoll.add(it->second, POLLIN);
 		Logger::getInstance().info("Socket created and added to poll");
@@ -149,39 +150,37 @@ bool VirtualServersManager::isListenSocket(int socket_fd) const {
 
 // ================ CLIENT ================
 
-Client* VirtualServersManager::searchClient(int client_fd) {
+Client* VirtualServersManager::searchClient(int client_fd)
+{
 	
-	Logger::getInstance() << "Searching for client ====" << std::endl;
-
 	std::map<int, Client *>::iterator it = _clients.find(client_fd);
-	if (it != _clients.end()) {
-		Logger::getInstance() << "Found client in _clients" << std::endl;
+	if (it != _clients.end())
+	{
 		return it->second;
 	}
 
-	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); it ++) {
-		Logger::getInstance() << "Checking clients owned fds=" << it->second->ownsFd(client_fd) << std::endl;
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); it ++)
+	{
 		if (it->second->ownsFd(client_fd)) {
-			Logger::getInstance() << "Found client owner of fds" << std::endl;
 			return it->second;
 		}
 	}
-	Logger::getInstance() << "No client found" << std::endl;
 	return NULL;
 }
 
-void VirtualServersManager::disconnectClient(int client_fd) {
-	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
-	
+void VirtualServersManager::disconnectClient(int client_fd)
+{
+	Logger::getInstance() << "Disconnecting client FD: " << client_fd << std::endl;
+
 	_client_to_listen.erase(client_fd);
 
 	std::map<int, Client*>::iterator it = _clients.find(client_fd);
-	if (it != _clients.end()) {
+	if (it != _clients.end())
+	{
 		delete it->second;
 		_clients.erase(it);
 		return ;
 	}
-
 	CODE_ERR("The server tried to find a client that does not exists. This is not possible.");
 }
 
@@ -189,12 +188,15 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 
 void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 	int socket_fd = event.fd;
-	Logger::getInstance() << "Handling event with file descriptor " << socket_fd << std::endl;
 
-	if (event.events & POLLIN && isListenSocket(socket_fd)) {
+	if (event.events & POLLIN && isListenSocket(socket_fd))
+	{
 		handleNewConnection(socket_fd);
-	} else {
-		try {
+	}
+	else
+	{
+		try 
+		{
 			Client* client = searchClient(socket_fd);
 			if (!client)
 				CODE_ERR("A file descriptor that doesn't belong to any client has been found");
@@ -215,24 +217,30 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 				client->process(socket_fd, event.events);
 			}
 				
-		} catch (const std::runtime_error& e) {
+		} 
+		catch (const std::runtime_error& e)
+		{
 			std::cerr << "Exception processing client data: " << e.what() << std::endl;
 			disconnectClient(socket_fd);
 		}
 	}
 }
 
-void VirtualServersManager::handleNewConnection(int listen_fd) {
+void VirtualServersManager::handleNewConnection(int listen_fd)
+{
 	Listen* listen = NULL;
 	for (std::map<Listen, int>::iterator it = _listen_sockets.begin();
-		it != _listen_sockets.end(); ++it) {
-			if (it->second == listen_fd) {
-				listen = const_cast<Listen*>(&it->first);
-				break;
-			}
+		it != _listen_sockets.end(); ++it)
+	{
+		if (it->second == listen_fd)
+		{
+			listen = const_cast<Listen*>(&it->first);
+			break;
+		}
 	}
 	
-	if (!listen) {
+	if (!listen)
+	{
 		return;
 	}
 
@@ -241,7 +249,8 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	socklen_t client_len = sizeof(client_addr);
 
 	int client_fd = accept(listen_fd, (struct sockaddr*)&client_addr, &client_len);
-	if (client_fd < 0) {
+	if (client_fd < 0)
+	{
 		return;
 	}
 
@@ -286,32 +295,40 @@ ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPReques
 	// Consigue cliente
 	std::map<int, Listen>::iterator it = _client_to_listen.find(client_fd);
 	if (it == _client_to_listen.end())
+	{
 		CODE_ERR("Impossible error trying to find server for client " + wss::i_to_dec(client_fd));
+	}
 
 	// Consigue el virtual host
 	std::map<Listen, std::vector<ServerConfig*> >::iterator vh_it = _virtual_hosts.find(it->second);
 	if (vh_it == _virtual_hosts.end())
+	{
 		CODE_ERR("Impossible error trying to find virtual host for client " + wss::i_to_dec(client_fd));
-
+	}
 
 	// Protección de vector de serverConfig vacío
-	if (vh_it->second.empty()) {
+	if (vh_it->second.empty())
+	{
 		CODE_ERR("No server configurations found for " + it->second.host + ":" + wss::i_to_dec(it->second.port));
 	}
 	
 	// Match server con hostname
 	std::string hostname = request.get_host();
-	for (size_t i = 0; i < vh_it->second.size(); ++i) {
-		if (!vh_it->second[i]) {
+	for (size_t i = 0; i < vh_it->second.size(); ++i)
+	{
+		if (!vh_it->second[i])
+		{
 			continue;
 		}
 
-		if (vh_it->second[i]->matchesServerName(hostname)) {
+		if (vh_it->second[i]->matchesServerName(hostname))
+		{
 			return vh_it->second[i];
 		}
 	}
 
-	if (!vh_it->second[0]) {
+	if (!vh_it->second[0])
+	{
 		CODE_ERR("Default server configuration not found for " + it->second.host + ":" + wss::i_to_dec(it->second.port));
 	}
 
@@ -321,62 +338,57 @@ ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPReques
 
 // ================ MAIN LOOP ================
 
-void VirtualServersManager::run() {
-
+void VirtualServersManager::run()
+{
 	setupSignals();
 	s_shutdown_requested = 0;
 
 	Logger::getInstance().info("=========== Starting WEBSERVER ===========");
 
-	try {
+	try
+	{
 		setPolling();
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception& e)
+	{
 		Logger::getInstance().error("Setup falied: " + std::string(e.what()));
 		return;
 	}
 
 	Logger::getInstance().info("=========== WEBSERVER Started. Listening to new requests ===========");
 
-	while (!s_shutdown_requested) {
-
-		Logger::getInstance() << "POLL WAIT START" << std::endl;
-		Logger::getInstance() << "Poll size: " << _wspoll.size() << std::endl;
-
+	while (!s_shutdown_requested)
+	{
 		int incoming = _wspoll.wait();
 
-		Logger::getInstance() << "POLL RETURNED: " << incoming << " events ===" << std::endl;
+//		Logger::getInstance() << "POLL RETURNED: " << incoming << " events ===" << std::endl;
 
-		if (incoming < 0) {
-			if (errno == EINTR){
-				if (s_shutdown_requested) {
+		if (incoming < 0)
+		{
+			if (errno == EINTR)
+			{
+				if (s_shutdown_requested)
+				{
 					break;
 				}
 				continue;
 			}
-
 			Logger::getInstance().error("Wspoll failed: " + std::string(strerror(errno)));
 			break;
 		}
 
-
-		for (int i = 0; i < _wspoll.size(); ++i) {
-
-			Logger::getInstance() << "Checking slot " << i << ": fd=" << _wspoll[i].fd 
-                                  << " events=" << _wspoll[i].events << std::endl;
-
+		for (int i = 0; i < _wspoll.size(); ++i)
+		{
 			if (_wspoll[i].events)
 			{
-				Logger::getInstance() << "*** PROCESSING EVENT: fd=" << _wspoll[i].fd 
-                                      << " events=" << _wspoll[i].events << std::endl;
-
-				try {
+				try
+				{
 					handleEvent(_wspoll[i]);
-					} 
-				catch (const std::exception& e) {
-					Logger::getInstance().error("Critial error handling event: " + std::string(e.what()) + " The server must close. ");
+				} 
+				catch (const std::exception& e)
+				{
 					throw std::exception();
 				}
-				Logger::getInstance() << "*** EVENT PROCESSED: fd=" << _wspoll[i].fd << std::endl;
 			}
 		}
 		checkTimeouts();
