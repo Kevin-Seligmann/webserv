@@ -111,12 +111,16 @@ void Client::handle_processing_request()
 
 void Client::handle_processing_response()
 {
-	if (_response_manager.response_done()) {
-		
+	if (_response_manager.response_done())
+	{	
 		_last_activity = time(NULL);
 
-		if (_request.headers.close_status == RCS_CLOSE || _error.status() >= 400) // será que el method es HEAD?
-		{
+		if (_request.headers.close_status == RCS_CLOSE ||
+			_error.status() == INTERNAL_SERVER_ERROR ||
+			_error.status() == NOT_IMPLEMENTED ||
+			_error.status() == VERSION_NOT_SUPPORTED ||
+			(_request.protocol == "HTTP/1.0" && _request.headers.close_status != RCS_KEEP_ALIVE))
+		{	
 			shutdown(_socket, SHUT_RD);
 			_status = CLOSING;
 		}

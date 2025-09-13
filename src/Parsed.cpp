@@ -166,7 +166,6 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			if (methods.empty())
 				CODE_ERR("allow_methods directive requires at least one method.");
 
-			std::cout << "OUT" << std::endl;
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
 				CODE_ERR("Missing ';' after 'allow_methods' directive");
@@ -527,12 +526,20 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 			server.locations[map_key] = loc;
 		}
-		else {
-			while (i < tokens.size() && tokens[i] != ";")
+		else
+		{
+			Logger::getInstance() << "Directive not supported: " << key << std::endl;
+			while (i < tokens.size() && !tokens[i].empty() &&
+				(tokens[i] != ";" && tokens[i] != "}"))
+			{
 				++i;
+			}
+			if (i < tokens.size() && tokens[i] == ";")
+			{
+				++i;
+			}
 		}
 	}
-	++i;
 
 	applyAutoindex(server);
 	applyAllowMethods(server);
