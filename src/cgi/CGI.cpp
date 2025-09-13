@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/07 18:41:06 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/13 14:54:56 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,11 @@
 
 CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server) : _env()
 {
+	_cgi_status = CGI_INIT;
+
+
 	buildEnv(req, server);
+
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
 	_cgi_pipe[0] = -1;
@@ -165,8 +169,11 @@ void CGI::runCGI()
 {
 	CGIResponse response;
 
+	_cgi_status = CGI_RUNNING;
+
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
+		_cgi_status = CGI_ERROR;
 		response.buildInternalErrorResponse();
 		return ;
 	}
@@ -174,6 +181,7 @@ void CGI::runCGI()
 
 	if (_pid < 0)
 	{
+		_cgi_status = CGI_ERROR;
 		response.buildInternalErrorResponse();
 		return ;
 	}
@@ -183,6 +191,7 @@ void CGI::runCGI()
 		if (dup2(req_pipe[0], STDIN_FILENO) == -1 || 
 			dup2(cgi_pipe[1], STDOUT_FILENO) == -1)
 		{
+			_cgi_status = CGI_ERROR;
 			response.buildInternalErrorResponse();
 			_exit(1);
 		}
@@ -197,6 +206,7 @@ void CGI::runCGI()
 
 		execve(argv[0], argv, envp);
 
+		_cgi_status = CGI_ERROR;
 		response.buildInternalErrorResponse();
         _exit(1);
 
@@ -211,11 +221,14 @@ void CGI::runCGI()
 			ssize_t written = write(_req_pipe[1], _req_body.c_str(), _req_body.size());
 			if (written == -1) 
 			{
+				_cgi_status = CGI_ERROR;
 				response.buildInternalErrorResponse();
 				return ;
 			}
 		}
 		close(_req_pipe[1]);
+
+		_gci_status = CGI_WRITING_BODY;
 
 		char buffer[4096];
 		ssize_t n;
@@ -230,6 +243,20 @@ void CGI::runCGI()
 		int	status_cgi;
 		waitpid(_pid, &status_cgi, 0);
 
+		_gci_status = CGI_READING_OUTPUT;
+
 		response.parseFromCGIOutput(cgi_output);
 		response.buildResponse();
+
+		_gci_status = CGI_FINISHED;
+}
+
+CGIStatus getStatus() const 
+{ 
+	return (_cgi_status);
+}
+
+void setStatus(CGIStatus s) 
+{ 
+	_cgi_status = s;
 }
