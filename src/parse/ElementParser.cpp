@@ -7,11 +7,24 @@ ElementParser::ElementParser(HTTPError & error):_error(error){}
 void ElementParser::parse_method(std::string::iterator & begin, std::string::iterator & end, HTTPMethod & method)
 {
     std::string method_str(begin, end);
+
+    Logger::getInstance() << "=== PARSE METHOD ===" << std::endl;
+    Logger::getInstance() << "Raw method string: '" << method_str << "'" << std::endl;
+    Logger::getInstance() << "Length: " << method_str.length() << std::endl;
+
     wss::to_upper(method_str);
+
+    Logger::getInstance() << "After to_upper: '" << method_str << "'" << std::endl;
+
     method = method::str_to_method(method_str);
+
+    Logger::getInstance() << "Converted to enum: " << method << std::endl;
 
     if (method != NOMETHOD)
         return ;
+
+    Logger::getInstance() << "Method not recognized, checking characters..." << std::endl;
+    
     while (begin != end)
     {
         if (!parse::is_alpha(*begin))
@@ -50,8 +63,12 @@ void ElementParser::parse_query(std::string::iterator & begin, std::string::iter
     query = std::string(begin, end);
     while (begin != end)
     {
-        if (!parse::is_query_char(*begin))
+        if (!parse::is_query_char(*begin)) {
+            Logger::getInstance() << "Non-alpha character found at position " 
+                                  << std::distance(begin, end) << ": " 
+                                  << (int)*begin << std::endl;
             return _error.set("Query, unexpected character", BAD_REQUEST);
+        }
         begin ++;
     }
     percentage_decode(query);

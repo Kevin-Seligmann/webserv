@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <sys/stat.h>
 
 ServerConfig::ServerConfig() 
 	: root("/var/www/html")
@@ -28,7 +29,7 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
 	, autoindex(parsed.autoindex)
 	, client_max_body_size(parseBodySize(parsed.client_max_body_size))
 	, locations(parsed.locations)
-	, allow_upload(false) // falta el allow_upload en ParsedServer
+	, allow_upload(false) // TODO: falta el allow_upload en ParsedServer
 {
 	if (index_files.empty()) {
 		index_files.push_back("index.html");
@@ -49,7 +50,16 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
 		Location default_location;
 		default_location.setPath("/");
 		default_location.setMatchType(Location::PREFIX);
+		default_location.setMethods(allow_methods);
 		locations["/"] = default_location;
+	}
+
+	// Asegurarse que ninguna location se vaya sin heredar el default
+	std::map<std::string, Location>::iterator it = locations.begin();
+	for (; it != locations.end(); ++it) {
+		if (it->second.getMethods().empty()) {
+			it->second.setMethods(allow_methods);
+		}
 	}
 }
 
@@ -152,9 +162,24 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 	Logger::getInstance() << "Matching inicial: " << request_path << " -> "
 						  << (location ? location->getPath() : "NULL") << std::endl;
 	
-	if (request_path.empty() || request_path[request_path.length() - 1] != '/') {
-		Logger::getInstance() << "No necesita resolucion de indices (termina != '/')" << std::endl;
-		return location;
+	// Verificar si es un directorio física
+	if (!request_path.empty() && request_path[request_path.length() - 1] != '/') {
+		std::string try_dir_path = request_path + "/";
+		Location* dir_location = findLocation(try_dir_path);
+
+		if (dir_location && dir_location != location) {
+			Logger::getInstance() << "Found directory Location: " << try_dir_path << std::endl;
+
+			std::string phys_path = getDocRoot(dir_location) + request_path;
+			struct stat statbuf;
+			if (stat(phys_path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+				final_path = try_dir_path;
+				return dir_location;
+			}
+
+			Logger::getInstance() << "No necesita resolucion de indices (termina != '/')" << std::endl;
+			return location;
+		}
 	}
 
 	std::vector<std::string> indexes = getIndexes(location);

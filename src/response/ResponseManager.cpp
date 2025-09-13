@@ -82,7 +82,8 @@ void ResponseManager::generate_response(RM_error_action action)
 				return ;
 			switch (_request.method)
 			{
-				case GET: generate_get_response(); break ;
+				case GET:
+				case HEAD: generate_get_response(); break ;
 				case POST: generate_post_response(); break ;
 				case DELETE: generate_delete_response(); break ;
 				default: CODE_ERR("Not implemented");
@@ -94,10 +95,30 @@ void ResponseManager::generate_response(RM_error_action action)
 
 bool ResponseManager::validate_method()
 {
+
+	Logger::getInstance() << "=== =============== ===" << std::endl;
+	Logger::getInstance() << "=== VALIDATE METHOD ===" << std::endl;
+	Logger::getInstance() << "=== =============== ===" << std::endl;
+    Logger::getInstance() << "Request method: " << _request.method << std::endl;
+
 	std::vector<HTTPMethod> methods = get_allowed_methods();
-	for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it ++)
-		if (*it == _request.method)
+
+	Logger::getInstance() << "Allowed methods count: " << methods.size() << std::endl;
+    for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it++) {
+        Logger::getInstance() << "  Allowed: " << method::method_to_str(*it) << std::endl;
+    }
+
+	for (std::vector<HTTPMethod>::iterator it = methods.begin(); it != methods.end(); it ++) {
+		if (*it == _request.method) {
+			Logger::getInstance() << "Method directly matched!" << std::endl;
 			return true;
+		}
+		if (*it == GET && _request.method == HEAD) {
+			Logger::getInstance() << "HEAD allowed because GET is present!" << std::endl;
+			return true;
+		}
+	}
+	Logger::getInstance() << "HEAD allowed because GET is present!" << std::endl;
 	set_error("Method not allowed", METHOD_NOT_ALLOWED);
 	return false;
 }
@@ -114,6 +135,15 @@ void ResponseManager::generate_get_response()
 
 	Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
 
+	struct stat statbuf;
+    if (stat(final_path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+        if (_request.get_path()[_request.get_path().length() - 1] != '/') {
+            set_error("Directory redirect", MOVED_PERMANENTLY);
+            _redirecting_location = _request.get_path() + "/";
+            return;
+        }
+    }
+
 	_file.open(final_path, O_RDONLY);
 
 	// Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
@@ -129,7 +159,23 @@ void ResponseManager::generate_get_response()
 	}
 	switch (_file.filetype)
 	{
-		case File::REGULAR: prepare_file_reading(); break;
+		case File::REGULAR:
+			if (_request.method == HEAD) {
+				_buffer.put_protocol("HTTP/1.1");
+				_buffer.put_status(_error);
+				_buffer.put_header("Server", "Webserv");
+				_buffer.put_header_time("Date", time(NULL));
+				_buffer.put_header_time("Last-Modified", _file.last_modified());
+				_buffer.put_header_number("Content-Length", _file.size());
+				_buffer.put_header("Content-Type", MediaType::filename_to_type(final_path));
+				_buffer.put_new_line();
+				// No hay body HEAD
+				_file.close();
+				_status = WRITING_RESPONSE;
+				return;	
+			}
+			prepare_file_reading();
+			break;
 		case File::DIRECTORY: read_directory(); break;
 		case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
 	}
@@ -447,21 +493,35 @@ std::vector<HTTPMethod> ResponseManager::get_allowed_methods()
 	std::vector<std::string> methods;
 	std::vector<HTTPMethod> real_methods;
 
+
+    Logger::getInstance() << "=== =================== ===" << std::endl;
+    Logger::getInstance() << "=== GET ALLOWED METHODS ===" << std::endl;
+    Logger::getInstance() << "=== =================== ===" << std::endl;
+
 	if (_location && !_location->getMethods().empty()) {
+       Logger::getInstance() << "Using location methods" << std::endl;
 		methods = _location->getMethods();
 	} 
 	else if (!_server->getAllowMethods().empty()) {
+		Logger::getInstance() << "Using server methods" << std::endl;
 		methods = _server->getAllowMethods();
 	} 
 	else {
+		Logger::getInstance() << "ERROR: No methods found!" << std::endl;
 		CODE_ERR("No methods found");
 	}
 
+	Logger::getInstance() << "String methods count: " << methods.size() << std::endl;
 	for (std::vector<std::string>::const_iterator it = methods.begin(); it != methods.end(); it ++)
 	{
+		Logger::getInstance() << "  String method: '" << *it << "'" << std::endl;
 		HTTPMethod m = method::str_to_method(*it);
-		if (m != NOMETHOD)
+		if (m != NOMETHOD) {
+			Logger::getInstance() << "  Converted to: " << method::method_to_str(m) << std::endl;
 			real_methods.push_back(m);
+		} else {
+			Logger::getInstance() << "  Failed to convert: '" << *it << "'" << std::endl;
+		}
 	}
 
 

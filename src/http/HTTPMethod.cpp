@@ -1,4 +1,5 @@
 #include "HTTPMethod.hpp"
+#include "Logger.hpp"
 
 std::ostream & operator<<(std::ostream & os, HTTPMethod method)
 {
@@ -16,18 +17,31 @@ std::ostream & operator<<(std::ostream & os, HTTPMethod method)
 
 HTTPMethod method::str_to_method(std::string const & str)
 {
-    if (wss::casecmp(str, "GET"))
+    Logger::getInstance() << "str_to_method input: '" << str << "'" << std::endl;
+    if (wss::casecmp(str, "GET")) {
+        Logger::getInstance() << "Matched GET" << std::endl;
         return GET;
-    else if (wss::casecmp(str, "POST"))
+    }
+    else if (wss::casecmp(str, "POST")) {
+        Logger::getInstance() << "Matched POST" << std::endl;
         return POST;
-    else if (wss::casecmp(str, "DELETE"))
+    }
+    else if (wss::casecmp(str, "DELETE")) {
+        Logger::getInstance() << "Matched DELETE" << std::endl;
         return DELETE;
-    else if (wss::casecmp(str, "PUT"))
+    }
+    else if (wss::casecmp(str, "PUT")) {
+        Logger::getInstance() << "Matched PUT" << std::endl;
         return PUT;
-    else if (wss::casecmp(str, "HEAD"))
+    }
+    else if (wss::casecmp(str, "HEAD")) {
+        Logger::getInstance() << "Matched HEAD" << std::endl;
         return HEAD;
-    else
+    }
+    else {
+        Logger::getInstance() << "No match - returning NOMETHOD" << std::endl;
         return NOMETHOD;
+    }
 }
 
 std::string const method::method_to_str(HTTPMethod const & m)
