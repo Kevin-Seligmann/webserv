@@ -75,6 +75,7 @@ void printLocationConfig(const Location& loc)
 	std::cout << YELLOW << "    Autoindex: " << RESET << autoindexToString(loc.getAutoindex()) << std::endl;
 
 	std::cout << YELLOW << "    Root: " << RESET << loc.getRoot() << std::endl;
+	std::cout << YELLOW << "    Alias: " << RESET << loc.getAlias() << std::endl;
 	std::vector<std::string> methods = loc.getMethods();
 	std::cout << YELLOW << "    Allowed Methods:" << RESET << std::endl;
     for (size_t i = 0; i < methods.size(); ++i)

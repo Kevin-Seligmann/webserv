@@ -129,5 +129,8 @@ Methods allowed.
 
 ### upload_max_size: Location (TO be done).
 
+### Alias: Location; Default: None
+
+Defines a replacement for the location. Not possible to use alongside root.
 
 

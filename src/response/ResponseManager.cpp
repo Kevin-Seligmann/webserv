@@ -74,6 +74,7 @@ void ResponseManager::generate_response(RM_error_action action)
                 return ;
             switch (_request.method)
             {
+                case HEAD:
                 case GET: generate_get_response(); break ;
                 case POST: generate_post_response(); break ;
                 case DELETE: generate_delete_response(); break ;
@@ -104,11 +105,11 @@ void ResponseManager::generate_get_response()
 {
     std::string final_path = get_host_path();
 
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET/HEAD response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
 
     _file.open(final_path, O_RDONLY);
 
-    // Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
 
     switch (_file.get_status())
     {
@@ -147,10 +148,11 @@ void ResponseManager::generate_file_status_response()
 void ResponseManager::generate_post_response()
 {
     std::string final_path = get_host_path();
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Procesing POST. File: " + final_path << std::endl;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) j+ ": Procesing POST. File: " + final_path << std::endl;
 
-    _file.open(final_path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-    // Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
+    _file.open(final_path, O_WRONLY | O_CREAT | O_APPEND, 0777);
+    
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Status at opening file: " + wss::ui_to_dec( _file.get_status()) + " Type. " + wss::ui_to_dec( _file.filetype) << std::endl;;
 
     switch (_file.get_status())
     {
@@ -164,10 +166,12 @@ void ResponseManager::generate_post_response()
     switch (_file.filetype)
     {
         case File::REGULAR: break;
-        case File::DIRECTORY: set_error("Can't overwrite a directory", FORBIDDEN); return;
-        case File::NONE: set_error("Rare file type", FORBIDDEN); return;
+        case File::DIRECTORY: set_error("Can't delete a directory", FORBIDDEN); return ;
+        case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
     }
 
+    if (_file.creation_status == File::NEW)
+        _error.set("File created", CREATED);
     _wr_file_it = _request.body.content.begin();
     _status = WRITING_FILE;
 };
@@ -214,6 +218,7 @@ void ResponseManager::prepare_file_reading()
     if (_error.status() == MOVED_PERMANENTLY)
         _buffer.put_header("Location", _redirecting_location);
     _buffer.put_new_line();
+
     _status = READING_FILE;
 }
 
@@ -262,6 +267,12 @@ void ResponseManager::write_file()
         _buffer.put_status(_error);
         _buffer.put_header("Server", "Webserv");
         _buffer.put_header_time("Date", time(NULL));
+        _buffer.put_header_number("Content-Length", 0);
+        if(_error.status() == CREATED)
+        {
+            _buffer.put_header("Location", get_host_path());
+        }
+        _buffer.put_new_line();
         Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
         _status = WRITING_RESPONSE;
     }
@@ -286,8 +297,9 @@ void ResponseManager::read_directory()
     _buffer.put_header_time("Last-Modified", _file.last_modified());
     _buffer.put_header("Content-Type", "text/html");
 
+    // Tester asks for NOT_FOUND. Honestly, makes more sense than FORBIDDEN (As: Index not found)
     if (!is_autoindex())
-        return set_error("Directory listing is forbidden", FORBIDDEN);
+        return set_error("Directory listing is forbidden", NOT_FOUND);
 
     std::string dir_prefix = "";
     if (!_request.uri.path.empty() && _request.uri.path[_request.uri.path.size() - 1] != '/')
@@ -307,7 +319,8 @@ void ResponseManager::read_directory()
 
     _buffer.put_header("Content-Length", wss::i_to_dec(dirs.size()));
     _buffer.put_new_line();
-    _buffer.put_body(dirs);
+    if (_request.method != HEAD)
+        _buffer.put_body(dirs);
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend()) << std::endl;
     _status = WRITING_RESPONSE;
@@ -335,7 +348,8 @@ void ResponseManager::generate_default_status_response()
         if (_error.status() == MOVED_PERMANENTLY)
             _buffer.put_header("Location", _redirecting_location);
         _buffer.put_new_line();
-        _buffer.put_body(error_page);
+        if (_request.method != HEAD)
+            _buffer.put_body(error_page);
     }
 
 
@@ -387,15 +401,14 @@ std::string const ResponseManager::get_host_path()
     // Removed null check because they should never be empty.
     // root_path = "/var/www/html";
 
-    if (_location && !_location->getRoot().empty()) {
-        return _location->getRoot() + _request.get_path();
-    } else if (!_server->getRoot().empty()) {
-        return _server->getRoot() + _request.get_path();
-    } else {
-        CODE_ERR("No root path found");
-    }
-
-    return _location->getRoot() + _request.get_path();
+    std::string path;
+    if (_location)
+        path = _location->getFilesystemLocation(_request.get_path());
+    if (path.empty() && !_server->getRoot().empty())
+        path = _server->getRoot() + _request.get_path();
+    else if (path.empty())
+        CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server->getRoot());
+    return path;
 }
 
 std::vector<HTTPMethod> ResponseManager::get_allowed_methods()

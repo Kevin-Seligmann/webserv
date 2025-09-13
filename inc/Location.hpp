@@ -35,6 +35,7 @@ private:
 	bool									_allow_upload;
 	std::map<int, std::string> 				_error_pages;
 	size_t 									_max_body_size;
+	std::string 							_alias;
 
 public:
 	Location();
@@ -59,6 +60,8 @@ public:
 
     const std::string& getCgiExtension() const { return _cgi_extension; }
 
+	const std::string & getAlias() const {return _alias;}
+
 	bool getAllowUpload() const { return _allow_upload; }
 	
 	std::string getErrorPage(int error_code) const;
@@ -67,6 +70,8 @@ public:
 	
     bool hasAutoindex() const { return _autoindex; }
 
+	std::string getFilesystemLocation(std::string const & path) const;
+	
 	void setPath(const std::string& path) { _path = path; }
 	void setMatchType(const MatchType& match_type) { _match_type = match_type; }
     void setMethods(const std::vector<std::string>& methods) { _methods = methods; }
@@ -78,6 +83,7 @@ public:
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
 	void setErrorPage(int code, const std::string& path) { _error_pages[code]=path; }
 	void setMaxBodySize(size_t max) { _max_body_size = max; }
+	void setAlias(const std::string & alias){_alias = alias;}
 };
 
 #endif

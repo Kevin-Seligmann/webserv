@@ -87,4 +87,9 @@ bool RequestManager::has_error() const
     return _error.status() != OK;
 }
 
+bool RequestManager::close() const
+{
+    return (_request.headers.close_status == RCS_CLOSE || _error.status() >= 400);
+}
+
 HTTPError & RequestManager::gerError(){return _error;}

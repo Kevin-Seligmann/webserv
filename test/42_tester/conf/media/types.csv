@@ -55,6 +55,7 @@ application, vnd.ms-excel, .xls
 application, vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx
 application, vnd.ms-powerpoint, .ppt
 application, vnd.openxmlformats-officedocument.presentationml.presentation, .pptx
+application, octet-stream
 
 font, woff, .woff
 font, woff2, .woff2

@@ -9,6 +9,7 @@ Location::Location()
     , _redirect("")
     , _cgi_extension("")
     , _allow_upload(false)
+    , _alias("")
 {
     _index.push_back("index.html");
 }
@@ -24,6 +25,7 @@ Location::Location(const Location& other)
     , _cgi_extension(other._cgi_extension)
     , _allow_upload(other._allow_upload)
     , _error_pages(other._error_pages)
+    , _alias(other._alias)
 {
 }
 
@@ -46,3 +48,19 @@ std::string Location::getErrorPage(int error_code) const {
     }
     return "";
 } 
+
+std::string Location::getFilesystemLocation(std::string const & path) const
+{
+    if (_alias.size() > 0)
+    {
+        if (path.compare(0, _path.size(), _path) == 0) {
+            return _alias + path.substr(_path.size());
+        }
+        return path;
+    }
+    else if (_root.size() > 0)
+    {
+        return _root + path;
+    }
+    return "";
+}

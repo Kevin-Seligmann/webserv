@@ -281,16 +281,11 @@ void VirtualServersManager::run() {
 	
 		Logger::getInstance() << "Starting to process: " << incoming << " events" << std::endl;
 
-		if (incoming == 0) {
-			checkTimeouts();
-			continue;
-		}
 
 		if (incoming < 0) {
 			Logger::getInstance().error("Wspoll failed: " + std::string(strerror(errno)));
 			break;
 		}
-
 
 		for (int i = 0; i < _wspoll.size(); ++i) {
 			if (_wspoll[i].events)
@@ -305,6 +300,8 @@ void VirtualServersManager::run() {
 			}
 
 		}
+
+		checkTimeouts();
 	}
 
 	Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
@@ -313,19 +310,24 @@ void VirtualServersManager::run() {
 void VirtualServersManager::checkTimeouts() {
 	time_t now = time(NULL);
 	std::vector<int> to_disconnect;
+	std::vector<int> to_close;
 
 	std::map<int, Client*>::iterator it = _clients.begin();
 	for (; it != _clients.end(); ++it) {
-		if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
+		if (it->second->closing() && now - it->second->getLastActivity() > Client::CLOSING_GRACE_PERIOD){
+			to_close.push_back(it->first);
+		}
+		else if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
 			to_disconnect.push_back(it->first);
 		}
-		// If t->second->getStatus() == CLOSING. && now - t->second->getLastActivity() > Client::CLOSING_TIMEOUT
-		// to_disconnect.push_back(it->first);
 	}
 
 	for (size_t i = 0; i < to_disconnect.size(); ++i) {
 		Logger::getInstance().warning("Client " + wss::i_to_dec(to_disconnect[i])
 									  + " timeout");
 		disconnectClient(to_disconnect[i]);
+	}
+	for (size_t i = 0; i < to_close.size(); ++i) {
+		disconnectClient(to_close[i]);
 	}
 }

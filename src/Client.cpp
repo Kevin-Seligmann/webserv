@@ -9,6 +9,7 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 , _response_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 , _status(PROCESSING_REQUEST)
 , _socket(client_fd)
+, _error_retry_count(0)
 , _active_fd(client_fd, POLLIN | POLLRDHUP)
 , _last_activity(time(NULL))
 {
@@ -17,13 +18,16 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 
 Client::~Client() 
 {
-	_vsm.unhookFileDescriptor(_active_fd);
+	if (_active_fd.fd >= 0)
+		_vsm.unhookFileDescriptor(_active_fd);
 	close(_socket);
 }
 
 // Entry point
 void Client::process(int fd, int mode)
 {
+	_last_activity = time(NULL);
+
 	if (fd != _active_fd.fd && !(_active_fd.mode & mode))
 		CODE_ERR("Trying to access client with an invalid socket or mode");
 
@@ -91,22 +95,22 @@ void Client::handle_processing_response()
 	if (_response_manager.is_error())
 		handleRequestError();
 	else if (_response_manager.response_done()) // Handle error
-	{
-		_last_activity = time(NULL);
-		
+	{		
 		// TODO
 		/*  https://man7.org/linux/man-pages/man2/shutdown.2.html SHUT_RD
 			Mientras no exista requestManager->close() usar error >= 400
 		*/
-		// if (true)  // SI requestManager->close()
-		// {
-		// 	//shutdown(socket, WRITE)
-		// 	//status = CLOSING
-		// }
-		// else 
-		// {
+		if (_request_manager.close())
+		{
+			// shutdown(_socket, SHUT_RD);
+			_status = CLOSING;
+			_vsm.unhookFileDescriptor(_active_fd);
+			_active_fd.fd = -1;
+		}
+		else 
+		{
 			prepareRequest();
-		// }
+		}
 	}
 	else 
 	{
@@ -238,7 +242,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK &&
 		_request.get_path().at(_request.get_path().size() - 1) == '/')
 	{
-		std::string root_path;
+		std::string full_path;
 		std::vector<std::string> try_index;
 
 		// Get indexes vector
@@ -252,18 +256,6 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			try_index.push_back("index.html");
 		}
 
-		// Get root path
-		if (*ptr_location && !(*ptr_location)->getRoot().empty()) {
-			root_path = (*ptr_location)->getRoot();
-		}
-		else if (!(*ptr_server_config)->getRoot().empty()) {
-			root_path = (*ptr_server_config)->getRoot();
-		}
-		else {
-			CODE_ERR("No root path found for " + _request.get_path());
-		}
-
-		// Try index files
 		for (size_t i = 0; i < try_index.size(); ++i) {
 
 			if (try_index[i].empty()) {
@@ -278,7 +270,6 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			// bool req_end = _request.get_path()[_request.get_path().size() - 1] == '/';
 			// bool try_index_start = try_index[i][0] == '/';
 
-			std::string full_file_path = _request.uri.path + try_index[i];
 
 			// if (root_end && req_start) {
 			// 	full_file_path = root_path + _request.get_path().substr(1);
@@ -300,14 +291,24 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			// 	full_file_path += "/" + try_index[i];
 			// }
 	
-			Logger::getInstance() << "Trying index: " + full_file_path << std::endl;
+			std::string new_request_path = _request.get_path() + try_index[i];
 
-			if (access((root_path + "/" + full_file_path).c_str(), F_OK) == 0) {
+			// Get root path
+			if (ptr_location)
+				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
+			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
+				full_path = (*ptr_server_config)->getRoot() + new_request_path;
+    		else if (full_path.empty())
+				CODE_ERR("No root path found");
+	
+			Logger::getInstance() << "Trying index: " + new_request_path << " Full: " << full_path << std::endl;
 
-				Logger::getInstance() << "Found: " + full_file_path << std::endl;
+			if (access(full_path.c_str(), F_OK) == 0) {
+
+				Logger::getInstance() << "Found: " + new_request_path << std::endl;
 				
 				// Guardar index encontrado
-				_request.uri.path = full_file_path;
+				_request.uri.path = new_request_path;
 				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 /*				Para un location con configuración para el archivo index en sí 
 				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
@@ -318,4 +319,9 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			}
 		}
 	}
+}
+
+bool Client::closing() const
+{
+	return _status == CLOSING;
 }

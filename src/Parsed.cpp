@@ -216,6 +216,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			loc.setMaxBodySize(limit);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 		}
+		else if (key == "alias"){
+			loc.setAlias(tokens[i++]);
+		}
         else
 		{
             if (i < tokens.size() && tokens[i] == ";") ++i;

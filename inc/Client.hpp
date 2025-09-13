@@ -13,6 +13,7 @@ class Client
 public:
 
     static const int TIMEOUT_SECONDS = 30;
+    static const int CLOSING_GRACE_PERIOD = 1;
     Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
@@ -22,6 +23,7 @@ public:
     void process(int fd, int mode);
     int  getSocket() const;
     int  ownsFd(int fd) const;
+    bool closing() const;
 
 private:
     enum Status {

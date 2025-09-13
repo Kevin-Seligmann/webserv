@@ -23,7 +23,8 @@ class File
 {
 public:
     enum filetype {NONE, REGULAR, DIRECTORY};
-    enum descriptor_status {OK, NOTFOUND, NOPERM, BADFILENAME, RAREFILE, ERROR};
+    enum descriptor_status {EXISTS, OK, NOTFOUND, NOPERM, BADFILENAME, RAREFILE, ERROR};
+    enum creation_status {S_NONE, NEW, OLD};
 
     File(std::string const & path, int mode);
     File();
@@ -40,7 +41,8 @@ public:
 
     int fd;
     enum filetype filetype;
-
+    enum creation_status creation_status;
+    
 private:
     struct stat _statbuf;
     DIR * _dir;

@@ -5,6 +5,7 @@ namespace status
 std::string const & status_to_text(Status const & status) 
 {
     static const std::string ok = "Ok (200)";
+    static const std::string created = "Created (201)";
     static const std::string moved_permanently = "Moved permanentyl (301)";
     static const std::string bad_request = "Bad Request (400)";
     static const std::string forbidden = "Forbidden (403)";
@@ -23,6 +24,7 @@ std::string const & status_to_text(Status const & status)
     switch (status)
     {
         case OK: return ok;
+        case CREATED: return created;
         case MOVED_PERMANENTLY: return moved_permanently;
         case BAD_REQUEST: return bad_request;
         case FORBIDDEN: return forbidden;
@@ -43,6 +45,7 @@ std::string const & status_to_text(Status const & status)
 std::string const & stoa(Status const & status) 
 {
     static const std::string ok = "200";
+    static const std::string created = "201";
     static const std::string moved_permanently = "301";
     static const std::string bad_request = "400";
     static const std::string forbidden = "403";
@@ -60,6 +63,7 @@ std::string const & stoa(Status const & status)
     switch (status)
     {
         case OK: return ok;
+        case CREATED: return created;
         case MOVED_PERMANENTLY: return moved_permanently;
         case BAD_REQUEST: return bad_request;
         case FORBIDDEN: return forbidden;
@@ -82,6 +86,7 @@ StatusType status_type(Status const & status)
     switch (status)
     {
         case OK:
+        case CREATED:
             return STYPE_REGULAR_RESPONSE;
         case MOVED_PERMANENTLY:
         case NO_STATUS:
