@@ -14,6 +14,8 @@ public:
 
     static const int TIMEOUT_SECONDS = 30;
     static const int CLOSING_GRACE_PERIOD = 1;
+    static const int KEEP_ALIVE_TIMEOUT = 5;
+
     Client(VirtualServersManager & vsm, int client_fd);
 
     ~Client();
@@ -21,8 +23,9 @@ public:
     time_t getLastActivity() const { return _last_activity; }
 
     void process(int fd, int mode);
-    int  getSocket() const;
-    int  ownsFd(int fd) const;
+
+    int getSocket() const { return _socket; }
+    int ownsFd(int fd) const { return fd == _socket || fd == _active_fd.fd; }
     bool closing() const;
 
 private:
@@ -61,8 +64,9 @@ private:
     void prepareRequest();
 
     bool isCgiRequest(Location* location, const std::string& path);
+    bool isKeepAlive() const;
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
+
 	void get_config(ServerConfig ** server, Location ** location);
-    void get_status_config(ServerConfig ** ptr_server_config, Location ** ptr_location);
 };

@@ -231,3 +231,21 @@ size_t str_to_sizet(const std::string& str, size_t max_value) {
 
 	return static_cast<size_t>(base);    
 }
+
+std::string normalizePath(const std::string& base, const std::string& path) {
+	std::string result;
+	
+	if (!base.empty() && base[base.length() - 1] == '/') {
+		result = base.substr(0, base.length() - 1);
+	} else {
+		result = base;
+	}
+
+	if (path.empty() || path[0] != '/') {
+		result += "/" + path;
+	} else {
+		result += path;
+	}
+
+	return result;
+}

@@ -61,4 +61,6 @@ void ERRORlogsEntry(const std::string& title, const std::string& str);
 // String to size_t
 size_t str_to_sizet(const std::string& str, size_t max_value);
 
+std::string normalizePath(const std::string& base, const std::string& path);
+
 #endif

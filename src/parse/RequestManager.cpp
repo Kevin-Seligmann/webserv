@@ -12,6 +12,10 @@ RequestManager::~RequestManager(){delete _sys_buffer;};
 
 void RequestManager::process()
 {
+
+    Logger::getInstance() << "RequestManager::process - using FD: " 
+                         << _sys_buffer->_fd << std::endl;
+                         
     bool parse = true;
     bool has_read = false;
 
