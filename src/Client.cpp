@@ -54,6 +54,9 @@ void Client::prepareRequest()
 
 void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
 {
+	if (0)
+		Logger::getInstance() << _request << std::endl;
+	
 	_response_manager.new_response();
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
@@ -83,7 +86,7 @@ void Client::handle_processing_request()
 	else if (_error.status() != OK)
 	{
 		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
-		Logger::getInstance() << "Request: " << _request << std::endl;
+		// Logger::getInstance() << "Request: " << _request << std::endl;
 		handleRequestError();
 	}
 }

@@ -42,9 +42,9 @@ public:
     ActiveFileDescriptor get_active_file_descriptor();
 
 private:
-    static const size_t _WRITE_BUFFER_SIZE = 2000;
-    static const size_t _READ_FILE_BUFFER_SIZE = 2000;
-    static const size_t _WRITE_FILE_BUFFER_SIZE = 2000;
+    static const size_t _WRITE_BUFFER_SIZE = 200000;
+    static const size_t _READ_FILE_BUFFER_SIZE = 200000;
+    static const size_t _WRITE_FILE_BUFFER_SIZE = 200000;
 
     HTTPRequest & _request;
     HTTPError & _error;    

@@ -16,8 +16,8 @@ const size_t RequestParser::FIRST_LINE_MAX_LENGTH = 8000;
 const size_t RequestParser::HEADER_LINE_MAX_LENGTH = 8000;
 const size_t RequestParser::MAX_HEADER_FIELDS = 100;
 const size_t RequestParser::MAX_TRAILER_FIELDS = 20;
-const size_t RequestParser::MAX_CONTENT_LENGTH = 1*512*1024;
-const size_t RequestParser::MAX_CHUNK_SIZE = 1*512 *1024;;
+const size_t RequestParser::MAX_CONTENT_LENGTH = 1024*1024*1024;
+const size_t RequestParser::MAX_CHUNK_SIZE = 1024*1024*1024;;
 const size_t RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH = 200;
 
 RequestParser::RequestParser(HTTPRequest & request, HTTPError & error, ElementParser & element_parser)
@@ -71,6 +71,8 @@ bool RequestParser::test_first_line()
 bool RequestParser::test_chunk_size()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
+    if (_processing)
+        Logger::getInstance() << "Chunk size: " << std::string(_begin, _end) <<std::endl;
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
     {
         _error.set("Chunk size line too long", BAD_REQUEST);
@@ -81,7 +83,13 @@ bool RequestParser::test_chunk_size()
 
 bool RequestParser::test_chunk_body()
 {
-    return _buffer.get_chunk(_chunk_length, _begin, _end);
+    _processing = _buffer.get_crlf_chunk(_chunk_length, _begin, _end);
+    if (_processing && (*(_end - 1) != '\n' || *(_end - 2) != '\r'))
+    {
+        _error.set("Expected new line at the end of chunked request", BAD_REQUEST);
+        return false;
+    }
+    return _processing;
 }
 
 bool RequestParser::test_body()
@@ -126,11 +134,16 @@ bool RequestParser::test_header_line()
     _header_field_count ++;
     if (_begin == _end)
     {
-        if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
-            _status = PRS_CHUNKED_SIZE;
-        else
-            _status = PRS_BODY;
-        return true;
+        process_headers();
+        if (_error.status() == OK)
+        {
+            if (!_request.headers.transfer_encodings.empty() && _request.headers.transfer_encodings.back().name == "chunked")
+                _status = PRS_CHUNKED_SIZE;
+            else
+                _status = PRS_BODY;
+            return true;
+        }
+        return false;
     }
     return _processing;
 }
@@ -239,6 +252,7 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
+    Logger::getInstance() << "Chunked received size: " << std::string(_begin, _end).size() << std::endl;
     _request.body.content += std::string(_begin, _end);
     _status = PRS_CHUNKED_SIZE;
 }

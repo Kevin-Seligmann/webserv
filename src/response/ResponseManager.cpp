@@ -392,7 +392,7 @@ void ResponseManager::write_response()
     }
 }
 
-bool ResponseManager::response_done(){return _buffer.size() == 0;}
+bool ResponseManager::response_done(){return _status == WRITING_RESPONSE && _buffer.size() == 0;}
 
 
 std::string const ResponseManager::get_host_path()
