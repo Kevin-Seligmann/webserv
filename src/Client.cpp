@@ -227,7 +227,7 @@ bool Client::isCgiRequest(Location* location, const std::string& path)
 {
 	(void)location;
 
-	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.txt");
+	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.csv");
 
 	for (size_t i = 0; i < cgi_extensions.size(); ++i) 
 	{
