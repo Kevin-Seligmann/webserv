@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/14 16:08:19 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/14 16:13:20 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 
 CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server) : _env()
 {
-	(void) client_fd;
-
 	_cgi_status = CGI_INIT;
 
 

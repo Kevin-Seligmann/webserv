@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 13:35:56 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/14 16:37:57 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # pragma once
 
+# include <algorithm>
 # include <arpa/inet.h>
 # include <climits>
 # include <cstring>
@@ -45,6 +46,9 @@ enum ParsingMessageType {
 
 /* Check input file function */
 int checkFile(const char* argv);
+
+/* Download extencions for CGI*/
+std::vector<std::string> loadCgiExtensions(const std::string& filename)
 
 /* Function for getting real localhost */
 std::string getLoopbackAddress();

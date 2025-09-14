@@ -223,12 +223,24 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 	_active_fd = newfd;
 }
 
-bool Client::isCgiRequest(Location* location, const std::string& path) {
-	// Implement CGI detection based on location configuration
+bool Client::isCgiRequest(Location* location, const std::string& path)
+{
 	(void)location;
-	(void)path;
-	return path.find(".cgi") != std::string::npos; // true si uri de la request termina en cgi
+
+	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.txt");
+
+	for (size_t i = 0; i < cgi_extensions.size(); ++i) 
+	{
+		const std::string& ext = cgi_extensions[i];
+		if (path.size() >= ext.size() &&
+			path.compare(path.size() - ext.size(), ext.size(), ext) == 0)
+		{
+			return (true);
+		}
+	}
+	return (false);
 }
+
 
 void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
 {

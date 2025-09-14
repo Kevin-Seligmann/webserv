@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 19:07:50 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/14 16:36:11 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,20 @@ std::string autoindexToString(AutoIndexState state)
         case AINDX_LOC_ON:   return "LOCATION_ON";
         default:             return "UNKNOWN";
     }
+}
+
+std::vector<std::string> loadCgiExtensions(const std::string& filename) {
+	std::vector<std::string> extensions;
+	std::ifstream file(filename.c_str());
+	std::string line;
+
+	while (std::getline(file, line))
+	{
+		if (!line.empty())
+			extensions.push_back(line);
+	}
+
+	return (extensions);
 }
 
 void printLocationConfig(const Location& loc)
