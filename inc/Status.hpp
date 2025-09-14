@@ -6,6 +6,8 @@
 enum Status {
     NO_STATUS = 0,
     OK = 200,
+    CREATED = 201,
+    MOVED_PERMANENTLY = 301,
     BAD_REQUEST = 400,
     FORBIDDEN = 403,
     NOT_FOUND = 404,
@@ -21,8 +23,9 @@ enum Status {
 };
 
 enum StatusType {
-    STYPE_IMMEDIATE_RESPONSE,
-    STYPE_GENERATE_RESPONSE
+    STYPE_EMPTY_ERROR_RESPONSE,
+    STYPE_BODY_ERROR_RESPONSE,
+    STYPE_REGULAR_RESPONSE
 };
 
 namespace status {

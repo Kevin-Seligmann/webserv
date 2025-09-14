@@ -1,7 +1,3 @@
-### Notes:
-
-Now there's a fd for epoll_create, a epoll_fd. Somewhere, in a class or in server.
-
 # Classes
 
 This document gives an overview of the class diagram classes. The objetive is to define enough details to make sure that the class diagram will be feasubke to implmenet with the tools c++ provides and the objetives of the project.

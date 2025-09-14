@@ -16,6 +16,7 @@
 # pragma once
 
 # include <arpa/inet.h>
+# include <climits>
 # include <cstring>
 # include <fstream>
 # include <ifaddrs.h>
@@ -34,7 +35,7 @@ class Location;
 struct ParsedServer;
 # include "StringUtil.hpp"
 
-# define CODE_ERR(str) (throw std::runtime_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
+# define CODE_ERR(str) (throw std::logic_error(std::string(str) + " at " + __FILE__ + ":" + wss::i_to_dec(__LINE__)))
 
 enum ParsingMessageType {
     DEFAULT_SERVER,
@@ -56,5 +57,8 @@ void printParsingMessage(ParsingMessageType type);
 /* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);
 void ERRORlogsEntry(const std::string& title, const std::string& str);
+
+// String to size_t
+size_t str_to_sizet(const std::string& str, size_t max_value);
 
 #endif

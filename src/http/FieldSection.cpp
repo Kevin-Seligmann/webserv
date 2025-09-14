@@ -30,27 +30,15 @@ void FieldSection::print(std::ostream & os) const
 {
     for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); it ++)
         os << "\t" << it->first << ": "  << it->second << std::endl;
-    os << "\tHeader parsed data... "
+    
+    os << "\n\tHeader parsed data... "
     << " port: " << port
     << " host: " << host
     << " content-length: " << content_length;
 
-    for (std::vector<Coding>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
-    {
-        os << it->name << " ";
-        for (std::vector<std::pair<std::string, std::string> >::const_iterator params = it->parameters.begin(); params != it->parameters.end(); params ++)
-        {
-            os << "param: " << params->first << "=" << params->second;
-            if (params + 1 != it->parameters.end())
-                os << "; ";
-        }
-        if (it + 1 != transfer_encodings.end())
-            os << ", ";
-    }
-
     if (transfer_encodings.size() > 0)
     {
-        os << "\n\ttransfer-encodings: ";
+        os << "\n\ttransfer-encodings " << transfer_encodings.size() << ": ";
         for (std::vector<Coding>::const_iterator it = transfer_encodings.begin(); it != transfer_encodings.end(); it ++)
         {
             os << it->name << " ";

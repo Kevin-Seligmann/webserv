@@ -41,6 +41,12 @@ void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 				name_to_hostports[server.server_names[n]].insert(key);
 			}
 		}
+
+		for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); loc_it ++)
+		{
+			if (loc_it->second.getAlias().size() > 0 && loc_it->second.getRoot().size() > 0)
+				throw std::runtime_error("Root and alias are incompatible");
+		}
 	}
 
 	std::map<ListenKey, std::vector<const ParsedServer*> >::iterator it1 = listen_map.begin();

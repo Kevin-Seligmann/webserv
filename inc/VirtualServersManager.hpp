@@ -1,7 +1,19 @@
 #ifndef VIRTUAL_SERVERS_MANAGER_HPP
 #define VIRTUAL_SERVERS_MANAGER_HPP
 
-#include "Server.hpp"
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <arpa/inet.h>
+#include <stdexcept>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstring>
+#include "Wspoll.hpp"
+#include "ServerConfig.hpp"
 #include "HTTPRequest.hpp"
 #include "RequestManager.hpp"
 #include "HTTPError.hpp"
@@ -11,99 +23,112 @@
 #include "Location.hpp"
 #include "HTTPMethod.hpp"
 #include "Status.hpp"
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-#include <arpa/inet.h> 		// INET_ADDRSTRL
-#include <stdexcept>
-#include <unistd.h>			// close()
-#include <sys/socket.h>		// accept(), socket functions
-#include <netinet/in.h>		// sockaddr_in
-#include <cstring>			// memset()
-#include <sys/epoll.h>		// epoll
-
+#include "Listen.hpp"
+#include "Client.hpp"
 
 class VirtualServersManager {
-public:
-	struct ClientState {
-		HTTPRequest 	request;
-		HTTPError		error;
-		ElementParser	element_parser;
-		RequestManager request_manager;
-		ResponseManager response_manager;
-	
-		enum Status {
-			READING_REQUEST,
-			PROCESSING_REQUEST,
-			WRITING_RESPONSE,
-			WAITING_FILE,
-			WAITING_CGI,
-			CLOSING,
-			CLOSED
-		};
-		Status status;
-
-		ClientState(int client_fd)
-			: element_parser(error)
-			, request_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-			, response_manager(request, error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-			, status(READING_REQUEST)
-			{}
-
-		~ClientState() {
-		}
-		
-		bool isRequestComplete() const {
-			return request_manager.request_done();
-		}
-
-		bool hasError() const {
-			return error.status() != OK;
-		}
-	
-		static std::map<int, ClientState*> client_states;
-		static ClientState* getOrCreateClientState(int client_fd);
-		static void cleanupClientState(int client_fd);
-	};
 
 private:
-	std::vector<Server>             _servers;
-	int                             _epoll_fd;
-	std::vector<struct epoll_event> _events;
-	std::vector<int>                _client_fds;
-	std::map<Listen, int>			_listen_sockets;
-	std::map<Listen, std::vector<ServerConfig*> >	_virtual_host;
+	std::vector<ServerConfig>						_server_configs; // Todas las configuraciones
+	std::map<Listen, std::vector<ServerConfig*> >	_virtual_hosts; // Listen, configs
+	std::map<Listen, int>							_listen_sockets; // Listen, socket_fd
+	std::map<int, Listen>							_client_to_listen; // client_fd to Listen, para llegar al vhost
+    std::map<int, Client*>                          _clients;
 
-	void setupEpoll();
-	bool isServerFD(int fd) const;
-	int findServerIndex(int fd) const;
+	Wspoll                                          _wspoll;
+ 
+	// Métodos privados de socket management
+	int createAndBindSocket(const Listen& listen);
+    bool isListenSocket(int fd) const;
+	// Listen* findListenBySocketFd(int fd);
+    void handleEvent(const struct Wspoll_event event);
+	void handleNewConnection(int listen_fd);
+	void setPolling();
 	void disconnectClient(int client_fd);
-	void handleEvent(const struct epoll_event& event);
-	void handleClientData(int client_fd);
-	void handleNewConnection(int server_index);
+    // ServerConfig* matchServerConfig(const std::vector<ServerConfig*>& vhost, const std::string& hostname);
 	
-	// metodos de request
-	void processCompleteRequest(int client_fd, HTTPRequest& request);
-	Server* findServerForRequest(const HTTPRequest& request);
-	Location* findLocationForRequest(const HTTPRequest& request, const Server* server);
-	bool isMethodAllowed(Server* server, Location* location, HTTPMethod method);
-	void sendErrorResponse(int client_fd, int status_code, const std::string& message);
-	void sendErrorResponse(int client_fd, const HTTPError& error);
-	
-	// proceso y aux de cgi
-	bool isCgiRequest(Location* location, const std::string& path);
-	void processCgiRequest(int client_fd, HTTPRequest& request, Location* location);
-	void processStaticRequest(int client_fd, Location* location);
-	
-	void temp_sendSimpleResponse(int client_fd);
+    Client* searchClient(int client_fd);
 
 public:
-	VirtualServersManager();
+    VirtualServersManager();
 	VirtualServersManager(const ParsedServers& configs);
 	~VirtualServersManager();
-	void run();
-};
 
+	void run();
+
+    void hookFileDescriptor(const ActiveFileDescriptor& actf);
+    void unhookFileDescriptor(const ActiveFileDescriptor& actf);
+    void swapFileDescriptor(const ActiveFileDescriptor& oldfd, const ActiveFileDescriptor& newfd);
+
+    ServerConfig* findServerConfigForRequest(const HTTPRequest& request, int client_fd);
+    void checkTimeouts();
+};
 #endif
+
+/*
+                        PARSEO (ParsedServers)
+                            |
+                            | Constructor VSM
+                            v
+    ┌──────────────────────────────────────────────────────────┐
+    │               VirtualServersManager                      │
+    │                                                          │
+    │  ┌──────────────────────────────────────────────┐        │
+    │  │ _server_configs: vector<ServerConfig>        │<───────│─── OWNERSHIP
+    │  │ [0] ServerConfig { names, locations, ... }   │        │    (datos completos)
+    │  │ [1] ServerConfig { names, locations, ... }   │        │
+    │  │ [2] ServerConfig { names, locations, ... }   │        │
+    │  └──────────────────────────────────────────────┘        │
+    │           │ ^                                            │
+    │           │ │ Punteros                                   │
+    │           v │                                            │
+    │  ┌──────────────────────────────────────────────┐        │
+    │  │ _virtual_hosts: map<Listen, vector<SC*>>    │<────────│─── MAPEO LÓGICO
+    │  │ {127.0.0.1:80} -> [SC*0, SC*1]              │         │    (referencias)
+    │  │ {127.0.0.1:443} -> [SC*2]                   │         │
+    │  └──────────────────────────────────────────────┘        │
+    │           │                                              │
+    │           │ createAndBindSocket()                        │
+    │           v                                              │
+    │  ┌──────────────────────────────────────────────┐        │
+    │  │ _listen_sockets: map<Listen, int>            │<───────│─── SOCKETS FÍSICOS
+    │  │ {127.0.0.1:80} -> fd:3                       │        │    (file descriptors)
+    │  │ {127.0.0.1:443} -> fd:4                      │        │
+    │  └──────────────────────────────────────────────┘        │
+    │           │                                              │
+    │           │ accept() → client_fd                         │
+    │           v                                              │
+    │  ┌──────────────────────────────────────────────┐        │
+    │  │ _client_to_listen: map<int, Listen>          │<───────│─── TRACKING CLIENTES
+    │  │ client_fd:5 -> {127.0.0.1:80}                │        │
+    │  │ client_fd:6 -> {127.0.0.1:80}                │        │
+    │  └──────────────────────────────────────────────┘        │
+    │           │                                              │
+    │           │ new Client()                                 │
+    │           v                                              │
+    │  ┌──────────────────────────────────────────────┐        │
+    │  │ _clients: map<int, Client*>                  │<───────│─── OBJETOS CLIENTE
+    │  │ fd:5 -> Client* ───┐                         │        │
+    │  │ fd:6 -> Client*    │                         │        │
+    │  └────────────────────┼─────────────────────────┘        │
+    └───────────────────────┼──────────────────────────────────┘
+                            │
+                            v
+    ┌───────────────────────────────────────────────────────┐
+    │                    Client                             │
+    │  _socket: 5                                           │
+    │  _vsm: VirtualServersManager&                         │
+    │  _request: HTTPRequest { host: "example.com" }        │
+    │                                                       │
+    │  get_config(&server, &location)                       │
+    │      │                                                │
+    │      ├─> vsm.getServerConfig(_socket, _request)       │
+    │      │       │                                        │
+    │      │       ├─> _client_to_listen[5] → Listen        │
+    │      │       ├─> _virtual_hosts[Listen] → [SC*]       │
+    │      │       └─> matchServerConfig(vhosts, host)      │
+    │      │                                                │
+    │      └─> server->findLocation(path)                   │
+    └───────────────────────────────────────────────────────┘
+
+    */

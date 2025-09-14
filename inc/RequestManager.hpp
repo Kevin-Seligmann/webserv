@@ -18,6 +18,8 @@ public:
 
     void process();
     bool request_done() const;
+    bool has_error() const;
+    bool close() const;
     void new_request();
     HTTPError & gerError();
 

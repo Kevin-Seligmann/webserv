@@ -17,5 +17,6 @@
 
 void	applyAutoindex(ParsedServer& server);
 void	applyAllowMethods(ParsedServer& server);
+void	applyIndexFiles(ParsedServer& server);
 
 #endif

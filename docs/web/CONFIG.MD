@@ -117,7 +117,7 @@ Allos POST requests that upload content natively (Not through CGI)
 
 ### upload_dir: Server, Location; Default: all
 
-Not implemented
+Not implemented (To be done)
 
 ### Return: Server, Location
 
@@ -127,5 +127,10 @@ Not implemented
 
 Methods allowed.
 
+### upload_max_size: Location (TO be done).
+
+### Alias: Location; Default: None
+
+Defines a replacement for the location. Not possible to use alongside root.
 
 

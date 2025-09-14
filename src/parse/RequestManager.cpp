@@ -32,7 +32,10 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_header_line();
                 if (_error.status() == OK && _request_parser.get_status() != RequestParser::PRS_HEADER_LINE)
+                {
+                    _request_parser.process_headers();
                     _validator.validate_headers(_request, _request.headers);
+                }
                 break ;
             case RequestParser::PRS_BODY:
                 parse = _request_parser.test_body();
@@ -77,6 +80,16 @@ bool RequestManager::request_done() const
 void RequestManager::new_request()
 {
     _error.set("", OK); _request.reset(); _request_parser.new_request();
+}
+
+bool RequestManager::has_error() const 
+{
+    return _error.status() != OK;
+}
+
+bool RequestManager::close() const
+{
+    return (_request.headers.close_status == RCS_CLOSE || _error.status() >= 400);
 }
 
 HTTPError & RequestManager::gerError(){return _error;}

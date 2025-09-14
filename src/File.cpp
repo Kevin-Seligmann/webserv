@@ -69,13 +69,33 @@ void File::destroy_current()
 
 void File::open_file(std::string const & path, int mode, int f)
 {
+    creation_status = S_NONE;
     status = OK;
-    fd = ::open(path.c_str(), mode, f);
+
+    int wants_creation = mode & O_CREAT;
+    if (wants_creation)
+    {
+        fd = ::open(path.c_str(), mode & ~O_CREAT, f);
+        creation_status = OLD;
+        if (fd == -1 && errno == ENOENT)
+        {
+            fd = ::open(path.c_str(), mode, f);
+            creation_status = NEW;
+        }
+    }
+    else
+    {
+        fd = ::open(path.c_str(), mode, f);
+        creation_status = OLD;
+    }
+
     if (fd == -1)
     {
+        creation_status = S_NONE;
         handle_error();
         return ;
     }
+
     if (fstat(fd, &_statbuf) == -1)
     {
         handle_error();
@@ -110,6 +130,7 @@ void File::handle_error()
         case EPERM:
         case EROFS:
         case EFAULT:
+        case EEXIST: status = EXISTS; return ;
         case EACCES: status = NOPERM; return ;
         case EINVAL: status = BADFILENAME; return ;
         default: status = ERROR; return ;

@@ -75,6 +75,7 @@ void printLocationConfig(const Location& loc)
 	std::cout << YELLOW << "    Autoindex: " << RESET << autoindexToString(loc.getAutoindex()) << std::endl;
 
 	std::cout << YELLOW << "    Root: " << RESET << loc.getRoot() << std::endl;
+	std::cout << YELLOW << "    Alias: " << RESET << loc.getAlias() << std::endl;
 	std::vector<std::string> methods = loc.getMethods();
 	std::cout << YELLOW << "    Allowed Methods:" << RESET << std::endl;
     for (size_t i = 0; i < methods.size(); ++i)
@@ -195,3 +196,38 @@ void ERRORlogsEntry(const std::string& title, const std::string& str) {
 	std::cout << RED << title << RESET << str << std::endl;
 }
 
+size_t str_to_sizet(const std::string& str, size_t max_value) {
+    if (str.empty()) {
+        return 0;
+    }
+
+	char* endptr = NULL;
+	unsigned long base = strtoul(str.c_str(), &endptr, 10);
+
+	if (base == 0 || base == ULONG_MAX) {
+		return 0;
+	}
+
+	if (*endptr != '\0') {
+		switch (std::toupper(*endptr)) {
+			case 'K':
+				base *= 1024UL;
+				break;
+			case 'M':
+				base *= 1024UL * 1024UL;
+				break;
+			case 'G':
+				base *= 1024UL * 1024UL * 1024UL;
+				break;
+		default:
+			// Si el sufijono es valido se usa el valor inicial bruto
+			break;
+		}
+	}
+
+	if (base > max_value) {
+		return max_value;
+	}
+
+	return static_cast<size_t>(base);    
+}

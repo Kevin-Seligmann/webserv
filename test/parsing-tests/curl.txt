@@ -1,0 +1,21 @@
+
+# Curl options (verbose: See headers, trace/trace-ascii: See body)
+verbose
+# trace-ascii -
+# trace -
+http1.1
+ipv4
+noproxy *
+
+# Request
+url = localhost:1234
+request-target = http://localhost:1234/s2
+header = "Host: s3:82"
+header = "Content-Type: application/javascript"
+
+# Post request  
+request = DELETE
+# data-binary = @post
+
+# Cookie output
+#cookie-jar = cookies.txt

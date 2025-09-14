@@ -207,7 +207,7 @@ void RequestParser::parse_header_line()
 
     _request.headers.put(name, value);
 
-    process_headers();
+    // process_headers();
 }
 
 void RequestParser::parse_body()

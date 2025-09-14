@@ -35,7 +35,6 @@ struct ParsedServer {
 	std::map<int, std::string> error_pages;
 	std::vector<std::string> allow_methods;
 	AutoIndexState autoindex;
-//	bool autoindex;
 	std::string client_max_body_size;
 	std::map<std::string, Location> locations;
 

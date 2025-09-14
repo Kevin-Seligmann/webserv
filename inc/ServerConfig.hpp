@@ -9,14 +9,15 @@
 #include "Enums.hpp"
 
 struct ServerConfig {
-    std::vector<std::string> server_names;
-    std::string root;
-    std::vector<std::string> index_files;
-    std::map<int, std::string> error_pages;
-    std::vector<std::string> allow_methods;
-    AutoIndexState autoindex;
-    size_t client_max_body_size;
+    std::vector<std::string>        server_names;
+    std::string                     root;
+    std::vector<std::string>        index_files;
+    std::map<int, std::string>      error_pages;
+    std::vector<std::string>        allow_methods;
+    AutoIndexState                  autoindex;
+    size_t                          client_max_body_size;
     std::map<std::string, Location> locations;
+    bool                            allow_upload;
 
     ServerConfig();
     ServerConfig(const ParsedServer& parsed);
@@ -25,11 +26,31 @@ struct ServerConfig {
 
     bool matchesServerName(const std::string& hostname) const;
     Location* findLocation(const std::string& path, bool resolve_index = true) const;
-    std::string getErrorPage(int error_code) const;
     bool isMethodAllowed(const std::string& method) const;
-    bool isAutoIndexEnabled() const;
+    bool getAutoindex() const;
+    AutoIndexState getAutoindex(const Location* location) const;
     std::string getClientMaxBodySizeString() const;
     std::string getDebugInfo() const;
+
+    const std::vector<std::string>& getServerNames() const { return server_names; }
+
+    const std::string& getRoot() const { return root; }
+
+    const std::vector<std::string>& getIndexFiles() const { return index_files; }
+
+    std::string getErrorPage(int error_code, const Location* location = NULL) const;
+
+    const std::vector<std::string>& getAllowMethods() const { return allow_methods; }
+    const std::vector<std::string>& getAllowMethods(const Location* location) const;
+
+    size_t getClientMaxBodySize() const { return client_max_body_size; }
+
+    const std::map<std::string, Location>& getLocations() const;
+    
+    bool getAllowUpload() const { return allow_upload; }
+
+    std::string getServerNamesString() const;
+    bool isDefaultServer() const;
 
 private:
     size_t parseBodySize(const std::string& size_str) const;

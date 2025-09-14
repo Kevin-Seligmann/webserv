@@ -109,6 +109,12 @@ size_t expect(const std::vector<std::string>& tokens, size_t i, const std::strin
 	return (i + 1);
 }
 
+/*
+TODO
+En parseLocation
+error_page
+debería validar que los archivos existan al parsear el path
+*/
 Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
 	Location loc;
@@ -122,7 +128,8 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	else if (tokens[i] == "~" || tokens[i] == "~*") {
 		throw std::runtime_error("Invalid regex location");
 	}
-	else {
+	else if (loc.getMatchType() == Location::UNSET) {
+		loc.setMatchType(Location::PREFIX);
 		loc.setPath(tokens[i]);
 		++i;
 	}
@@ -149,7 +156,15 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "index")
 		{
-			if (i < tokens.size()) loc.setIndex(tokens[i++]);
+			std::vector<std::string> index_vec;
+			while (i < tokens.size() && tokens[i] != ";") {
+				index_vec.push_back(tokens[i++]);
+			}
+			if (index_vec.empty()) {
+				index_vec.push_back("index.html");
+			}
+			loc.setIndex(index_vec);
+			if (i < tokens.size() && tokens[i] != ";") ++i;
 		}
 		else if (key == "autoindex")
 		{
@@ -179,12 +194,63 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
                 loc.setAllowUpload(value == "on" || value == "true");
             }
         }
+		else if (key == "error_page")
+		{
+			std::vector<int> codes;
+			while (i < tokens.size() && tokens[i] != ";" && isdigit(tokens[i][0]))
+				codes.push_back(to_int(tokens[i++]));
+			
+			if (i < tokens.size() && tokens[i] != ";")
+			{
+				std::string error_page_path = tokens[i++];
+				for (size_t j = 0; j < codes.size(); ++j) {
+					loc.setErrorPage(codes[j], error_page_path); 
+				}
+			}
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+		}
+		else if (key == "body_size") {
+
+			std::string value = tokens[i++];
+			size_t limit = str_to_sizet(value, ULONG_MAX);
+			loc.setMaxBodySize(limit);
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+		}
+		else if (key == "alias"){
+			loc.setAlias(tokens[i++]);
+		}
         else
 		{
             if (i < tokens.size() && tokens[i] == ";") ++i;
         }
 	}
 	if (i < tokens.size() && tokens[i] == "}") ++i;
+
+
+/* TO_DELETE
+// debug
+
+	Logger::getInstance().info("=== PARSED LOCATION DEBUG ===");
+	Logger::getInstance().info("  path: '" + loc.getPath() + "'");
+	Logger::getInstance().info("  match_type: " + std::string(loc.getMatchType() == Location::EXACT ? "EXACT" : "PREFIX"));
+	Logger::getInstance().info("  methods count: " + wss::i_to_dec(loc.getMethods().size()));
+	for (size_t j = 0; j < loc.getMethods().size(); ++j) {
+		Logger::getInstance().info("    method[" + wss::i_to_dec(j) + "]: " + loc.getMethods()[j]);
+	}
+	Logger::getInstance().info("  root: '" + loc.getRoot() + "'");
+
+	std::ostringstream oss;
+	for (size_t i = 0; i < loc.getIndex().size(); ++i) {
+		oss << loc.getIndex()[i] << (i + 1 < loc.getIndex().size() ? " " : "");
+	}
+	Logger::getInstance().info(std::string("  index: '") + oss.str() + "'");
+	Logger::getInstance().info("  autoindex: " + wss::i_to_dec(static_cast<int>(loc.getAutoindex())));
+	Logger::getInstance().info("  redirect: '" + loc.getRedirect() + "'");
+	Logger::getInstance().info("  cgi_extension: '" + loc.getCgiExtension() + "'");
+	Logger::getInstance().info("  allow_upload: " + std::string(loc.getAllowUpload() ? "TRUE" : "FALSE"));
+	Logger::getInstance().info("=== END PARSED LOCATION DEBUG ===");
+
+//end debug */
 
 	return loc;
 }
@@ -322,14 +388,19 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		else if (key == "location")
 		{
 			Location loc = parseLocation(tokens, i);
+			std::string map_key = loc.getPath();
+			if (loc.getMatchType() == Location::EXACT) {
+				map_key = "=" + map_key;
+			}
 			server.locations[loc.getPath()] = loc;
 		}
-		if (tokens[i] == ";") ++i;
+		if (i < tokens.size() && tokens[i] == ";") ++i;
 	}
 	++i;
 
 	applyAutoindex(server);
 	applyAllowMethods(server);
+	applyIndexFiles(server);
 
 	return (server);
 }

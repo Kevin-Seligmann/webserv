@@ -19,9 +19,22 @@ void applyAutoindex(ParsedServer& server)
 	{
 		if (it->second.getAutoindex() == AINDX_DEF_OFF)
 		{
-			it->second.setAutoindex(server.autoindex);
+			if (server.autoindex == AINDX_SERV_ON)
+			{
+				it->second.setAutoindex(AINDX_LOC_ON);
+			}
+			else if (server.autoindex == AINDX_SERV_OFF)
+			{
+				it->second.setAutoindex(AINDX_LOC_OFF);
+			}
 		}
 	}
+/*	ESTO NO SIRVE PARA LO QUE ESPERA ResponseManager::is_autindex() PORQUE HACE LOS IF CON "...LOC..." NO CON "...SERV..."
+		if (it->second.getAutoindex() == AINDX_DEF_OFF)
+		{
+			it->second.setAutoindex(server.autoindex); // -> "...SERV..." o "...DEF..."
+		}
+*/
 }
 
 void applyAllowMethods(ParsedServer& server)
@@ -37,6 +50,26 @@ void applyAllowMethods(ParsedServer& server)
 		if (methods.empty())
 		{
 			it->second.setMethods(server.allow_methods);
+		}
+	}
+}
+
+void applyIndexFiles(ParsedServer& server) {
+
+	// Si server no tiene index files pone los defaults
+	if (server.index_files.empty())
+	{
+		server.index_files.push_back("index.html");
+		server.index_files.push_back("index.htm");
+	}
+
+	// Propagar a locations sin index propio
+	std::map<std::string, Location>::iterator it = server.locations.begin();
+	for (; it != server.locations.end(); ++it)
+	{
+		if (it->second.getIndex().empty())
+		{
+			it->second.setIndex(server.index_files);
 		}
 	}
 }
