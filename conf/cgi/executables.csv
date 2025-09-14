@@ -1,0 +1,6 @@
+PROGRAM, EXTENSION
+/bin/php, .bla, .php
+/bin/node, .js
+
+
+int execve("/bin/php", ["script.bla"], variables...);

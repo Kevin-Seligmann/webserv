@@ -147,15 +147,6 @@ Location* ServerConfig::findLocation(const std::string& path) const {
 // RESOLVE REQUEST
 Location* ServerConfig::resolveRequest(const std::string& request_path, std::string& final_path) const {
 
-	static int resolve_count = 0;
-
-	// Esto lo puse para encontrar un loop infinito, lo he dejado por si hay problemas con eso.
-	if (resolve_count > 10)
-	{
-		Logger::getInstance().error("RESOLVE REQUEST called too many times - KILLING");
-		exit(1);
-	}
-
 	final_path = request_path;
 	Location* location = findLocation(request_path);
 	

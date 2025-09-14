@@ -428,7 +428,6 @@ void VirtualServersManager::gracefulShutdown() {
 	std::map<Listen, int>::iterator it = _listen_sockets.begin();
 	for (; it != _listen_sockets.end(); ++it) {
 		if (it->second >= 0) {
-			shutdown(it->second, SHUT_RDWR);
 			close(it->second);
 		}
 	}
@@ -436,7 +435,7 @@ void VirtualServersManager::gracefulShutdown() {
 	time_t start = time(NULL);
 	while (!_clients.empty()) {
 		time_t waiting = time(NULL) - start;
-		if (waiting > 0.1) {
+		if (waiting > Client::KEEP_ALIVE_TIMEOUT) {
 			Logger::getInstance().warning("Timeout. Shuting down.");
 			break;
 		}
