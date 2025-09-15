@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/14 16:37:57 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/15 10:04:41 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ enum ParsingMessageType {
 int checkFile(const char* argv);
 
 /* Download extencions for CGI*/
-std::vector<std::string> loadCgiExtensions(const std::string& filename)
+std::vector<std::string> loadCgiExtensions(const std::string& filename);
 
 /* Function for getting real localhost */
 std::string getLoopbackAddress();
