@@ -158,7 +158,6 @@ void Client::handle_cgi_request() {
 
 }
 
-// State transitions
 void Client::handleRequestDone()
 {
 	ServerConfig * server_config = NULL;
@@ -167,20 +166,12 @@ void Client::handleRequestDone()
 
 	if (!server_config)
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
-	/* TO_DELETE ? UNCOMMENT */
-	// else if (isCgiRequest(location, _request.get_path())) {
-	//     prepareCgiResponse(target_server, location);
-	// }
-	else {
-		if (isCgiRequest()) 
-		{	
+	else if (isCgiRequest()) {
 			_status = PROCESSING_CGI; 
 			handle_cgi_request();
-		}
-		else
-		{
-			prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
-		}
+	}
+	else {
+		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 	}
 }
 

@@ -5,6 +5,8 @@
 #include "ElementParser.hpp"
 #include "RequestManager.hpp"
 #include "ResponseManager.hpp"
+#include "CGI.hpp"
+#include "CGIInterpreter.hpp"
 
 class VirtualServersManager;
 
@@ -62,8 +64,7 @@ private:
     void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
     void prepareRequest();
 
-    bool isCgiRequest(Location* location, const std::string& path);
-    bool isKeepAlive() const;
+    bool isCgiRequest();
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
 
