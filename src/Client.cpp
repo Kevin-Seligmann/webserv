@@ -28,24 +28,15 @@ void Client::process(int fd, int mode)
 {
 	_last_activity = time(NULL);
 
-	if (fd != _active_fd.fd || !(_active_fd.mode & mode)) {
+	if (fd != _active_fd.fd && !(_active_fd.mode & mode))
 		CODE_ERR("Trying to access client with an invalid socket or mode");
-	}
 
 	switch (_status)
 	{
-		case Client::PROCESSING_REQUEST:
-			handle_processing_request();
-			break;
-		case Client::PROCESSING_RESPONSE:
-			handle_processing_response();
-			break;
-		case Client::PROCESSING_CGI:
-			handle_cgi_request();
-			break;
-		case Client::CLOSING:
-//			handle_closing();
-			break;
+		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
+		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
+		case Client::PROCESSING_CGI: handle_cgi_request(); break;
+		// case Client::CLOSING: handle_closing(client_fd, client); break;
 	}
 }
 
@@ -60,9 +51,6 @@ void Client::prepareRequest()
 
 void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
 {
-	if (0)
-		Logger::getInstance() << _request << std::endl;
-	
 	_response_manager.new_response();
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
@@ -86,15 +74,15 @@ void Client::handle_processing_request()
 
 	if (_request_manager.request_done() && _error.status() == OK)
 	{
+		Logger::getInstance() <<  "Request processed: " << _error.to_string() + ". " + _error.msg() << " Body size: " << _request.body.content.size() << std::endl;
 		handleRequestDone();
 	}
 	else if (_error.status() != OK)
 	{
 		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
-		// Logger::getInstance() << "Request: " << _request << std::endl;
 		handleRequestError();
 	}
- }
+}
 
 void Client::handle_processing_response()
 {
@@ -104,6 +92,10 @@ void Client::handle_processing_response()
 		handleRequestError();
 	else if (_response_manager.response_done()) // Handle error
 	{		
+		// TODO
+		/*  https://man7.org/linux/man-pages/man2/shutdown.2.html SHUT_RD
+			Mientras no exista requestManager->close() usar error >= 400
+		*/
 		if (_request_manager.close())
 		{
 			// shutdown(_socket, SHUT_RD);
@@ -116,10 +108,8 @@ void Client::handle_processing_response()
 			prepareRequest();
 		}
 	}
-	else
+	else 
 	{
-		_last_activity = time(NULL);
-		_response_manager.process();
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
@@ -205,6 +195,7 @@ void Client::handleRequestError()
 
 	if (err_page.empty())
 		return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
+
     if (_request.method != HEAD)
 	    _request.method = GET;
 	_request.uri.path = err_page;
@@ -212,6 +203,7 @@ void Client::handleRequestError()
 	prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
 
+// Util, getters, setters, etc
 void Client::updateActiveFileDescriptor(int fd, int mode)
 {
 	ActiveFileDescriptor newfd(fd, mode);
@@ -222,23 +214,15 @@ void Client::updateActiveFileDescriptor(int fd, int mode)
 }
 
 void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
-{    
-	if (newfd == _active_fd) {
+{
+	if (newfd == _active_fd)
 		return ;
-	}
 	_vsm.swapFileDescriptor(_active_fd, newfd);
 	_active_fd = newfd;
 }
 
-bool Client::isKeepAlive() const {
-	if (_request.protocol == "HTTP/1.1") {
-		return _request.headers.close_status != RCS_CLOSE;
-	}
-	return false;
-}
-
 bool Client::isCgiRequest(Location* location, const std::string& path) {
-	// 
+	// Implement CGI detection based on location configuration
 	(void)location;
 	(void)path;
 	return path.find(".cgi") != std::string::npos; // true si uri de la request termina en cgi
@@ -246,9 +230,7 @@ bool Client::isCgiRequest(Location* location, const std::string& path) {
 
 void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
 {
-    static std::map<int, int> client_resolve_count;
- 
-	// Get server
+	// Server
 	*ptr_server_config = _vsm.findServerConfigForRequest(_request, _socket);
 
 	// Location
@@ -274,38 +256,8 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 
 		for (size_t i = 0; i < try_index.size(); ++i) {
 
-			if (try_index[i].empty()) {
+			if (try_index[i].empty())
 				continue;
-			}
-
-			// _request.uri.path += try_index[i];
-			
-			// Eliminar posibles doble slash por la concatenacion "//"
-			// bool root_end = root_path[root_path.size() - 1] == '/';
-			// bool req_start = _request.get_path()[0] == '/';
-			// bool req_end = _request.get_path()[_request.get_path().size() - 1] == '/';
-			// bool try_index_start = try_index[i][0] == '/';
-
-
-			// if (root_end && req_start) {
-			// 	full_file_path = root_path + _request.get_path().substr(1);
-			// }
-			// else if (root_end || req_start) {
-			// 	full_file_path = root_path + _request.get_path();
-			// }
-			// else {
-			// 	full_file_path = root_path + "/" + _request.get_path();
-			// }
-
-			// if (req_end && try_index_start) {
-			// 	full_file_path += try_index[i].substr(1);
-			// }
-			// else if (req_end || try_index_start) {
-			// 	full_file_path += try_index[i];
-			// }
-			// else {
-			// 	full_file_path += "/" + try_index[i];
-			// }
 	
 			std::string new_request_path = _request.get_path() + try_index[i];
 
@@ -317,11 +269,9 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
     		else if (full_path.empty())
 				CODE_ERR("No root path found");
 	
-			Logger::getInstance() << "Trying index: " + new_request_path << " Full: " << full_path << std::endl;
-
 			if (access(full_path.c_str(), F_OK) == 0) {
 
-				Logger::getInstance() << "Found: " + new_request_path << std::endl;
+				Logger::getInstance() << "Index found: " + new_request_path << std::endl;
 				
 				// Guardar index encontrado
 				_request.uri.path = new_request_path;

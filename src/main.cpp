@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
 
     try {
         MediaType::load_types();
-		CGIInterpreter::load_interpreters();
+        		CGIInterpreter::load_interpreters();
 
         // Prepare for parseProcess function
         int newArgc = (configFilename ? 2 : 1);
