@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 
     try {
         MediaType::load_types();
-
+        
         // Prepare for parseProcess function
         int newArgc = (configFilename ? 2 : 1);
         char* newArgv[3];

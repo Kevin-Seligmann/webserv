@@ -55,7 +55,6 @@ private:
     void handle_cgi_request();
     void handle_processing_request();
     void handle_processing_response();
-    void handle_closing();
 
     void handleRequestDone();
     void handleRequestError();

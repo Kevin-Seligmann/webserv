@@ -71,8 +71,6 @@ bool RequestParser::test_first_line()
 bool RequestParser::test_chunk_size()
 {
     _processing = _buffer.get_crlf_line(_begin, _end);
-    if (_processing)
-        Logger::getInstance() << "Chunk size: " << std::string(_begin, _end) <<std::endl;
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
     {
         _error.set("Chunk size line too long", BAD_REQUEST);
@@ -252,8 +250,7 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
-    Logger::getInstance() << "Chunked received size: " << std::string(_begin, _end).size() << std::endl;
-    _request.body.content += std::string(_begin, _end);
+    _request.body.content += std::string(_begin, _end - 2);
     _status = PRS_CHUNKED_SIZE;
 }
 
