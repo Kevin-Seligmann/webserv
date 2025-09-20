@@ -406,19 +406,35 @@ void VirtualServersManager::checkTimeouts() {
 	std::vector<int> to_close;
 
 	std::map<int, Client*>::iterator it = _clients.begin();
-	for (; it != _clients.end(); ++it) {
-		if (it->second->closing() && now - it->second->getLastActivity() > Client::CLOSING_GRACE_PERIOD)
+	for (; it != _clients.end(); ++it)
+	{
+		time_t inactive_time = now - it->second->getLastActivity();
+
+		if (it->second->closing())
 		{
-			to_close.push_back(it->first);
+			if (inactive_time > Client::CLOSING_GRACE_PERIOD)
+			{
+				to_close.push_back(it->first);
+			}
 		}
-		else if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
-			to_disconnect.push_back(it->first);
+		else
+		{
+			if (inactive_time > Client::TIMEOUT_SECONDS)
+			{
+				to_disconnect.push_back(it->first);
+			}
 		}
 	}
 
-	for (size_t i = 0; i < to_disconnect.size(); ++i) {
-		Logger::getInstance().warning("Client " + wss::i_to_dec(to_disconnect[i])
-									  + " timeout");
+	for (size_t i = 0; i < to_close.size(); ++i)
+	{
+		Logger::getInstance().warning("Foce closing stuck client " + wss::i_to_dec(to_close[i]) + " timeout");
+		disconnectClient(to_close[i]);
+	}
+
+	for (size_t i = 0; i < to_disconnect.size(); ++i)
+	{
+		Logger::getInstance().warning("Client " + wss::i_to_dec(to_disconnect[i]) + " timeout");
 		disconnectClient(to_disconnect[i]);
 	}
 }
@@ -456,29 +472,4 @@ void VirtualServersManager::gracefulShutdown() {
 	}
 
 	Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
-}
-
-void VirtualServersManager::checkTimeouts() {
-	time_t now = time(NULL);
-	std::vector<int> to_disconnect;
-	std::vector<int> to_close;
-
-	std::map<int, Client*>::iterator it = _clients.begin();
-	for (; it != _clients.end(); ++it) {
-		if (it->second->closing() && now - it->second->getLastActivity() > Client::CLOSING_GRACE_PERIOD)
-		{
-			to_close.push_back(it->first);
-		}
-		else if (now - it->second->getLastActivity() > Client::TIMEOUT_SECONDS) {
-			to_disconnect.push_back(it->first);
-		}
-	}
-
-	std::map<int, Client*>::iterator client_it;
-	for (client_it = _clients.begin(); client_it != _clients.end(); ++client_it) {
-		delete client_it->second;
-	}
-	_clients.clear();
-
-	Logger::getInstance().info("Server shutdown complete");
 }

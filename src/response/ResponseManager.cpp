@@ -138,6 +138,7 @@ void ResponseManager::generate_get_response()
 		case File::BADFILENAME: set_error("File's basename is invalid", BAD_REQUEST); return ;
 		case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
 		case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
+		case File::EXISTS: return ;
 	}
 	switch (_file.filetype)
 	{
@@ -180,23 +181,6 @@ void ResponseManager::generate_file_status_response()
 	prepare_file_reading();
 }
 
-void ResponseManager::generate_file_status_response()
-{
-    std::string final_path = get_host_path();
-
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating status response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
-
-    _file.open(final_path, O_RDONLY);
-
-    // We don't want to change the error type. Just report that there's an error and let the manager handle it.
-    if (_file.get_status() != File::OK || _file.filetype != File::REGULAR)
-    {
-        set_error(_error.msg(), _error.status());
-        return ;
-    }
-    prepare_file_reading();
-}
-
 void ResponseManager::generate_post_response()
 {
 	std::string final_path = get_host_path();
@@ -209,10 +193,11 @@ void ResponseManager::generate_post_response()
     {
         case File::OK: break;
         case File::NOTFOUND: set_error("File not found", NOT_FOUND); return ;
-        case File::NOPERM:  set_error("No access to this file", FORBIDDEN); return;
+        case File::NOPERM:  set_error("No access to this file", FORBIDDEN); return ;
         case File::BADFILENAME: set_error("File's basename is invalid", BAD_REQUEST); return ;
-        case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return;
-        case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return;
+        case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
+        case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
+		case File::EXISTS: return ;
     }
     switch (_file.filetype)
     {
@@ -242,6 +227,7 @@ void ResponseManager::generate_delete_response()
 		case File::BADFILENAME: set_error("File's basename is invalid", BAD_REQUEST); return ;
 		case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
 		case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
+		case File::EXISTS: return;
 	}
 	switch (_file.filetype)
 	{

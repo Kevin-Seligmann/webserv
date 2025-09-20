@@ -5,6 +5,7 @@
 #include "Parsed.hpp"
 #include "VirtualServersManager.hpp"
 #include "DebugView.hpp"
+#include "CGIInterpreter.hpp"
 
 void printSeparator(const std::string& title) {
     std::cout << "\n" << std::string(50, '=') << std::endl;

@@ -44,7 +44,7 @@ void Client::process(int fd, int mode)
 			handle_cgi_request();
 			break;
 		case Client::CLOSING:
-			handle_closing();
+//			handle_closing();
 			break;
 	}
 }

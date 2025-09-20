@@ -1,16 +1,17 @@
 
 
-VPATH = src src/util src/http src/parse src/buffer src/response
+VPATH = src src/util src/http src/parse src/buffer src/response src/cgi
 
 # Files
-OBJ = main.o Logger.o  HTTPMethod.o FieldSection.o \
-	URI.o HTTPBody.o  RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
-	RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
-	HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
-	SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
-	File.o HTTPResponseBuffer.o VirtualServersManager.o Wspoll.o \
-    Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
-	Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
+OBJ = main.o Logger.o HTTPMethod.o FieldSection.o \
+ URI.o HTTPBody.o RequestParser.o HTTPRequestBuffer.o ReadNetBuffer.o \
+ RequestValidator.o ParsingUtil.o StringUtil.o ElementParser.o \
+ HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
+ SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
+ File.o HTTPResponseBuffer.o VirtualServersManager.o Wspoll.o \
+ Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
+ Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
+ CGIArg.o CGI.o CGIEnv.o CGIInterpreter.o CGIResponse.o
 	
 # Target
 NAME = webserv
@@ -65,7 +66,7 @@ clean:
 
 fclean: clean
 	@rm -rf $(NAME) $(NAME_B)
-	@echo $(YELLOW)$(PROJ) - Rem	oving:$(NO_COLOR) $(NAME) $(NAME_B)
+	@echo $(YELLOW)$(PROJ) - Removing:$(NO_COLOR) $(NAME) $(NAME_B)
 
 re: fclean all
 

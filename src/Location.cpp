@@ -56,14 +56,6 @@ bool Location::matchesPath(const std::string& path) const {
 	return false;
 }
 
-std::string Location::getErrorPage(int error_code) const {
-	std::map<int, std::string>::const_iterator it = _error_pages.find(error_code);
-	if(it != _error_pages.end()) {
-		return it->second;
-	}
-	return "";
-} 
-
 std::string Location::getFilesystemLocation(std::string const & path) const
 {
     if (_alias.size() > 0)
@@ -87,19 +79,3 @@ std::string Location::getErrorPage(int error_code) const {
     }
     return "";
 } 
-
-std::string Location::getFilesystemLocation(std::string const & path) const
-{
-    if (_alias.size() > 0)
-    {
-        if (path.compare(0, _path.size(), _path) == 0) {
-            return _alias + path.substr(_path.size());
-        }
-        return path;
-    }
-    else if (_root.size() > 0)
-    {
-        return _root + path;
-    }
-    return "";
-}
