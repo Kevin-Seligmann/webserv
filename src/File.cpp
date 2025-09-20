@@ -130,6 +130,7 @@ void File::handle_error()
         case EPERM:
         case EROFS:
         case EFAULT:
+        // case EEXIST: status = EXISTS; return ;
         case EACCES: status = NOPERM; return ;
         case EINVAL: status = BADFILENAME; return ;
         default: status = ERROR; return ;
