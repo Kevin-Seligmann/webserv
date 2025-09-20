@@ -119,37 +119,6 @@ bool ServerConfig::matchesServerName(const std::string& hostname) const {
 }
 
 // findLocation
-// Función auxiliar para debug (pon static antes de esta función)
-static void debugLocationSearch(const std::string& path, const std::map<std::string, Location>& locations, 
-                        const Location& location, const std::string& key) {
-                            return ;
-    Logger::getInstance()<<("DEBUG: iterating key='" + key + "'")<< std::endl;
-    (void) locations;
-    
-    // DEBUG CRÍTICO: valores raw del enum
-    Logger::getInstance()<<("DEBUG: location._match_type raw value = " + 
-        wss::i_to_dec(static_cast<int>(location.getMatchType())))<< std::endl;
-    Logger::getInstance()<<("DEBUG: Location::PREFIX enum value = " + 
-        wss::i_to_dec(static_cast<int>(Location::PREFIX)))<< std::endl;
-    Logger::getInstance()<<("DEBUG: Location::EXACT enum value = " + 
-        wss::i_to_dec(static_cast<int>(Location::EXACT)))<< std::endl;
-    
-    bool match_type_ok = (location.getMatchType() == Location::PREFIX);
-    bool matches_path_ok = location.matchesPath(path);
-    
-    Logger::getInstance() << ("DEBUG: match_type_ok=" + 
-        std::string(match_type_ok ? "TRUE" : "FALSE"))<< std::endl;
-    Logger::getInstance() << ("DEBUG: matches_path_ok=" + 
-        std::string(matches_path_ok ? "TRUE" : "FALSE"))<< std::endl;
-    
-    if (match_type_ok && matches_path_ok) {
-        Logger::getInstance() << ("DEBUG: ENTERING IF BLOCK!")<< std::endl;
-    } else {
-        Logger::getInstance() << ("DEBUG: NOT ENTERING IF - one condition failed")<< std::endl;
-    }
-}
-
-// findLocation
 Location* ServerConfig::findLocation(const std::string& path) const {
 
 	// Buscar match exacto primero
