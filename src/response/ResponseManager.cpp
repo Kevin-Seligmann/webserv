@@ -158,7 +158,6 @@ void ResponseManager::generate_post_response()
         case File::BADFILENAME: set_error("File's basename is invalid", BAD_REQUEST); return ;
         case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
         case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
-		case File::EXISTS: return ;
     }
     switch (_file.filetype)
     {
