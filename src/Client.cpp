@@ -115,42 +115,7 @@ void Client::handle_processing_response()
 }
 
 void Client::handle_cgi_request() {
-	// Implement CGI request processing
 
-//         static std::map<int, time_t> cgi_start_times;
-		
-//         if (cgi_start_times.find(client_fd) == cgi_start_times.end()) {
-//             cgi_start_times[client_fd] = time(NULL);
-//             Logger::getInstance().info("Starting CGI execution...");
-//             return;
-//         }
-		
-//         time_t elapsed = time(NULL) - cgi_start_times[client_fd];
-//         if (elapsed > 30) { // timeout de 30 segundos
-//             Logger::getInstance().warning("CGI timeout");
-//             cgi_start_times.erase(client_fd);
-//             client->error.set("CGI script timeout", INTERNAL_SERVER_ERROR);
-//             client->status = ClientState::ERROR_HANDLING;
-//             return;
-//         }
-		
-//         if (elapsed >= 1) { // 1 o más segundos de procesamiento //QUESTION porque damos por completo cgi con 1 segundo de procesamiento
-//             Logger::getInstance().info("CGI execution complete");
-//             cgi_start_times.erase(client_fd);
-			
-//             client->status = ClientState::WRITING_RESPONSE;
-//             return;
-//         }
-	
-	std::string response = 
-		"HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
-		"Content-Length: 27\r\n"
-		"\r\n"
-		"CGI processing placeholder";
-	/*
-	send(_socket, response.c_str(), response.length(), 0);
-	*/
 }
 
 // State transitions

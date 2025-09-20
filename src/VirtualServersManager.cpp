@@ -375,17 +375,12 @@ void VirtualServersManager::checkTimeouts() {
 		}
 	}
 
-	for (size_t i = 0; i < to_close.size(); ++i)
-	{
-		Logger::getInstance().warning("Foce closing stuck client " + wss::i_to_dec(to_close[i]) + " timeout");
-		disconnectClient(to_close[i]);
-	}
-
 	for (size_t i = 0; i < to_disconnect.size(); ++i)
 	{
 		Logger::getInstance().warning("Client " + wss::i_to_dec(to_disconnect[i]) + " timeout");
 		disconnectClient(to_disconnect[i]);
 	}
+
 	for (size_t i = 0; i < to_close.size(); ++i) {
 		disconnectClient(to_close[i]);
 	}
