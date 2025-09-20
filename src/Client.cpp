@@ -115,6 +115,46 @@ void Client::handle_processing_response()
 }
 
 void Client::handle_cgi_request() {
+	// Implement CGI request processing
+
+//         static std::map<int, time_t> cgi_start_times;
+		
+//         if (cgi_start_times.find(client_fd) == cgi_start_times.end()) {
+//             cgi_start_times[client_fd] = time(NULL);
+//             Logger::getInstance().info("Starting CGI execution...");
+//             return;
+//         }
+		
+//         time_t elapsed = time(NULL) - cgi_start_times[client_fd];
+//         if (elapsed > 30) { // timeout de 30 segundos
+//             Logger::getInstance().warning("CGI timeout");
+//             cgi_start_times.erase(client_fd);
+//             client->error.set("CGI script timeout", INTERNAL_SERVER_ERROR);
+//             client->status = ClientState::ERROR_HANDLING;
+//             return;
+//         }
+		
+//         if (elapsed >= 1) { // 1 o más segundos de procesamiento //QUESTION porque damos por completo cgi con 1 segundo de procesamiento
+//             Logger::getInstance().info("CGI execution complete");
+//             cgi_start_times.erase(client_fd);
+			
+//             client->status = ClientState::WRITING_RESPONSE;
+//             return;
+//         }
+	CGI cgi(_request, _vsm);
+
+	cgi.runCGI();
+
+/*	std::string response = 
+		"HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"Content-Length: 27\r\n"
+		"\r\n"
+		"CGI processing placeholder";*/
+
+	std::cout << "HERE IS THE CGI ANSWER: " << cgi.getCGIResponse().getResponseBuffer() << std::endl;
+	/*
+	send(_socket, cgi.getCGIResponse().getResponseBuffer(), cgi.getCGIResponse().getResponseBuffer().size(), 0);*/
 
 }
 
@@ -126,16 +166,22 @@ void Client::handleRequestDone()
 	get_config(&server_config, &location);
 
 	if (!server_config)
-	{
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
+	/* TO_DELETE ? UNCOMMENT */
+	// else if (isCgiRequest(location, _request.get_path())) {
+	//     prepareCgiResponse(target_server, location);
+	// }
+	else {
+		if (isCgiRequest()) 
+		{	
+			_status = PROCESSING_CGI; 
+			handle_cgi_request();
+		}
+		else
+		{
+			prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+		}
 	}
-
-	if (isCgiRequest(location, _request.uri.path))
-	{
-		_status = PROCESSING_CGI;
-	}
-
-	prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
 
 void Client::handleRequestError() 
@@ -186,12 +232,26 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 	_active_fd = newfd;
 }
 
-bool Client::isCgiRequest(Location* location, const std::string& path) {
-	// Implement CGI detection based on location configuration
-	(void)location;
-	(void)path;
-	return path.find(".cgi") != std::string::npos; // true si uri de la request termina en cgi
+bool Client::isCgiRequest()
+{
+	const std::string& path = _request.uri.path;
+
+    for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+         it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+    {
+        for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+             ext != it->extensions.end(); ++ext)
+        {
+            if (path.size() >= ext->size() &&
+                path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
+            {
+                return (true);
+            }
+        }
+    }
+    return (false);
 }
+
 
 void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_location)
 {
