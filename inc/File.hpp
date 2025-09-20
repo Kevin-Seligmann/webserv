@@ -23,7 +23,7 @@ class File
 {
 public:
     enum filetype {NONE, REGULAR, DIRECTORY};
-    enum descriptor_status {EXISTS, OK, NOTFOUND, NOPERM, BADFILENAME, RAREFILE, ERROR};
+    enum descriptor_status { OK, NOTFOUND, NOPERM, BADFILENAME, RAREFILE, ERROR};
     enum creation_status {S_NONE, NEW, OLD};
 
     File(std::string const & path, int mode);
