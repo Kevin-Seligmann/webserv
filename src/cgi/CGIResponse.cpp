@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/14 14:47:45 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/20 16:11:12 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,11 @@ std::string CGIResponse::getCGIResponseHeader(const std::string& key) const
 const std::map<std::string, std::string>& CGIResponse::getCGIResponseHeaders() const
 {
 	return (_cgiResponseHeaders);
+}
+
+const std::string& CGIResponse::getResponseBuffer() const
+{
+	return (_responseBuffer);
 }
 
 void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)

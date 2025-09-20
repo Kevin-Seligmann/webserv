@@ -6,13 +6,13 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/18 11:12:24 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/20 16:10:50 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
 
-CGI::CGI(int cliend_fd, const HTTPRequest& req, const ServerConfig* server) : _env()
+CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 {
 	_cgi_status = CGI_INIT;
 
@@ -121,7 +121,7 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path) co
 	return (cgi);
 }
 
-void CGI::buildEnv(const HTTPRequest& req, const ServerConfig* server)
+void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server)
 {
 	std::map<std::string, std::string> res = pathToBlocks(req.uri.path);
 
@@ -149,7 +149,7 @@ void CGI::buildEnv(const HTTPRequest& req, const ServerConfig* server)
 	}
 	else
 	{
-		_env.setEnvValue("SERVER_NAME", server->server_names[0]); // TODO check if you have to use getter
+//		_env.setEnvValue("SERVER_NAME", server->server_names[0]); // TODO check if you have to use getter
 	}
 
 	if (req.headers.port != -1)
@@ -257,7 +257,7 @@ void CGI::runCGI()
 		_cgi_status = CGI_FINISHED;
 }
 
-const CGIResponse& CGI::getCGIResponse()
+const CGIResponse& CGI::getCGIResponse() const
 {
 	return (_cgi_response);
 }
