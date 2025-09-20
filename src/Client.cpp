@@ -146,15 +146,21 @@ void Client::handle_cgi_request() {
 //             client->status = ClientState::WRITING_RESPONSE;
 //             return;
 //         }
-	
-	std::string response = 
+	CGI cgi(_request, _vsm);
+
+	cgi.runCGI();
+
+/*	std::string response = 
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: text/plain\r\n"
 		"Content-Length: 27\r\n"
 		"\r\n"
-		"CGI processing placeholder";
-	
-	send(_socket, response.c_str(), response.length(), 0);
+		"CGI processing placeholder";*/
+
+	std::cout << "HERE IS THE CGI ANSWER: " << cgi.getCGIResponse().getResponseBuffer() << std::endl;
+	/*
+	send(_socket, cgi.getCGIResponse().getResponseBuffer(), cgi.getCGIResponse().getResponseBuffer().size(), 0);*/
+
 }
 
 // State transitions
@@ -172,11 +178,14 @@ void Client::handleRequestDone()
 	// }
 	else {
 		if (isCgiRequest()) 
-		{
-			_status = PROCESSING_CGI;
-			std::cout << "HERE >>>>>>> YES" << std::endl;
+		{	
+			_status = PROCESSING_CGI; 
+			handle_cgi_request();
 		}
-		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+		else
+		{
+			prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+		}
 	}
 }
 

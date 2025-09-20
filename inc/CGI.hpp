@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/18 14:03:05 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/20 16:10:44 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@
 # include "HTTPRequest.hpp"
 # include "ServerConfig.hpp"
 
+class VirtualServersManager;
+
 class CGI
 {
 	private:
@@ -51,14 +53,14 @@ class CGI
 
 	public:
 
-		CGI(int client_fd, const HTTPRequest& req, const ServerConfig* server);
+		CGI(const HTTPRequest& req, const VirtualServersManager& server);
 		~CGI();
 
-		void buildEnv(const HTTPRequest &req, const ServerConfig* server);
+		void buildEnv(const HTTPRequest &req, const VirtualServersManager& server);
 		CGIEnv& getEnv();
 		void runCGI();
 
-		const CGIResponse& getCGIResponse();
+		const CGIResponse& getCGIResponse() const;
 
 		CGIStatus getStatus() const;
 		void setStatus(CGIStatus s);

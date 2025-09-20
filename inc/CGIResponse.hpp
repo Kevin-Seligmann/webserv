@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:39:00 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/14 15:14:56 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/20 16:11:32 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class CGIResponse
 		std::string getLocation() const;
 		std::string getCGIResponseHeader(const std::string& key) const;
 		const std::map<std::string, std::string>& getCGIResponseHeaders() const;
+		const std::string& getResponseBuffer() const;
 
 		void parseFromCGIOutput(const std::string& cgiOutput);
 		void buildResponse();
