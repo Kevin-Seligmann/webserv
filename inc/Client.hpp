@@ -34,7 +34,8 @@ private:
     enum Status {
         PROCESSING_REQUEST,
         PROCESSING_RESPONSE,
-        PROCESSING_CGI
+        PROCESSING_CGI,
+        CLOSING
     };
 
     static const int MAX_ERROR_RETRIES = 1;

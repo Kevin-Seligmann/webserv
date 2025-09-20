@@ -36,7 +36,7 @@ void Client::process(int fd, int mode)
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
 		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
 		case Client::PROCESSING_CGI: handle_cgi_request(); break;
-		// case Client::CLOSING: handle_closing(client_fd, client); break;
+		case Client::CLOSING: CODE_ERR("Using CLOSE status"); break;
 	}
 }
 
