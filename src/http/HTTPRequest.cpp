@@ -9,6 +9,7 @@ void HTTPRequest::reset()
     headers.reset();
     method = NOMETHOD;
     protocol = "";
+    Logger::getInstance() << "HTTPRequest::reset() - method set to NOMETHOD" << std::endl;
 }
 
 std::string HTTPRequest::to_string()
@@ -21,7 +22,7 @@ std::string HTTPRequest::to_string()
 
 void HTTPRequest::print(std::ostream & os) const
 {
-    os 
+    os
     << "METHOD: " << method << "\n"
     << "URI: " << uri << "\n"
     << "PROTOCOL: " << protocol << "\n"

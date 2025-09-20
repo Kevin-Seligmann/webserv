@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <cstring>
 #include "Wspoll.hpp"
 #include "ServerConfig.hpp"
@@ -33,35 +34,43 @@ private:
 	std::map<Listen, std::vector<ServerConfig*> >	_virtual_hosts; // Listen, configs
 	std::map<Listen, int>							_listen_sockets; // Listen, socket_fd
 	std::map<int, Listen>							_client_to_listen; // client_fd to Listen, para llegar al vhost
-    std::map<int, Client*>                          _clients;
+	std::map<int, Client*>                          _clients;
 
 	Wspoll                                          _wspoll;
  
+	// Manejo de señales
+	static VirtualServersManager*                   s_instance;
+	static volatile sig_atomic_t					s_shutdown_requested;
+
 	// Métodos privados de socket management
 	int createAndBindSocket(const Listen& listen);
-    bool isListenSocket(int fd) const;
-	// Listen* findListenBySocketFd(int fd);
-    void handleEvent(const struct Wspoll_event event);
+	bool isListenSocket(int fd) const;
+	void handleEvent(const struct Wspoll_event event);
 	void handleNewConnection(int listen_fd);
 	void setPolling();
-	void disconnectClient(int client_fd);
-    // ServerConfig* matchServerConfig(const std::vector<ServerConfig*>& vhost, const std::string& hostname);
 	
-    Client* searchClient(int client_fd);
-
-public:
-    VirtualServersManager();
+	Client* searchClient(int client_fd);
+	
+	public:
+	VirtualServersManager();
 	VirtualServersManager(const ParsedServers& configs);
 	~VirtualServersManager();
-
+	
 	void run();
+	
+	void hookFileDescriptor(const ActiveFileDescriptor& actf);
+	void unhookFileDescriptor(const ActiveFileDescriptor& actf);
+	void swapFileDescriptor(const ActiveFileDescriptor& oldfd, const ActiveFileDescriptor& newfd);
+	void disconnectClient(int client_fd);
 
-    void hookFileDescriptor(const ActiveFileDescriptor& actf);
-    void unhookFileDescriptor(const ActiveFileDescriptor& actf);
-    void swapFileDescriptor(const ActiveFileDescriptor& oldfd, const ActiveFileDescriptor& newfd);
+	ServerConfig* findServerConfigForRequest(const HTTPRequest& request, int client_fd);
+	void checkTimeouts();
 
-    ServerConfig* findServerConfigForRequest(const HTTPRequest& request, int client_fd);
-    void checkTimeouts();
+	// Manejo de señales
+	static void signal_handler(int sig);
+	void setupSignals();
+	void gracefulShutdown();
+	bool isShutdownRequested() const { return s_shutdown_requested != 0; }
 };
 #endif
 

@@ -12,6 +12,10 @@ RequestManager::~RequestManager(){delete _sys_buffer;};
 
 void RequestManager::process()
 {
+
+    Logger::getInstance() << "RequestManager::process - using FD: " 
+                         << _sys_buffer->_fd << std::endl;
+                         
     bool parse = true;
     bool has_read = false;
 
@@ -33,7 +37,6 @@ void RequestManager::process()
                     _request_parser.parse_header_line();
                 if (_error.status() == OK && _request_parser.get_status() != RequestParser::PRS_HEADER_LINE)
                 {
-                    _request_parser.process_headers();
                     _validator.validate_headers(_request, _request.headers);
                 }
                 break ;
@@ -50,7 +53,7 @@ void RequestManager::process()
                 if (parse)
                     _request_parser.parse_chunked_size();
                 break ;
-            case RequestParser::PRS_CHUNKED_BODY: // TODO: Validate body?
+            case RequestParser::PRS_CHUNKED_BODY:
                 parse = _request_parser.test_chunk_body();
                 if (parse)
                     _request_parser.parse_chunked_body();

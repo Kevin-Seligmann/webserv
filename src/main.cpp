@@ -5,7 +5,6 @@
 #include "Parsed.hpp"
 #include "VirtualServersManager.hpp"
 #include "DebugView.hpp"
-#include "CGIInterpreter.hpp"
 
 void printSeparator(const std::string& title) {
     std::cout << "\n" << std::string(50, '=') << std::endl;
@@ -96,7 +95,6 @@ int main(int argc, char* argv[]) {
     try {
         MediaType::load_types();
 		CGIInterpreter::load_interpreters();
-
 
         // Prepare for parseProcess function
         int newArgc = (configFilename ? 2 : 1);

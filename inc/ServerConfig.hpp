@@ -30,7 +30,15 @@ struct ServerConfig {
     bool getAutoindex() const;
     AutoIndexState getAutoindex(const Location* location) const;
     std::string getClientMaxBodySizeString() const;
-    std::string getDebugInfo() const;
+    const std::vector<std::string>& getServerNames() const { return server_names; }
+    const std::string& getRoot() const { return root; }
+    const std::vector<std::string>& getIndexFiles() const { return index_files; }
+    std::string getErrorPage(int error_code, const Location* location = NULL) const;
+    const std::vector<std::string>& getAllowMethods() const { return allow_methods; }
+    const std::vector<std::string>& getAllowMethods(const Location* location) const;
+    size_t getClientMaxBodySize() const { return client_max_body_size; }
+    const std::map<std::string, Location>& getLocations() const;
+    bool getAllowUpload() const { return allow_upload; }
 
     const std::vector<std::string>& getServerNames() const { return server_names; }
 
@@ -54,7 +62,8 @@ struct ServerConfig {
 
 private:
     size_t parseBodySize(const std::string& size_str) const;
-    Location* resolveIndexAndRematch(const std::string& path, Location* original_location) const;
+    std::vector<std::string> getIndexes(const Location* loc) const;
+    std::string getDocRoot(const Location* loc) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const ServerConfig& config);

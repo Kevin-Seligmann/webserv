@@ -34,7 +34,10 @@ ServerConfig::ServerConfig(const ParsedServer& parsed)
         index_files.push_back("index.html");
         index_files.push_back("index.htm");
     }
-    
+// No es buena idea anadir todos los metodos, mejor anadir solo GET
+// es mas seguro, creo.
+// Tambien en nivel de parseo de configuracion tengo la regla q anada GET si no hay directiva allow_methods
+// Pero para mi va bien un nivel extra para asegurar q configuracion de server no esta vacia
     if (allow_methods.empty()) {
         allow_methods.push_back("GET");
         allow_methods.push_back("POST");
@@ -383,24 +386,4 @@ Location* ServerConfig::resolveIndexAndRematch(const std::string& path, Location
 std::ostream& operator<<(std::ostream& os, const ServerConfig& config) {
     os << config.getDebugInfo();
     return os;
-}
-
-// para debug
-std::string ServerConfig::getServerNamesString() const {
-    if (server_names.empty()) {
-        return "_";
-    }
-    std::string result;
-    for (size_t i = 0; i < server_names.size(); ++i) {
-        result += server_names[i];
-        if (i < server_names.size() - 1) {
-            result += ", ";
-        }
-    }
-    return result;
-}
-
-bool ServerConfig::isDefaultServer() const {
-    return server_names.empty() || 
-            (server_names.size() == 1 && server_names[0] == "_");
 }

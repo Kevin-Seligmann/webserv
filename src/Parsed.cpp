@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parsed.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 20:18:01 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/20 14:00:16 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,18 @@ size_t expect(const std::vector<std::string>& tokens, size_t i, const std::strin
 	return (i + 1);
 }
 
+bool isServerDirective(const std::string& token) {
+    return (token == "listen" || token == "server_name" || token == "root" || 
+            token == "index" || token == "error_page" || token == "allow_methods" ||
+            token == "autoindex" || token == "client_max_body_size" || token == "location");
+}
+
+bool isLocationDirective(const std::string& token) {
+	return (token == "allow_methods" || token == "root" || token == "index" || 
+			token == "autoindex" || token == "redirect" || token == "cgi_extension" ||
+			token == "allow_upload" || token == "error_page" || token == "client_max_body_size");
+}
+
 /*
 TODO
 En parseLocation
@@ -119,20 +131,23 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
 	Location loc;
 	
-	if (tokens[i] == "=") {
+	if (i < tokens.size() && (tokens[i] == "~" || tokens[i] == "~*"))
+		throw std::runtime_error("Invalid regex location");
+	else if (i < tokens.size() && tokens[i] == "=") {
 		loc.setMatchType(Location::EXACT);
 		++i;
-		loc.setPath(tokens[i]);
-		++i;
-	}
-	else if (tokens[i] == "~" || tokens[i] == "~*") {
-		throw std::runtime_error("Invalid regex location");
-	}
-	else if (loc.getMatchType() == Location::UNSET) {
+		if (i >= tokens.size()) {
+			CODE_ERR("Missing path after '=' in location");
+		}
+	} else {
 		loc.setMatchType(Location::PREFIX);
-		loc.setPath(tokens[i]);
-		++i;
 	}
+
+	if (i >= tokens.size())
+		CODE_ERR("Missing location path");
+	
+	loc.setPath(tokens[i]);
+	++i;
 
 	i = expect(tokens, i, "{");
 	while (i < tokens.size() && tokens[i] != "}")
@@ -145,26 +160,47 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		else if (key == "allow_methods")
 		{
 			std::vector<std::string> methods;
-			while (i < tokens.size() && tokens[i] != ";")
+			while (i < tokens.size() && tokens[i] !=  ";" && !isLocationDirective(tokens[i]))
 				methods.push_back(tokens[i++]);
+
+			if (methods.empty())
+				CODE_ERR("allow_methods directive requires at least one method.");
+
 			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'allow_methods' directive");
+			}
+
 			loc.setMethods(methods);
 		}
 		else if (key == "root")
 		{
 			if (i < tokens.size()) loc.setRoot(tokens[i++]);
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'root' directive");
+			}
 		}
 		else if (key == "index")
 		{
 			std::vector<std::string> index_vec;
-			while (i < tokens.size() && tokens[i] != ";") {
+// TODO eliminar el cso de que sea un directive como nombre de pagina index??
+			while (i < tokens.size() && tokens[i] != ";" && !isLocationDirective(tokens[i])) {
 				index_vec.push_back(tokens[i++]);
 			}
+
 			if (index_vec.empty()) {
 				index_vec.push_back("index.html");
+				Logger::getInstance().warning("Empty 'index' directive in Location block. Setting default value.");
 			}
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'index' directive");
+			}
+
 			loc.setIndex(index_vec);
-			if (i < tokens.size() && tokens[i] != ";") ++i;
 		}
 		else if (key == "autoindex")
 		{
@@ -174,18 +210,30 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			else if (autoindex_value == "false" || autoindex_value == "off")
 				loc.setAutoindex(AINDX_LOC_OFF);
 			else {
-				loc.setAutoindex(AINDX_LOC_OFF);
-				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
+				loc.setAutoindex(AINDX_DEF_OFF);
+				Logger::getInstance().warning("Invalid argument for 'autoindex' directive. Setting default = false.");
 			}
+		
 			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'autoindex' directive.");
+			}
 		}
 		else if (key == "redirect") 
 		{
             if (i < tokens.size()) loc.setRedirect(tokens[i++]);
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'redirect' directive.");
+			}
         }
         else if (key == "cgi_extension")
 		{
             if (i < tokens.size()) loc.setCgixtension(tokens[i++]);
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'cgi_extension' directive.");
+			}
         }
         else if (key == "allow_upload")
 		{
@@ -193,36 +241,63 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
                 std::string value = tokens[i++];
                 loc.setAllowUpload(value == "on" || value == "true");
             }
+			
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'allow_upload' directive.");
+			}
         }
 		else if (key == "error_page")
 		{
 			std::vector<int> codes;
-			while (i < tokens.size() && tokens[i] != ";" && isdigit(tokens[i][0]))
+			while (i < tokens.size() && tokens[i] != ";" && !isLocationDirective(tokens[i]) && isdigit(tokens[i][0]))
 				codes.push_back(to_int(tokens[i++]));
 			
 			if (i < tokens.size() && tokens[i] != ";")
 			{
 				std::string error_page_path = tokens[i++];
+
 				for (size_t j = 0; j < codes.size(); ++j) {
 					loc.setErrorPage(codes[j], error_page_path); 
 				}
 			}
-			if (i < tokens.size() && tokens[i] == ";") ++i;
-		}
-		else if (key == "body_size") {
 
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'error_page' directive.");
+			}
+		}
+		else if (key == "client_max_body_size") {
 			std::string value = tokens[i++];
 			size_t limit = str_to_sizet(value, ULONG_MAX);
 			loc.setMaxBodySize(limit);
+
 			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'client_max_body_size' directive.");
+			}
 		}
 		else if (key == "alias"){
 			loc.setAlias(tokens[i++]);
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'alias' directive.");
+			}
 		}
-        else
+		else
 		{
-            if (i < tokens.size() && tokens[i] == ";") ++i;
-        }
+			Logger::getInstance() << "Location directive not supported: " << key << std::endl;
+			
+			// Avanzar hasta ; o }
+			while (i < tokens.size() && tokens[i] != ";" && tokens[i] != "}") {
+				++i;
+			}
+			
+			// Saltar ; si existe
+			if (i < tokens.size() && tokens[i] == ";") {
+				++i;
+			}
+		}
 	}
 	if (i < tokens.size() && tokens[i] == "}") ++i;
 
@@ -322,7 +397,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 
 	return (ld);
 }
-
+ 
 ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 {
 	ParsedServer server;
@@ -339,38 +414,95 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			{
 				listen_tokens.push_back(tokens[i++]);
 			}
-			++i;
+
 			Listen ld = parse_listen(listen_tokens);
 			server.listens.push_back(ld);
+			++i;
 		}
 		else if (key == "server_name")
 		{
-			while (tokens[i] != ";") server.server_names.push_back(tokens[i++]);
+			std::vector<std::string> names;
+
+			while (tokens[i] != ";" && !isServerDirective(tokens[i]))
+				names.push_back(tokens[i++]);
+			
+			server.server_names = names;
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'server_name' directive.");
+			}
 		}
-		else if (key == "root")
+		else if (key == "root") {
 			server.root = tokens[i++];
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'root' directive.");
+			}
+		}
 		else if (key == "index")
 		{
-			while (tokens[i] != ";")
-				server.index_files.push_back(tokens[i++]);
+			std::vector<std::string> index_files;
+
+			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]))
+				index_files.push_back(tokens[i++]);
+			
+			if (index_files.empty()) {
+				index_files.push_back("index.html");
+				Logger::getInstance().warning("Empty 'index' directive in Server block. Setting default value.");
+			}
+
+			server.index_files = index_files;
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'index' directive.");
+			}
 		}
 		else if (key == "error_page")
 		{
 			std::vector<int>codes;
-			while (isdigit(tokens[i][0]))
+		
+			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]) && isdigit(tokens[i][0]))
 				codes.push_back(to_int(tokens[i++]));
-			
+
+			if (codes.empty())
+				CODE_ERR("'error_page' directive requieres at least one error code.");
+
+
+			if (i >= tokens.size() || tokens[i] == ";" || isServerDirective(tokens[i]))
+				CODE_ERR("'error_page' directive requires a file path after error codes");
+
+
 			std::string error_page_path = tokens[i++];
+
 			for (size_t j = 0; j < codes.size(); ++j)
-			{
 				server.error_pages[codes[j]] = error_page_path;
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'error_page' directive.");
 			}
 		}
 		else if (key == "allow_methods")
 		{
-			while (tokens[i] != ";")
-				server.allow_methods.push_back(tokens[i++]);
-        }
+
+			std::vector<std::string> methods;
+
+			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]))
+				methods.push_back(tokens[i++]);
+
+			if (methods.empty())
+				CODE_ERR("'allow_methods directive requires at least one method.");
+
+			server.allow_methods = methods;
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'allow_methods' directive.");
+			}
+
+		}
 		else if (key == "autoindex")
 		{
 			std::string autoindex_value = tokens[i++];
@@ -382,9 +514,20 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 				server.autoindex = AINDX_DEF_OFF;
 				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
 			}
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'autoindex' directive.");
+			}
 		}
-		else if (key == "client_max_body_size")
+		else if (key == "client_max_body_size") {
 			server.client_max_body_size = tokens[i++];
+
+			if (i < tokens.size() && tokens[i] == ";") ++i;
+			else {
+				CODE_ERR("Missing ';' after 'client_max_body_size' directive.");
+			}
+		}
 		else if (key == "location")
 		{
 			Location loc = parseLocation(tokens, i);
@@ -392,10 +535,29 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			if (loc.getMatchType() == Location::EXACT) {
 				map_key = "=" + map_key;
 			}
-			server.locations[loc.getPath()] = loc;
+
+			if (server.locations.find(map_key) != server.locations.end()) {
+				CODE_ERR("Duplicate location '" + map_key + "' in location block found, KILLING.");
+				// TODO Fixed
+			}
+
+			server.locations[map_key] = loc;
 		}
-		if (i < tokens.size() && tokens[i] == ";") ++i;
+		else
+		{
+			Logger::getInstance() << "Directive not supported: " << key << std::endl;
+			while (i < tokens.size() && !tokens[i].empty() &&
+				(tokens[i] != ";" && tokens[i] != "}"))
+			{
+				++i;
+			}
+			if (i < tokens.size() && tokens[i] == ";")
+			{
+				++i;
+			}
+		}
 	}
+
 	++i;
 
 	applyAutoindex(server);

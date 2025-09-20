@@ -19,6 +19,7 @@ public:
 
     bool get_crlf_line(std::string::iterator & _begin, std::string::iterator &  _end);
     bool get_chunk(ssize_t size, std::string::iterator &  _begin, std::string::iterator &  _end);
+    bool get_crlf_chunk(ssize_t chunk_size, std::string::iterator & _begin, std::string::iterator & _end);
 
     ssize_t previous_read_size() const;
 
