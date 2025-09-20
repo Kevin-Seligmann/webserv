@@ -11,7 +11,7 @@ OBJ = main.o Logger.o  HTTPMethod.o FieldSection.o \
 	File.o HTTPResponseBuffer.o VirtualServersManager.o Wspoll.o \
     Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
 	Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
-	CGIArg.o CGIEnv.o CGIInterpreter.o CGI.o CGIMap.o CGIResponse.o
+	CGIArg.o CGIEnv.o CGIInterpreter.o CGI.o CGIResponse.o
 	
 # Target
 NAME = webserv

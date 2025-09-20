@@ -33,6 +33,7 @@ void Client::process(int fd, int mode)
 
 	Logger::getInstance() <<  "Processing on client: " + wss::i_to_dec(_socket) + ". Mode: " + wss::i_to_dec(mode) << std::endl;
 
+
 	switch (_status)
 	{
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
@@ -170,6 +171,7 @@ void Client::handleRequestDone()
 	//     prepareCgiResponse(target_server, location);
 	// }
 	else {
+		isCgiRequest(); // check if need to switch to CGI
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 	}
 }
@@ -223,11 +225,12 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 	_active_fd = newfd;
 }
 
-bool Client::isCgiRequest(Location* location, const std::string& path)
+bool Client::isCgiRequest()
 {
-	(void)location;
+	std::cout << "HERE THE PATH: " << _request.uri.path << "end_of_path"<< std::endl; 
 
-	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.csv");
+	
+/*	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.csv");
 
 	for (size_t i = 0; i < cgi_extensions.size(); ++i) 
 	{
@@ -237,7 +240,7 @@ bool Client::isCgiRequest(Location* location, const std::string& path)
 		{
 			return (true);
 		}
-	}
+	}*/
 	return (false);
 }
 

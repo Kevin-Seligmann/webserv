@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:51:09 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/15 13:40:56 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/18 12:08:54 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef CGIINTERPTETER_HPP
@@ -40,6 +40,7 @@ struct CGIInterpreter
 	std::vector<std::string> extensions;
 
 	static std::string getInterpreterForExtension(const std::string& ext);
+	static std::string findInterpreterForScript(const std::string& script);
 
 	void reset();
 };

@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 11:11:22 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/15 13:43:46 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/18 12:10:10 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,23 @@ std::string CGIInterpreter::getInterpreterForExtension(const std::string& ext)
 		}
 	}
 	return ("");
+}
+
+std::string CGIInterpreter::findInterpreterForScript(const std::string& script)
+{
+	for (t_cgi_conf::const_iterator it = ACCEPTED_EXT.begin(); it != ACCEPTED_EXT.end(); ++it)
+	{
+		for (std::vector<std::string>::const_iterator s = it->extensions.begin();
+			 s != it->extensions.end(); ++s)
+		{
+			if (script.size() >= s->size() &&
+				script.compare(script.size() - s->size(), s->size(), *s) == 0)
+			{
+				return it->interpreter;
+			}
+		}
+	}
+	return "";
 }
 
 std::ostream& operator<<(std::ostream& os, CGIInterpreter const& cgi)

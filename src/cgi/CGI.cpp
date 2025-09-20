@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/14 16:13:20 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/18 11:12:24 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,11 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path) co
 	std::vector<std::string> parts;
 	std::vector<std::string> exts;
 
-	exts.push_back(".php");
-	exts.push_back(".py");
+	for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+		 it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+	{
+		exts.insert(exts.end(), it->extensions.begin(), it->extensions.end());
+	}
 
 	size_t indx = std::string::npos;
 

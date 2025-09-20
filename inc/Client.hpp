@@ -60,7 +60,7 @@ private:
     void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
     void prepareRequest();
 
-    bool isCgiRequest(Location* location, const std::string& path);
+    bool isCgiRequest();
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
 	void get_config(ServerConfig ** server, Location ** location);

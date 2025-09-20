@@ -97,8 +97,6 @@ int main(int argc, char* argv[]) {
         MediaType::load_types();
 		CGIInterpreter::load_interpreters();
 
-		std::cout << "HERE <<<<<<<" << std::endl;
-		std::cout << CGIInterpreter::ACCEPTED_EXT << std::endl;
 
         // Prepare for parseProcess function
         int newArgc = (configFilename ? 2 : 1);
