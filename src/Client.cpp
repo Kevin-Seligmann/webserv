@@ -171,7 +171,11 @@ void Client::handleRequestDone()
 	//     prepareCgiResponse(target_server, location);
 	// }
 	else {
-		isCgiRequest(); // check if need to switch to CGI
+		if (isCgiRequest()) 
+		{
+			_status = PROCESSING_CGI;
+			std::cout << "HERE >>>>>>> YES" << std::endl;
+		}
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 	}
 }
@@ -227,21 +231,22 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 
 bool Client::isCgiRequest()
 {
-	std::cout << "HERE THE PATH: " << _request.uri.path << "end_of_path"<< std::endl; 
+	const std::string& path = _request.uri.path;
 
-	
-/*	static const std::vector<std::string> cgi_extensions = loadCgiExtensions("cgi_extensions.csv");
-
-	for (size_t i = 0; i < cgi_extensions.size(); ++i) 
-	{
-		const std::string& ext = cgi_extensions[i];
-		if (path.size() >= ext.size() &&
-			path.compare(path.size() - ext.size(), ext.size(), ext) == 0)
-		{
-			return (true);
-		}
-	}*/
-	return (false);
+    for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+         it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+    {
+        for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+             ext != it->extensions.end(); ++ext)
+        {
+            if (path.size() >= ext->size() &&
+                path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
+            {
+                return (true);
+            }
+        }
+    }
+    return (false);
 }
 
 
