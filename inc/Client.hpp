@@ -41,6 +41,7 @@ private:
     static const int MAX_ERROR_RETRIES = 1;
 
     VirtualServersManager & _vsm;
+    // CGI                     _cgi;
     Status                  _status;
     HTTPError	            _error;
     HTTPRequest 	        _request;
@@ -51,6 +52,8 @@ private:
     id_t                    _error_retry_count;
     ActiveFileDescriptor    _active_fd;
     time_t                  _last_activity;
+    bool                    _is_cgi;
+
     // int             error_retry_count;
 
 

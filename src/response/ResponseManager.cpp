@@ -7,8 +7,8 @@ Location * lc = new Location();
     Remember status with content, should put C.L 0 or send error page.
 */
 
-ResponseManager::ResponseManager(HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
-:_request(request), _error(error),_status(WAITING_REQUEST)
+ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
+:_cgi(cgi), _request(request), _error(error),_status(WAITING_REQUEST)
 {
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
 
@@ -55,11 +55,16 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 /*
     Called once request is done
 */
-void ResponseManager::generate_response(RM_error_action action)
+void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
 {
     Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     _error_action = action;
+    if (is_cgi)
+    {
+        generate_cgi_response();
+        return ;
+    }
     switch (::status::status_type(_error.status()))
     {
         case STYPE_BODY_ERROR_RESPONSE:
@@ -124,6 +129,13 @@ void ResponseManager::generate_get_response()
         case File::DIRECTORY: read_directory(); break;
         case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
     }
+}
+
+void ResponseManager::generate_cgi_response()
+{
+    Logger::getInstance() << "Generating CGI response. " << std::endl;
+    _buffer.put_body(_cgi.getCGIResponse().getResponseBuffer());
+    _status = WRITING_RESPONSE;
 }
 
 void ResponseManager::generate_file_status_response()

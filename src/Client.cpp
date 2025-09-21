@@ -3,15 +3,17 @@
 
 // Constructors, destructors
 Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance of overloaded function Client::Client matches the specified type
-: _vsm(vsm) 
+:_vsm(vsm)
+, _cgi(_request, _vsm) 
 , _element_parser(_error)
 , _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-, _response_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
+, _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 , _status(PROCESSING_REQUEST)
 , _socket(client_fd)
 , _error_retry_count(0)
 , _active_fd(client_fd, POLLIN | POLLRDHUP)
 , _last_activity(time(NULL))
+, _is_cgi(false)
 {
 	_vsm.hookFileDescriptor(_active_fd);
 }
@@ -46,6 +48,7 @@ void Client::prepareRequest()
 	_error_retry_count = 0;
 	updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
 	_request_manager.new_request();
+	// Reset CGI.
 	_status = PROCESSING_REQUEST;
 }
 
@@ -54,7 +57,7 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	_response_manager.new_response();
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
-	_response_manager.generate_response(action);
+	_response_manager.generate_response(action, _is_cgi);
 
 	if(_response_manager.is_error())
 	{
@@ -92,13 +95,8 @@ void Client::handle_processing_response()
 		handleRequestError();
 	else if (_response_manager.response_done()) // Handle error
 	{		
-		// TODO
-		/*  https://man7.org/linux/man-pages/man2/shutdown.2.html SHUT_RD
-			Mientras no exista requestManager->close() usar error >= 400
-		*/
 		if (_request_manager.close())
 		{
-			// shutdown(_socket, SHUT_RD);
 			_status = CLOSING;
 			_vsm.unhookFileDescriptor(_active_fd);
 			_active_fd.fd = -1;
@@ -114,47 +112,41 @@ void Client::handle_processing_response()
 	}
 }
 
-void Client::handle_cgi_request() {
-	// Implement CGI request processing
+/*
+	prepareCgi()
+	{
+		cgi.init();
+		updateActiveFileDescriptor(cgi.get_active_file_descriptor());
+		status = processing_CGI
+	}
+*/
 
-//         static std::map<int, time_t> cgi_start_times;
-		
-//         if (cgi_start_times.find(client_fd) == cgi_start_times.end()) {
-//             cgi_start_times[client_fd] = time(NULL);
-//             Logger::getInstance().info("Starting CGI execution...");
-//             return;
-//         }
-		
-//         time_t elapsed = time(NULL) - cgi_start_times[client_fd];
-//         if (elapsed > 30) { // timeout de 30 segundos
-//             Logger::getInstance().warning("CGI timeout");
-//             cgi_start_times.erase(client_fd);
-//             client->error.set("CGI script timeout", INTERNAL_SERVER_ERROR);
-//             client->status = ClientState::ERROR_HANDLING;
-//             return;
-//         }
-		
-//         if (elapsed >= 1) { // 1 o más segundos de procesamiento //QUESTION porque damos por completo cgi con 1 segundo de procesamiento
-//             Logger::getInstance().info("CGI execution complete");
-//             cgi_start_times.erase(client_fd);
-			
-//             client->status = ClientState::WRITING_RESPONSE;
-//             return;
-//         }
-	CGI cgi(_request, _vsm);
 
-	cgi.runCGI();
+void Client::handle_cgi_request() {	
 
-/*	std::string response = 
-		"HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
-		"Content-Length: 27\r\n"
-		"\r\n"
-		"CGI processing placeholder";*/
 
-	std::cout << "HERE IS THE CGI ANSWER: " << cgi.getCGIResponse().getResponseBuffer() << std::endl;
 	/*
-	send(_socket, cgi.getCGIResponse().getResponseBuffer(), cgi.getCGIResponse().getResponseBuffer().size(), 0);*/
+		cgi.runCGI() // Read or write only once.
+		if (cgi.done())
+		{
+			prepareResponse();
+		}
+		else if (cgi.error()? ) ? SI existe
+		{
+			handleRequestError();
+		}
+		else
+		{
+			updateActiveFileDescriptor(cgi.get_active_file_descriptor());
+		}
+	*/
+	// cgi(_request, _vsm);
+
+	// _cgi.runCGI();
+
+	std::cout << "HERE IS THE CGI ANSWER: " << _cgi.getCGIResponse().getResponseBuffer() << std::endl;
+
+	// prepareResonse();
 
 }
 
@@ -168,6 +160,7 @@ void Client::handleRequestDone()
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	else if (isCgiRequest()) {
 			_status = PROCESSING_CGI; 
+			// prepareCgi();
 			handle_cgi_request();
 	}
 	else {
@@ -236,10 +229,12 @@ bool Client::isCgiRequest()
             if (path.size() >= ext->size() &&
                 path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
             {
+				_is_cgi = true;
                 return (true);
             }
         }
     }
+	_is_cgi = false;
     return (false);
 }
 

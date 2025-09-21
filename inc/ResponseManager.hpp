@@ -13,6 +13,7 @@
 #include "HTTPResponseBuffer.hpp"
 #include "File.hpp"
 #include "ActiveFileDescriptor.hpp"
+#include "CGI.hpp"
 
 class ResponseManager
 {
@@ -25,14 +26,14 @@ public:
         GENERATING_DEFAULT_ERROR_PAGE, GENERATING_LOCATION_ERROR_PAGE
     };
 
-    ResponseManager(HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
+    ResponseManager(CGI &, HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
     ~ResponseManager();
 
     void set_virtual_server(ServerConfig const * config);
     void set_location(Location const * location);
     // void generate_response(CGIResponse & response);
 
-    void generate_response(RM_error_action action);
+    void generate_response(RM_error_action action, bool is_cgi);
     void process();
     bool response_done();
     void new_response();
@@ -57,11 +58,13 @@ private:
     std::string::iterator _wr_file_it;
     RM_error_action _error_action;
     std::string _redirecting_location;
+    CGI & _cgi;
 
     void generate_default_status_response();
     void generate_get_response();
     void generate_post_response();
     void generate_delete_response();
+    void generate_cgi_response();
     void read_file();
     void write_file();
     void write_response();
