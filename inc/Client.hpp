@@ -41,7 +41,7 @@ private:
     static const int MAX_ERROR_RETRIES = 1;
 
     VirtualServersManager & _vsm;
-    // CGI                     _cgi;
+    CGI                     _cgi;
     Status                  _status;
     HTTPError	            _error;
     HTTPRequest 	        _request;

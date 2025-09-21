@@ -64,6 +64,8 @@ class CGI
 
 		CGIStatus getStatus() const;
 		void setStatus(CGIStatus s);
+
+		void init(const HTTPRequest &req, const VirtualServersManager& server);
 };
 
 

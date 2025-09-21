@@ -1,3 +1,4 @@
 <?php
 
-echo "HOLA";
+// header('Content-Type: text/html');
+echo "<p>HOLA MUNDO (CGI)</p>";

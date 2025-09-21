@@ -142,12 +142,12 @@ void Client::handle_cgi_request() {
 	*/
 	// cgi(_request, _vsm);
 
-	// _cgi.runCGI();
+	_cgi.init(_request, _vsm);
+	_cgi.runCGI();
 
 	std::cout << "HERE IS THE CGI ANSWER: " << _cgi.getCGIResponse().getResponseBuffer() << std::endl;
 
-	// prepareResonse();
-
+	prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
 
 void Client::handleRequestDone()

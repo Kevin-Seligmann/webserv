@@ -17,7 +17,6 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 	_cgi_status = CGI_INIT;
 
 
-	buildEnv(req, server);
 
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
@@ -25,6 +24,11 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 	_cgi_pipe[1] = -1;
 	_pid = -1;
 
+}
+
+void CGI::init(const HTTPRequest &req, const VirtualServersManager& server)
+{
+	buildEnv(req, server);
 }
 
 CGI::~CGI()
@@ -125,6 +129,8 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server)
 {
 	std::map<std::string, std::string> res = pathToBlocks(req.uri.path);
 
+	_env.setEnvValue("REDIRECT_STATUS", "200"); // default
+
 	if (!req.body.content.empty())
 	{
 		std::ostringstream ss;
@@ -209,6 +215,8 @@ void CGI::runCGI()
 
 		char** envp = _env.getEnvp();
 
+		argv[1] = strdup("/home/kevin/42/webserv/test/42_tester/www/test.php");
+		std::cout <<"\n\n\n" << argv[0] << " " << argv[0] << " " << argv[1] << " " << envp[0] << std::endl;
 		execve(argv[0], argv, envp);
 
 		_cgi_status = CGI_ERROR;
