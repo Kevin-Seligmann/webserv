@@ -142,10 +142,22 @@ void Client::handle_cgi_request() {
 	*/
 	// cgi(_request, _vsm);
 
-	_cgi.init(_request, _vsm);
+	ServerConfig * _server_config = NULL;
+	Location * _location = NULL;
+	get_config(&_server_config, &_location);
+	std::string path = "";
+    if (_location)
+        path = _location->getFilesystemLocation(_request.get_path());
+    if (path.empty() && !_server_config->getRoot().empty())
+        path = _server_config->getRoot() + _request.get_path();
+    else if (path.empty())
+        CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
+
+	std::cout << "SENDING CGI" << std::endl;
+	_cgi.init(_request, _vsm, path);
 	_cgi.runCGI();
 
-	std::cout << "HERE IS THE CGI ANSWER: " << _cgi.getCGIResponse().getResponseBuffer() << std::endl;
+	// std::cout << "HERE IS THE CGI ANSWER: " << _cgi.getCGIResponse().getResponseBuffer() << std::endl;
 
 	prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }

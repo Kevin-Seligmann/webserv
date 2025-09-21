@@ -126,7 +126,7 @@ void CGIResponse::buildResponse()
 
 	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
 
-	response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
+	// response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
 
 	if (!_location.empty())
 		response << "Location: " << _location << "\r\n";

@@ -135,6 +135,7 @@ void ResponseManager::generate_cgi_response()
 {
     Logger::getInstance() << "Generating CGI response. " << std::endl;
     _buffer.put_body(_cgi.getCGIResponse().getResponseBuffer());
+    // std::cout << "BODY SIZE: " << _buffer.end() - _buffer.begin() << std::endl;
     _status = WRITING_RESPONSE;
 }
 

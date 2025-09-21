@@ -26,9 +26,9 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 
 }
 
-void CGI::init(const HTTPRequest &req, const VirtualServersManager& server)
+void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path)
 {
-	buildEnv(req, server);
+	buildEnv(req, server, path);
 }
 
 CGI::~CGI()
@@ -75,7 +75,7 @@ std::string CGI::methodToString(HTTPMethod method) const
 	}
 }
 
-std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path) const
+std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, const std::string &file_path) const
 {
 	std::map<std::string, std::string> cgi;
 	std::vector<std::string> parts;
@@ -120,16 +120,19 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path) co
 		for (size_t k = indx + 1; k < parts.size(); ++k)
 			pathInfo += "/" + parts[k];
 	}
-	cgi["PATH_INFO"] = pathInfo;
+
+	std::cout << "PATH: " << file_path << std::endl;
+	cgi["PATH_INFO"] = "/";
 
 	return (cgi);
 }
 
-void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server)
+void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & path)
 {
-	std::map<std::string, std::string> res = pathToBlocks(req.uri.path);
+	std::map<std::string, std::string> res = pathToBlocks(req.uri.path, req.get_path());
 
-	_env.setEnvValue("REDIRECT_STATUS", "200"); // default
+	_env.setEnvValue("REDIRECT_STATUS", "200");
+	_env.setEnvValue("SCRIPT_FILENAME", path); 
 
 	if (!req.body.content.empty())
 	{
@@ -215,8 +218,17 @@ void CGI::runCGI()
 
 		char** envp = _env.getEnvp();
 
-		argv[1] = strdup("/home/kevin/42/webserv/test/42_tester/www/test.php");
-		std::cout <<"\n\n\n" << argv[0] << " " << argv[0] << " " << argv[1] << " " << envp[0] << std::endl;
+		// for (int i = 0; i < 100; i ++){
+		// 	if (!argv[i])
+		// 		break;
+		// 	std::cout << argv[i] << std::endl;
+		// }
+
+		// for (int i = 0; i < 100; i ++){
+		// 	if (!envp[i])
+		// 		break;
+		// 	std::cout << envp[i] << std::endl;
+		// }
 		execve(argv[0], argv, envp);
 
 		_cgi_status = CGI_ERROR;
