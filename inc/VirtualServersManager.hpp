@@ -67,6 +67,7 @@ private:
 
 	// Manejo de señales
 	static void signal_handler(int sig);
+	static void sigchild_handler(int sig);
 	void setupSignals();
 	void gracefulShutdown();
 	bool isShutdownRequested() const { return s_shutdown_requested != 0; }

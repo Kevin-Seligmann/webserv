@@ -4,29 +4,88 @@
 #include <arpa/inet.h>  // inet_pton
 #include <errno.h>  // inet_pton
 
+// ================ SIGNALS  MANAGEMENT ================
 
 volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
 
 void VirtualServersManager::setupSignals() {
 
-	signal(SIGPIPE, SIG_IGN);
-	struct sigaction sa;
-	sa.sa_handler = signal_handler;
+	// SIGPIPE manage signals launched at pipes closure (we want to make suer it is ignored)
+	struct sigaction sa_pipe;
+	sa_pipe.sa_handler = SIG_IGN;
+	// Set signals to block during execution of handler
+	sigemptyset(&sa_pipe.sa_mask);
+	// Set behaviour for process interrupted by handler
+	sa_pipe.sa_flags = 0;
+	
 
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
+	// SIGINT/SIGTERM launched buy user o kill, initiates gentle shutdown
+	struct sigaction sa_shutdown;
+	sa_shutdown.sa_handler = signal_handler;
+	// Set signals to block during execution of handler
+	sigemptyset(&sa_shutdown.sa_mask);
+	// Block this signals during handler execution to avoid reentrance
+	sigaddset(&sa_shutdown.sa_mask, SIGINT);
+	sigaddset(&sa_shutdown.sa_mask, SIGTERM);
+	// Set behaviour for process interrupetd by handler
+	sa_shutdown.sa_flags = SA_RESTART;
 
-	if (sigaction(SIGINT, &sa, NULL ) == -1) {
+
+	// SIGCHLD manage signlas launched at child termination, avoid zombie processes
+	struct sigaction sa_child;
+	sa_child.sa_handler = sigchild_handler;
+	// Set signals to block during execution of handler
+	sigemptyset(&sa_child.sa_mask);
+	// Block other signals during handler execution (reaping)
+	sigaddset(&sa_child.sa_mask, SIGINT);
+	sigaddset(&sa_child.sa_mask, SIGTERM);
+	// Set behaviour for process interrupted by handler
+	sa_child.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+
+	// Apply config to signals
+	
+	// SIGPIPE
+	if (sigaction(SIGPIPE, &sa_pipe, NULL ) == -1) 
+	{
+		throw std::runtime_error("Failed to install SIGPIPE handler");
+	}
+
+	// SIGINT
+	if (sigaction(SIGINT, &sa_shutdown, NULL ) == -1) 
+	{
 		throw std::runtime_error("Failed to install SIGINT handler");
 	}
-	if (sigaction(SIGTERM, &sa, NULL) == -1) {
+
+	// SIGTERM
+	if (sigaction(SIGTERM, &sa_shutdown, NULL) == -1) 
+	{
 		throw std::runtime_error("Failed to install SIGTERM handler");
 	}
+
+	// SIGCHLD
+	if (sigaction(SIGCHLD, &sa_child, NULL ) == -1) 
+	{
+		throw std::runtime_error("Failed to install SIGCHLD handler");
+	}	
 }
 
 void VirtualServersManager::signal_handler(int sig) {
 	if (sig == SIGINT || sig == SIGTERM) {
 		s_shutdown_requested = 1;	
+	}
+}
+
+void VirtualServersManager::sigchild_handler(int sig) {
+	(void)sig;
+
+	pid_t pid;
+	int status;
+
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		// Nothing here
+		// Waitpid removes de process from the porocess table
+		// It only iterates to clean every child finished
+		// If need I can implement a self pipe trick to add actions in the run loop
 	}
 }
 
