@@ -251,7 +251,7 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection." << std::endl;
 				else if (event.events & POLLHUP)
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection abrutply." << std::endl;
-				if (event.events & POLLRDHUP)
+				else if (event.events & POLLERR)
 					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " socket error. Closing connection abruptly." << std::endl;
 
 				disconnectClient(socket_fd);

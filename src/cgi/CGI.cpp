@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:10:50 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/22 16:55:56 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,19 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	std::map<std::string, std::string> res = pathToBlocks(req.uri.path, req.get_path());
 
 	_env.setEnvValue("REDIRECT_STATUS", "200");
-	_env.setEnvValue("SCRIPT_FILENAME", path); 
+
+	// TESTING
+	// Construiccion del path de cgi script
+	std::string abs_path = path;
+	if (abs_path[0] != '/' && abs_path.find("./") == 0)
+	{
+		char cwd[1024];
+		if (getcwd(cwd, sizeof(cwd)))
+		{
+			abs_path = std::string(cwd) + "/" + abs_path;
+		}
+	}
+	_env.setEnvValue("SCRIPT_FILENAME", path);
 
 	if (!req.body.content.empty())
 	{
@@ -187,14 +199,19 @@ void CGI::runCGI()
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
+		// TEST 
+		perror("pipe failed"); // .
 		_cgi_status = CGI_ERROR;
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
 	_pid = fork();
+	
 
 	if (_pid < 0)
 	{
+		// TEST 
+		perror("pipe failed"); // .
 		_cgi_status = CGI_ERROR;
 		_cgi_response.buildInternalErrorResponse();
 		return ;
@@ -202,9 +219,17 @@ void CGI::runCGI()
 
 	if (_pid == 0)
 	{
+		// TEST 
+		std::cerr << "CHILD: Starting, PID=" << getpid() << std::endl;
+		// .
+
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 			dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
 		{
+			// TEST
+			std::cerr << "CHILD: dup2 failed" << std::endl;
+			perror("dup2 failed"); // .
+
 			_cgi_status = CGI_ERROR;
 			_cgi_response.buildInternalErrorResponse();
 			_exit(1);
@@ -229,12 +254,27 @@ void CGI::runCGI()
 		// 		break;
 		// 	std::cout << envp[i] << std::endl;
 		// }
+
+		std::string script_path = _env.getCGIEnvValue("SCRIPT_FILENAME");
+		// TEST
+		std::cerr << "CHILD: Checking script path: [" << script_path << "]" << std::endl;
+		std::cerr << "CHILD: Script exists: " << (access(script_path.c_str(), F_OK) == 0 ? "YES" : "NO") << std::endl;
+		std::cerr << "CHILD: Script executable: " << (access(script_path.c_str(), X_OK) == 0 ? "YES" : "NO") << std::endl;
+		// .
+
+		if (access(script_path.c_str(), X_OK) != 0) {
+			// TEST
+			std::cerr << "CHILD: Script not executable, exiting" << std::endl;
+    		perror("access failed");
+			// .
+			_exit(1);
+		}
+		
+		// TEST
+		std::cerr << "CHILD: About to execve " << argv[0] << std::endl;\
+		// .
+		
 		execve(argv[0], argv, envp);
-
-		_cgi_status = CGI_ERROR;
-		_cgi_response.buildInternalErrorResponse();
-        _exit(1);
-
 	}
 	else
 	{
@@ -264,10 +304,21 @@ void CGI::runCGI()
 			cgi_output.append(buffer, n);
 		}
 
+		std::cout << "CGI OUTPUT LENGTH: " << cgi_output.length() << std::endl;
+		std::cout << "CGI OUTPUT CONTENT: [" << cgi_output << "]" << std::endl;
+
 		close(_cgi_pipe[0]);
 
+		// TEST
+		std::cout << "PARENT: About to waitpid for " << _pid << std::endl;
 		int	status_cgi;
-		waitpid(_pid, &status_cgi, 0);
+		pid_t result = waitpid(_pid, &status_cgi, 0);
+		Logger::getInstance() << "\n\n WAITPID RESULT : " << result << "  STATUS : " << status_cgi << std::endl;
+		std::cout << "PARENT: waitpid returned " << result << ", errno=" << errno << std::endl;
+    	if (result == -1) {
+        	perror("waitpid failed");
+    	}
+		// . mantener int, waitpid
 
 		_cgi_status = CGI_READING_OUTPUT;
 

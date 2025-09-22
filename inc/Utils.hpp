@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 13:17:49 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/22 17:20:13 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,5 +66,6 @@ void ERRORlogsEntry(const std::string& title, const std::string& str);
 size_t str_to_sizet(const std::string& str, size_t max_value);
 
 std::string normalizePath(const std::string& base, const std::string& path);
+std::string normalizeWebPath(const std::string& root, const std::string& request_path);
 
 #endif
