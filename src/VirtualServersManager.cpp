@@ -5,11 +5,9 @@
 #include <errno.h>  // inet_pton
 
 
-VirtualServersManager* VirtualServersManager::s_instance = NULL;
 volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
 
 void VirtualServersManager::setupSignals() {
-	s_instance = this;
 
 	signal(SIGPIPE, SIG_IGN);
 	struct sigaction sa;

@@ -39,7 +39,6 @@ private:
 	Wspoll                                          _wspoll;
  
 	// Manejo de señales
-	static VirtualServersManager*                   s_instance;
 	static volatile sig_atomic_t					s_shutdown_requested;
 
 	// Métodos privados de socket management
