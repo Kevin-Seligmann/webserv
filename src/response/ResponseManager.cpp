@@ -1,12 +1,5 @@
 #include "ResponseManager.hpp"
 
-/* TO_DELETE ya no es necearia la location fake */
-Location * lc = new Location();
-
-/*
-    Remember status with content, should put C.L 0 or send error page.
-*/
-
 ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
 :_cgi(cgi), _request(request), _error(error),_status(WAITING_REQUEST)
 {

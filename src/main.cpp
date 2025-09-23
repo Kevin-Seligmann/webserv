@@ -7,105 +7,80 @@
 #include "DebugView.hpp"
 #include "CGIInterpreter.hpp"
 
-void printSeparator(const std::string& title) {
-    std::cout << "\n" << std::string(50, '=') << std::endl;
-    std::cout << "  " << title << std::endl;
-    std::cout << std::string(50, '=') << std::endl;
-}
-
-
-void testVirtualServersManager(const ParsedServers& configs) {
-    printSeparator("TEST: VirtualServersManager");
-    
+void runServer(const ParsedServers& configs)
+{    
     if (configs.empty()) {
-        std::cout << "✗ No configurations to test" << std::endl;
+		Logger::getInstance().error("✗ No configurations for virtual servers");
         return;
     }
     
-    try {
-        VirtualServersManager manager(configs);
-        
-        std::cout << "✓ VirtualServersManager created" << std::endl;
-        std::cout << "✓ Managing " << configs.size() << " servers" << std::endl;
-        
-    } catch (const std::exception& e) {
-        std::cout << "✗ Error creating manager: " << e.what() << std::endl;
-    }
-}
-
-void runInteractiveTest(const ParsedServers& configs) {
-    printSeparator("INTERACTIVE TEST");
+    Logger::getInstance().info(" === Starting Webserv ===");
     
-    if (configs.empty()) {
-        std::cout << "✗ No configurations for interactive test" << std::endl;
-        return;
-    }
-    
-    std::cout << "Starting interactive server test..." << std::endl;
-    std::cout << "This will start all configured servers" << std::endl;
-    
-    // Show what will be started
-    for (size_t i = 0; i < configs.size(); ++i) {
-        for (size_t j = 0; j < configs[i].listens.size(); ++j) {
-            std::cout << "  Server on " << configs[i].listens[j].host 
-                      << ":" << configs[i].listens[j].port;
-            if (!configs[i].server_names.empty()) {
-                std::cout << " (" << configs[i].server_names[0] << ")";
-            }
-            std::cout << std::endl;
+    // Show servers config
+    for (size_t i = 0; i < configs.size(); ++i)
+	{
+        for (size_t j = 0; j < configs[i].listens.size(); ++j)
+		{
+			std::ostringstream oss;
+			oss << "Starting... "
+				<< configs[i].listens[j].host
+				<< ":" 
+				<< configs[i].listens[j].port
+				<< " for servername "
+				<< (!configs[i].server_names.empty()
+					? "'" + configs[i].server_names[0] + "'"
+					: "Unnamed'");
+			Logger::getInstance().info(oss.str());
         }
     }
     
-    std::cout << "\nStarting servers..." << std::endl;
-    
-    try {
+    try
+	{
         VirtualServersManager manager(configs);
-        
-        std::cout << "Starting all servers..." << std::endl;
-        std::cout << "Press Ctrl+C to stop" << std::endl;
-        
-        // Start the actual event loop
         manager.run();
-        
-    } catch (const std::exception& e) {
-        std::cout << "✗ Error running servers: " << e.what() << std::endl;
+    }
+	catch (const std::exception& e)
+	{
+		std::ostringstream oss;
+		oss << "✗ Error running servers: "
+			<< e.what();
+		Logger::getInstance().error(oss.str());
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+
     std::cout << "Webserv Test" << std::endl;
     std::cout << "============" << std::endl;
     
-    // Flags & config filename preprocessing
-    bool interactive = false;
     const char* configFilename = NULL;
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--interactive") {
-            interactive = true;
-        } else if (!arg.empty() && arg[0] == '-') {
-            // ignore unknown flags for now
-        } else if (configFilename == NULL) {
-            configFilename = argv[i];
-        }
+
+    if (argc > 2)
+    {
+        std::cerr << "✗ Wrong arguments number!" << std::endl;
+        std::cerr << "Use: ./webserv <config.conf>" << std::endl;
+        std::cerr << "Or use a default configuration using: ./webserv " << std::endl;
+        return 1;
+    }
+    else if (argc == 2)
+    {
+        configFilename = argv[1];
     }
 
     // Parse configuration
     ParsedServers parsedConfig;
 
-    try {
+    try
+    {
+    
         MediaType::load_types();
         CGIInterpreter::load_interpreters();
 
-        // Prepare for parseProcess function
-        int newArgc = (configFilename ? 2 : 1);
-        char* newArgv[3];
-        newArgv[0] = argv[0];
-        if (configFilename) newArgv[1] = const_cast<char*>(configFilename);
-        int result = parseProcess(newArgc, newArgv, parsedConfig);
+        int result = parseProcess(argc, argv, parsedConfig);
         
         if (result != 0) {
-            Logger::getInstance().error("Configuration parsing failed");
+            Logger::getInstance().error("✗ Configuration parsing failed");
             return 1;
         }
         
@@ -116,7 +91,9 @@ int main(int argc, char* argv[]) {
         
         Logger::getInstance().info("✓ Configuration parsed successfully");
         
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         std::ostringstream oss;
         oss << "✗ Error parsing configuration: " << e.what();
         Logger::getInstance().error(oss.str());
@@ -124,17 +101,9 @@ int main(int argc, char* argv[]) {
     }
     
     // DEBUG
-    DebugView::printConfigSummary(parsedConfig);
+    // DebugView::printConfigSummary(parsedConfig);
         
-    // Interactive test
-    std::cout << "\nRun with config file for interactive testing" << std::endl;
-    std::cout << "Example: ./webserver conf/test_simple.conf --interactive" << std::endl;
-
-    if (interactive) {
-        std::cout << "\nStarting servers interactively..." << std::endl;
-        runInteractiveTest(parsedConfig);
-        return 0; // if runInteractiveTest returns
-    }
-
+	std::cout << "\nStarting servers interactively..." << std::endl;
+    runServer(parsedConfig);
     return 0;
 }
