@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/22 16:55:56 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/23 18:05:10 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,12 +88,15 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	}
 
 	size_t indx = std::string::npos;
-
 	std::stringstream ss(path);
 	std::string item;
+
 	while (std::getline(ss, item, '/'))
 	{
-		if (!item.empty()) { parts.push_back(item); }
+		if (!item.empty())
+		{
+			parts.push_back(item);
+		}
 	}
 
 	for (size_t i = 0; i < parts.size(); ++i)
@@ -107,17 +110,20 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 				break;
 			}
 		}
-
-		if (indx != std::string::npos) { break; }
+		if (indx != std::string::npos)
+		{
+			break;
+		}
 	}
 
 	if (indx != std::string::npos)
 	{
 		std::string scriptName = "";
-		for (size_t i = 0; i <= indx; ++i) {
+		for (size_t i = 0; i <= indx; ++i)
+		{
 			scriptName += "/" + parts[i];
 		}
-		cgi["SCRIPT_NAME"] = parts[indx];
+		cgi["SCRIPT_NAME"] = scriptName;
 	}
 	else
 	{
@@ -136,19 +142,20 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 
 	if (isTestScript)
 	{
-    	cgi["PATH_INFO"] = file_path;
+    	cgi["PATH_INFO"] = pathInfo;
     	// TEST
-		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
+		std::cerr << "DEBUG: Test mode PATH_INFO=" << pathInfo << std::endl;
 		// .
 	}
 	else
 	{
     	cgi["PATH_INFO"] = pathInfo;
+		
 	   	// TEST
-		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
+		std::cerr << "DEBUG: Test mode PATH_INFO=" << pathInfo << std::endl;
 		// .
 	}
-
+	//	cgi["PATH_INFO"] = "/directory/youpi.bla";
 
 	// TEST
 	std::cout << "PATH: " << file_path << std::endl;
@@ -221,6 +228,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 
 	if (req.uri.query.empty()) { _env.setEnvValue("QUERY_STRING", ""); }
 	else { _env.setEnvValue("QUERY_STRING", req.uri.query); }
+
 
 	_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
 

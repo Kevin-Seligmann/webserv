@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIResponse.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:11:12 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/23 16:01:31 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,8 @@ const std::string& CGIResponse::getResponseBuffer() const
 
 void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 {
+	std::cout << "DEBUG parseFromCGIOutput: total bytes = " << cgiOutput.size() << std::endl;
+	
 	std::istringstream stream(cgiOutput);
 	std::string line;
 
@@ -113,7 +115,13 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 		}
 	}
 
-	_bodyStream << bodyTmp.str();
+	std::string bodyStr = bodyTmp.str();
+	if (!bodyStr.empty() && bodyStr[bodyStr.size() - 1] == '\n')
+	{
+		bodyStr.erase(bodyStr.size() - 1, 1);
+	}
+
+	_bodyStream << bodyStr;
 
 	if (_status.empty()) { _status = "200 OK"; }
 	if (_contentType.empty()) { _contentType = "text/plain"; }
