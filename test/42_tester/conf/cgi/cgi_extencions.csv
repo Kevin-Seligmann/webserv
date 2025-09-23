@@ -4,4 +4,4 @@ INTERPRETER, EXT
 /usr/bin/node, .js
 ./cgi-bin/cgi_test, .blabla
 ./cgi-bin/mini.sh, .blax
-./test/42_tester/www/YoupiBanane/youpi.bla,.bla
+./www/YoupiBanane/youpi.bla,.bla

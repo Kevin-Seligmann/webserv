@@ -131,7 +131,24 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 			pathInfo += "/" + parts[k];
 	}
 
-	cgi["PATH_INFO"] = pathInfo;
+	// PATH_INFO conditional
+	bool isTestScript = file_path.find(".bla") != std::string::npos;
+
+	if (isTestScript)
+	{
+    	cgi["PATH_INFO"] = file_path;
+    	// TEST
+		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
+		// .
+	}
+	else
+	{
+    	cgi["PATH_INFO"] = pathInfo;
+	   	// TEST
+		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
+		// .
+	}
+
 
 	// TEST
 	std::cout << "PATH: " << file_path << std::endl;
@@ -164,11 +181,33 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 
 	if (!req.body.content.empty())
 	{
-		std::ostringstream ss;
-		ss << req.headers.content_length;
-		_env.setEnvValue("CONTENT_LENGTH", ss.str());
-		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.type + '/' + req.headers.content_type.subtype);
-		_req_body = req.body.content;
+		// TEST
+		std::cerr << "DEBUG: === CONTENT LENGTH === " << std::endl;
+		std::cerr << "DEBUG: req.headers.content_length = " << req.headers.content_length << std::endl;
+		std::cerr << "DEBUG: req.body.content.size() = " << req.body.content.size() << std::endl;
+		// .
+
+		if (req.method == POST || req.method == PUT) 
+		{
+			std::ostringstream ss;
+			
+			// Usar el valor del header si es válido, sino usar el tamaño del body
+			if (req.headers.content_length > 0) {
+				ss << req.headers.content_length;
+			} else if (!req.body.content.empty()) {
+				ss << req.body.content.size();
+			} else {
+				ss << "0";  // Cuerpo vacío
+			}
+			
+			_env.setEnvValue("CONTENT_LENGTH", ss.str());
+			
+			if (!req.body.content.empty()) {
+				_env.setEnvValue("CONTENT_TYPE", 
+					req.headers.content_type.type + '/' + req.headers.content_type.subtype);
+				_req_body = req.body.content;
+			}
+		}
 	}
 	
 	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
