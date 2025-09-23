@@ -192,19 +192,26 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 			std::ostringstream ss;
 			
 			// Usar el valor del header si es válido, sino usar el tamaño del body
-			if (req.headers.content_length > 0) {
+			if (req.headers.content_length > 0)
+			{
 				ss << req.headers.content_length;
-			} else if (!req.body.content.empty()) {
+			}
+			else if (!req.body.content.empty())
+			{
 				ss << req.body.content.size();
-			} else {
+			}
+			else
+			{
 				ss << "0";  // Cuerpo vacío
 			}
 			
 			_env.setEnvValue("CONTENT_LENGTH", ss.str());
 			
-			if (!req.body.content.empty()) {
+			if (!req.body.content.empty())
+			{
 				_env.setEnvValue("CONTENT_TYPE", 
-					req.headers.content_type.type + '/' + req.headers.content_type.subtype);
+					req.headers.content_type.type + 
+					'/' + req.headers.content_type.subtype);
 				_req_body = req.body.content;
 			}
 		}
