@@ -2,4 +2,6 @@ INTERPRETER, EXT
 /usr/bin/php-cgi, .php
 /usr/bin/python3, .py
 /usr/bin/node, .js
-./cgi-bin/cgi_test, .bla
+./cgi-bin/cgi_test, .blabla
+./cgi-bin/mini.sh, .blax
+./test/42_tester/www/YoupiBanane/youpi.bla,.bla

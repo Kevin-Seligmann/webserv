@@ -32,6 +32,11 @@ CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 	_args[0] = strdup(interpreter.c_str());
 	_args[1] = strdup(script_filename.c_str());
 	_args[2] = NULL;
+
+	// TEST
+	std::cerr << "CGIArg DEBUG: Final args[0]=[" << _args[0] << "]" << std::endl;
+	std::cerr << "CGIArg DEBUG: Final args[1]=[" << _args[1] << "]" << std::endl;
+	// .
 }
 
 
