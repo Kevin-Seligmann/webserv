@@ -1,2 +1,3 @@
+rm -f webserv
 make -C ../.. && cp -f ../../webserv .
-./webserv ./conf/42b.conf --interactive
+./webserv ./conf/42.conf --interactive

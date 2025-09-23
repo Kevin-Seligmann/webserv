@@ -1,3 +1,7 @@
-<?php
-
-header('Content-Type: text/plain');
+#!/bin/bash
+echo "Content-Type: text/plain"
+echo ""
+echo "Hello from youpi.bla script!"
+echo "REQUEST_METHOD: $REQUEST_METHOD"
+echo "CONTENT_LENGTH: $CONTENT_LENGTH"
+echo "SCRIPT_NAME: $SCRIPT_NAME"

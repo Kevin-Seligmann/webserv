@@ -55,8 +55,13 @@ application, vnd.ms-excel, .xls
 application, vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx
 application, vnd.ms-powerpoint, .ppt
 application, vnd.openxmlformats-officedocument.presentationml.presentation, .pptx
+application, x-www-form-urlencoded
+application, octet-stream
+application, octet-stream, .bla
 
 font, woff, .woff
 font, woff2, .woff2
 font, ttf, .ttf
 font, otf, .otf
+
+test, file

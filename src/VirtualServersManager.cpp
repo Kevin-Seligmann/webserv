@@ -30,7 +30,7 @@ void VirtualServersManager::setupSignals() {
 	// Set behaviour for process interrupetd by handler
 	sa_shutdown.sa_flags = SA_RESTART;
 
-
+/*
 	// SIGCHLD manage signlas launched at child termination, avoid zombie processes
 	struct sigaction sa_child;
 	sa_child.sa_handler = sigchild_handler;
@@ -41,6 +41,7 @@ void VirtualServersManager::setupSignals() {
 	sigaddset(&sa_child.sa_mask, SIGTERM);
 	// Set behaviour for process interrupted by handler
 	sa_child.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+*/
 
 	// Apply config to signals
 	
@@ -62,11 +63,13 @@ void VirtualServersManager::setupSignals() {
 		throw std::runtime_error("Failed to install SIGTERM handler");
 	}
 
+	/*
 	// SIGCHLD
 	if (sigaction(SIGCHLD, &sa_child, NULL ) == -1) 
 	{
 		throw std::runtime_error("Failed to install SIGCHLD handler");
-	}	
+	}
+	*/	
 }
 
 void VirtualServersManager::signal_handler(int sig) {

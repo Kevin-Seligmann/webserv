@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/php-cgi
 <?php
 header("Content-Type: text/html");
 echo "<h1>PHP CGI Works!</h1>\n";
