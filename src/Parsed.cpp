@@ -603,10 +603,9 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 // SIMPLE ARBOL DE CONDICIONES QUE EVALUA ARGUMENTOS, PARA SACARLO DEL FLUJO DEL MAIN
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 
-    if (argc > 2) {
-        std::cerr << std::endl << RED << "ERROR: " << RESET <<
-        "This program start with arguments ---> " << YELLOW <<
-        "./webserver [filename]" << RESET << std::endl << std::endl;
+    if (argc > 2)
+	{
+		Logger::getInstance().error("This program start with arguments ---> ./webserver [filename]\n");
         return (1);
     }
 
@@ -625,8 +624,7 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         
         std::ifstream file(configFile.c_str());
         if (!file.is_open()) {
-            std::cerr << RED << "ERROR: " << RESET <<
-            "Cannot open config file: " << configFile << std::endl;
+            Logger::getInstance().error("Cannot open config file: " + configFile);
             return (1);
         }
         
@@ -650,7 +648,7 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
         std::cout << BLUE << successMessage << RESET << std::endl;
         
     } catch (const std::exception& e) {
-        std::cerr << RED << "PARSING ERROR: " << RESET << e.what() << std::endl;
+		Logger::getInstance().error(std::string("PARSING ERROR: ") + e.what());
         return (1);
     }
     

@@ -58,9 +58,9 @@ int main(int argc, char* argv[])
 
     if (argc > 2)
     {
-        std::cerr << "✗ Wrong arguments number!" << std::endl;
-        std::cerr << "Use: ./webserv <config.conf>" << std::endl;
-        std::cerr << "Or use a default configuration using: ./webserv " << std::endl;
+        Logger::getInstance().info("✗ Wrong arguments number!");
+        Logger::getInstance().info("Use: ./webserv <config.conf>");
+        Logger::getInstance().info("Or use a default configuration using: ./webserv ");
         return 1;
     }
     else if (argc == 2)

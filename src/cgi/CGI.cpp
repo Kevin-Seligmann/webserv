@@ -292,38 +292,31 @@ void CGI::runCGI()
 
 		std::string script_path = _env.getCGIEnvValue("SCRIPT_FILENAME");
 
-		/*
 		// Flie exist
 		if (access(script_path.c_str(), F_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script does not exist, exiting" << std::endl;
+			DEBUG_LOG("CHILD: Script does not exist, exiting");
     		perror("access F_OK");
-			// .
 			_exit(127);
 		}
 		
 		// Flie readable
 		if (access(script_path.c_str(), R_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script is not readable, exiting" << std::endl;
+			DEBUG_LOG("CHILD: Script is not readable, exiting");
     		perror("access R_OK");
-			// .
 			_exit(127);
 		}
 
 		// Flie executable
 		if (access(script_path.c_str(), X_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script is not executable, exiting" << std::endl;
+			DEBUG_LOG("CHILD: Script is not executable, exiting");
     		perror("access X_OK");
 			// .
 			_exit(127);
 		}
-		*/
 		
 		execve(argv[0], argv, envp);
 
-		std::cerr << "CHILD: Failed to execute execve " << argv[0] << std::endl;\
+		DEBUG_LOG("CHILD: Failed to execute execve " << argv[0]);
 		perror("execve failed");
 		_exit(127);
 	}
@@ -367,15 +360,15 @@ void CGI::runCGI()
 		// TODO hay doble waitpid? se hace aqui abajo, sirve? o es demasiado?
 		if (check_result == -1)
         {
-            std::cerr << "PARENT: Child already closed or not exist" << std::endl;
+            DEBUG_LOG("PARENT: Child already closed or not exist");
             perror("waitpid WNOHANG failed");
         }
         else if (check_result == 0)
         {
-            std::cerr << "PARENT: Child still running, waiting..." << std::endl;
+            DEBUG_LOG("PARENT: Child still running, waiting...");
             // Child is running, wait until it finishes
             pid_t wait_result = waitpid(_pid, &status_check, 0);
-            std::cerr << "PARENT: blocking waitpid returned " << wait_result << std::endl;
+            DEBUG_LOG("PARENT: blocking waitpid returned " << wait_result);
             if (wait_result == -1)
             {
 				// TODO como manejar esto? no deberia pasar
@@ -383,13 +376,13 @@ void CGI::runCGI()
             }
             else
             {
-                std::cerr << "PARENT: Child closed with status " << status_check << std::endl;
+                DEBUG_LOG("PARENT: Child closed with status " << status_check);
             }
         }
         else
         {
 			// TODO aqui esta el estatus de cierre del child, lo necesitamos?
-            std::cerr << "PARENT: Child closed with status " << status_check << std::endl;
+			DEBUG_LOG("PARENT: Child closed with status " << status_check);
         }
 
 		// .

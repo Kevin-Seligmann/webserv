@@ -1,3 +1,4 @@
+/*
 #include "DebugView.hpp"
 #include "Utils.hpp"
 
@@ -73,5 +74,4 @@ void DebugView::printConfigSummary(const ParsedServers &configs) {
 
     printBox("CONFIG SUMMARY", lines);
 }
-
-
+*/

@@ -32,7 +32,7 @@ DEPS = $(OBJ_PATH:.o=.d)
 INCLUDES = -I./$(INC_DIR)
 
 # Flags -Wall -Wextra -Werror 
-FLAGS = -std=c++98 -g3
+FLAGS = -std=c++98
 
 # Compiler
 CC = c++
@@ -41,6 +41,9 @@ CC = c++
 YELLOW = "\e[33m"
 GREEN = "\e[32m"
 NO_COLOR = "\e[0m"
+
+debug: FLAGS += -g3 -DDEBUG_MODE=1
+debug: re
 
 # Linking
 all: $(OBJ_DIR) $(NAME)
