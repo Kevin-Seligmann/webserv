@@ -1,7 +1,0 @@
-INTERPRETER, EXT
-/usr/bin/php-cgi, .php
-/usr/bin/python3, .py
-/usr/bin/node, .js
-./ubuntu_cgi_test,.blas
-./my_cgi_tester.sh,.bla
-/bin/bash,.blas
