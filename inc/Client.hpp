@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CGI.hpp"
 #include "CGIInterpreter.hpp"
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"

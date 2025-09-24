@@ -6,7 +6,11 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2025/09/22 16:55:56 by mvisca-g         ###   ########.fr       */
+=======
+/*   Updated: 2025/09/20 16:10:50 by irozhkov         ###   ########.fr       */
+>>>>>>> d5ecbde (cgi works, need to push to epoll)
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,7 +164,11 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	return (cgi);
 }
 
+<<<<<<< HEAD
 void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & path)
+=======
+void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server)
+>>>>>>> d5ecbde (cgi works, need to push to epoll)
 {
 	std::map<std::string, std::string> res = pathToBlocks(req.uri.path, req.get_path());
 

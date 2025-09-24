@@ -49,14 +49,14 @@ class CGI
 		CGIStatus 							_cgi_status;
 
 		std::string methodToString(HTTPMethod method) const;
-		std::map<std::string, std::string> pathToBlocks(const std::string& path, const std::string& file_path) const;
+		std::map<std::string, std::string> pathToBlocks(const std::string& path) const;
 
 	public:
 
 		CGI(const HTTPRequest& req, const VirtualServersManager& server);
 		~CGI();
 
-		void buildEnv(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path);
+		void buildEnv(const HTTPRequest &req, const VirtualServersManager& server);
 		CGIEnv& getEnv();
 		void runCGI();
 
@@ -64,8 +64,6 @@ class CGI
 
 		CGIStatus getStatus() const;
 		void setStatus(CGIStatus s);
-
-		void init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path);
 };
 
 
