@@ -16,15 +16,21 @@ public:
     static void printBox(const std::string &title, const std::vector<std::string> &lines);
 };
 */
+#ifndef DEBUGVIEW_HPP
+#define DEBUGVIEW_HPP
 
-#ifndef DEBUG_HPP
-#define DEBUG_HPP
-
-#ifdef DEBUG_MODE
-    #define DEBUG_LOG(x) std::cerr << "[DEBUG] " << x << std::endl;
-    #define DEBUG_VAR(var) std::cerr<< "[VAR] " << var << std::endl;
+#ifndef DEBUG_MODE
+    #define DEBUG_MODE 0
+#endif
+    
+#if DEBUG_MODE == 1
+    #include <iostream>
+    #define DEBUG_LOG(msg) \
+        do { std::cerr << "[DEBUG] " << msg << std::endl; } while(0)
+    #define DEBUG_VAR(var) \
+        do { std::cerr << "[DEBUG] " #var " = " << var << std::endl; } while(0)
 #else
-    #define DEBUG_LOG(x) do {} while(0)
+    #define DEBUG_LOG(msg) do {} while(0)
     #define DEBUG_VAR(var) do {} while(0)
 #endif
 

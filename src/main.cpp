@@ -51,11 +51,10 @@ void runServer(const ParsedServers& configs)
 int main(int argc, char* argv[])
 {
 
-    std::cout << "Webserv Test" << std::endl;
-    std::cout << "============" << std::endl;
+    DEBUG_LOG("\nDEBUG MODE ON\n");
+    std::cout << "\n Webserv Test" << std::endl;
+    std::cout << "==============\n" << std::endl;
     
-    const char* configFilename = NULL;
-
     if (argc > 2)
     {
         Logger::getInstance().info("✗ Wrong arguments number!");
@@ -63,12 +62,7 @@ int main(int argc, char* argv[])
         Logger::getInstance().info("Or use a default configuration using: ./webserv ");
         return 1;
     }
-    else if (argc == 2)
-    {
-        configFilename = argv[1];
-    }
 
-    // Parse configuration
     ParsedServers parsedConfig;
 
     try
@@ -103,7 +97,7 @@ int main(int argc, char* argv[])
     // DEBUG
     // DebugView::printConfigSummary(parsedConfig);
         
-	std::cout << "\nStarting servers interactively..." << std::endl;
+	Logger::getInstance().info("\nStarting servers interactively...");
     runServer(parsedConfig);
     return 0;
 }

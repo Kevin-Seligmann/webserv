@@ -637,7 +637,7 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 
 		parsedConfig = parseConfig(tokens);
 
-
+		
 		for (size_t i = 0; i < parsedConfig.size(); ++i)
 		{
 			printServerConfig(parsedConfig[i]);

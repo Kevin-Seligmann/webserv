@@ -1,7 +1,7 @@
 #include "ResponseManager.hpp"
 
 ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
-:_cgi(cgi), _request(request), _error(error),_status(WAITING_REQUEST)
+:_request(request), _error(error),_status(WAITING_REQUEST), _cgi(cgi)
 {
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
 

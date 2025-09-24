@@ -16,14 +16,13 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 {
 	_cgi_status = CGI_INIT;
 
-
-
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
-
+	(void)req;
+	(void)server;
 }
 
 void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path)
@@ -229,6 +228,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 
 	_env.setEnvValue("SERVER_PROTOCOL", req.protocol);
 	_env.setEnvValue("SERVER_SOFTWARE", "webserver"); // default
+	(void)server;
 }
 
 CGIEnv& CGI::getEnv()
