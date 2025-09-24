@@ -41,10 +41,10 @@ private:
     static const int MAX_ERROR_RETRIES = 1;
 
     VirtualServersManager & _vsm;
-    CGI                     _cgi;
     Status                  _status;
     HTTPError	            _error;
     HTTPRequest 	        _request;
+    CGI                     _cgi;
     ElementParser	        _element_parser;
     RequestManager          _request_manager;
     ResponseManager         _response_manager;
@@ -55,7 +55,6 @@ private:
     bool                    _is_cgi;
 
     // int             error_retry_count;
-
 
     void handle_cgi_request();
     void handle_processing_request();

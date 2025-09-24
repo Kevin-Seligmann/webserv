@@ -88,8 +88,8 @@ void Wspoll::real_del(int fd)
             if (i < _size - 1)
                 _fds[i] = _fds[_size - 1];
             _size --;
-        if (WSPOLL_DEBUG)
-            Logger::getInstance() << "Wspoll removal " + wss::i_to_dec(fd) << std::endl;
+            if (WSPOLL_DEBUG)
+                Logger::getInstance() << "Wspoll removal " + wss::i_to_dec(fd) << std::endl;
             return ;
         }
     }

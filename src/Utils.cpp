@@ -103,6 +103,9 @@ void printLocationConfig(const Location& loc)
 
 void printServerConfig(const ParsedServer& config)
 {
+	#if DEBUG_MODE != 1
+		return;
+	#endif
 
 	std::cout << GREEN << "\n=== ServerConfig ===" << RESET << std::endl;
 

@@ -50,6 +50,4 @@ private:
     std::string getDocRoot(const Location* loc) const;
 };
 
-std::ostream& operator<<(std::ostream& os, const ServerConfig& config);
-
 #endif

@@ -20,21 +20,12 @@ CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 	std::string script_filename = env.getCGIEnvValue("SCRIPT_FILENAME");
 	
 	std::string interpreter = CGIInterpreter::findInterpreterForScript(script);
-	
-	// TEST
-	std::cerr << "CGIArg DEBUG: SCRIPT_NAME=[" << script << "]" << std::endl;
-    std::cerr << "CGIArg DEBUG: SCRIPT_FILENAME=[" << env.getCGIEnvValue("SCRIPT_FILENAME") << "]" << std::endl;
-    std::cerr << "CGIArg DEBUG: interpreter=[" << interpreter << "]" << std::endl;
-	// .
 
 	if (interpreter.empty())
 	{
 		if (access(script_filename.c_str(), X_OK) == 0) 
 		{
 			interpreter = script_filename;
-			// TEST
-			std::cerr << "CGIArg DEBUG: Using script as executable" << std::endl;	
-			// .
 		}
 		else
 		{
@@ -42,9 +33,6 @@ CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 			if (ext == ".bla")
 			{
 				interpreter = "/";
-				// TEST
-				std::cerr << "CGIArg DEBUG: Using default interpreter for .bla -> '/'" << std::endl;
-				// .
 			}
 			else
 			{
@@ -68,12 +56,6 @@ CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 		_args[1] = strdup(script_filename.c_str());
 		_args[2] = NULL;
 	}
-
-
-	// TEST
-	std::cerr << "CGIArg DEBUG: argv[0]=" << _args[0]
-              << " argv[1]=" << (_size > 2 ? _args[1] : "(none)") << std::endl;
-	// .
 }
 
 

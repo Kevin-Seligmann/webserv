@@ -265,7 +265,7 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			}
 				
 		} catch (const std::runtime_error& e) {
-			std::cerr << "Exception processing client data: " << e.what() << std::endl;
+			DEBUG_LOG("Exception processing client data: " << e.what());
 			disconnectClient(socket_fd);
 		}
 	}
