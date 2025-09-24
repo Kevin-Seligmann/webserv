@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIResponse.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:11:12 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:22:35 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,8 @@ const std::string& CGIResponse::getResponseBuffer() const
 
 void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 {
+	DEBUG_LOG("parseFromCGIOutput: total bytes = " << cgiOutput.size());
+	
 	std::istringstream stream(cgiOutput);
 	std::string line;
 
@@ -89,7 +91,7 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 			{
 				value.erase(0,1);
 			}
-
+			DEBUG_LOG("KEY value: " << key);
 			if (key == "Status") 
 			{
 				_status = value;
@@ -113,9 +115,15 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 		}
 	}
 
-	_bodyStream << bodyTmp.str();
+	std::string bodyStr = bodyTmp.str();
+	if (!bodyStr.empty() && bodyStr[bodyStr.size() - 1] == '\n')
+	{
+		bodyStr.erase(bodyStr.size() - 1, 1);
+	}
 
-	if (_status.empty()) { _status = "200 OK"; }
+	_bodyStream << bodyStr;
+
+	if (_status.empty()) { _status = "200 OK"; } // TODO no confiable debe ser dinamico
 	if (_contentType.empty()) { _contentType = "text/plain"; }
 }
 

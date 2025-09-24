@@ -33,6 +33,8 @@
 # include "Enums.hpp"
 # include "HTTPRequest.hpp"
 # include "ServerConfig.hpp"
+# include "DebugView.hpp"
+
 
 class VirtualServersManager;
 

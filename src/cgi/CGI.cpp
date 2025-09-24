@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/22 16:55:56 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:57:53 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,13 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 {
 	_cgi_status = CGI_INIT;
 
-
-
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
-
+	(void)req;
+	(void)server;
 }
 
 void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path)
@@ -88,12 +87,15 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	}
 
 	size_t indx = std::string::npos;
-
 	std::stringstream ss(path);
 	std::string item;
+
 	while (std::getline(ss, item, '/'))
 	{
-		if (!item.empty()) { parts.push_back(item); }
+		if (!item.empty())
+		{
+			parts.push_back(item);
+		}
 	}
 
 	for (size_t i = 0; i < parts.size(); ++i)
@@ -107,23 +109,26 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 				break;
 			}
 		}
-
-		if (indx != std::string::npos) { break; }
+		if (indx != std::string::npos)
+		{
+			break;
+		}
 	}
 
 	if (indx != std::string::npos)
 	{
 		std::string scriptName = "";
-		for (size_t i = 0; i <= indx; ++i) {
+		for (size_t i = 0; i <= indx; ++i)
+		{
 			scriptName += "/" + parts[i];
 		}
-		cgi["SCRIPT_NAME"] = parts[indx];
+		cgi["SCRIPT_NAME"] = scriptName;
 	}
 	else
 	{
 		cgi["SCRIPT_NAME"] = path;
 	}
-
+	DEBUG_LOG("SCRIPT_NAME ser : " << cgi["SCRIPT_NAME"]);
 	std::string pathInfo;
 	if (indx != std::string::npos && indx + 1 < parts.size())
 	{
@@ -137,25 +142,14 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	if (isTestScript)
 	{
     	cgi["PATH_INFO"] = file_path;
-    	// TEST
-		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
-		// .
 	}
 	else
 	{
     	cgi["PATH_INFO"] = pathInfo;
-	   	// TEST
-		std::cerr << "DEBUG: Test mode PATH_INFO=" << file_path << std::endl;
-		// .
 	}
-
-
-	// TEST
-	std::cout << "PATH: " << file_path << std::endl;
-	std::cout << "DEBUG pathInfo calculated: [" << pathInfo << "]" << std::endl;
-	std::cout << "DEBUG SCRIPT_NAME: [" << cgi["SCRIPT_NAME"] << "]" << std::endl;
-	std::cout << "DEBUG PATH_INFO: [" << cgi["PATH_INFO"] << "]" << std::endl;
-	// .
+	DEBUG_LOG(" PATH_INFO set: " << cgi["PATH_INFO"]);
+	DEBUG_LOG(" file_path -- case isTestScript (.bla): " << file_path);
+	DEBUG_LOG(" path_info -- nnormal use o cgi: " << pathInfo);
 
 	return (cgi);
 }
@@ -181,12 +175,6 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 
 	if (!req.body.content.empty())
 	{
-		// TEST
-		std::cerr << "DEBUG: === CONTENT LENGTH === " << std::endl;
-		std::cerr << "DEBUG: req.headers.content_length = " << req.headers.content_length << std::endl;
-		std::cerr << "DEBUG: req.body.content.size() = " << req.body.content.size() << std::endl;
-		// .
-
 		if (req.method == POST || req.method == PUT) 
 		{
 			std::ostringstream ss;
@@ -222,6 +210,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	if (req.uri.query.empty()) { _env.setEnvValue("QUERY_STRING", ""); }
 	else { _env.setEnvValue("QUERY_STRING", req.uri.query); }
 
+
 	_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
 
 	_env.setEnvValue("REQUEST_METHOD", methodToString(req.method));
@@ -249,17 +238,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 
 	_env.setEnvValue("SERVER_PROTOCOL", req.protocol);
 	_env.setEnvValue("SERVER_SOFTWARE", "webserver"); // default
-
-
-	// TEST
-	std::cerr << "=== CGI Environment Variables ===" << std::endl;
-    const std::map<std::string, std::string>& env_map = _env.getCGIEnv();
-    for (std::map<std::string, std::string>::const_iterator it = env_map.begin(); 
-         it != env_map.end(); ++it) {
-        std::cerr << it->first << "=[" << it->second << "]" << std::endl;
-    }
-    std::cerr << "================================" << std::endl;
-	// .
+	(void)server;
 }
 
 CGIEnv& CGI::getEnv()
@@ -280,9 +259,6 @@ void CGI::runCGI()
 		return ;
 	}
 
-	std::cerr << "PARENT: Created pipes. req_pipe[" << _req_pipe[0] << "," << _req_pipe[1] 
-              << "] cgi_pipe[" << _cgi_pipe[0] << "," << _cgi_pipe[1] << "]" << std::endl;
-
 	_pid = fork();
 	
 	if (_pid < 0)
@@ -296,20 +272,12 @@ void CGI::runCGI()
 
 	if (_pid == 0)
 	{
-		// TEST 
-		std::cerr << "CHILD: Starting, PID=" << getpid() << std::endl;
-		// .
-
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1)
 		{
-			// TEST
-			std::cerr << "CHILD: dup2 stdin failed" << std::endl;
-			perror("dup2 stdin failed"); // .
-
-			// NECESARIOS
+			// TODO eliminar?
 			// _cgi_status = CGI_ERROR;
 			// _cgi_response.buildInternalErrorResponse();
 			// .
@@ -318,10 +286,6 @@ void CGI::runCGI()
 		
 		if (dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
 		{
-			// TEST
-			std::cerr << "CHILD: dup2 stdout failed" << std::endl;
-			perror("dup2 stdout failed"); // .
-
 			// _cgi_status = CGI_ERROR;
 			// _cgi_response.buildInternalErrorResponse();
 			_exit(127);
@@ -336,108 +300,51 @@ void CGI::runCGI()
 		
 		char** envp = _env.getEnvp();
 
-		// TEST
-		// Debug: Print ALL environment variables that will be passed to execve
-		std::cerr << "CHILD: Environment variables for execve:" << std::endl;
-		int ii = 0;
-		for (; envp[ii] != NULL; ii++) {
-			std::cerr << "CHILD ENV[" << ii << "]: " << envp[ii] << std::endl;
-		}
-		std::cerr << "CHILD: Total env vars: " << ii << std::endl;
-
-		// Debug: Check specifically for PATH_INFO
-		std::cerr << "CHILD: Checking for PATH_INFO..." << std::endl;
-		bool found_path_info = false;
-		for (int i = 0; envp[i] != NULL; i++) {
-			if (strncmp(envp[i], "PATH_INFO=", 10) == 0) {
-				std::cerr << "CHILD: Found PATH_INFO: [" << envp[i] << "]" << std::endl;
-				found_path_info = true;
-				break;
-			}
-		}
-		if (!found_path_info) {
-			std::cerr << "CHILD: PATH_INFO NOT FOUND in environment!" << std::endl;
-		}
-		// .
-
 		std::string script_path = _env.getCGIEnvValue("SCRIPT_FILENAME");
-
-		// TEST
-		std::cerr << "CHILD: Checking script path: [" << script_path << "]" << std::endl;
-		std::cerr << "CHILD: Script exists: " << (access(script_path.c_str(), F_OK) == 0 ? "YES" : "NO") << std::endl;
-		std::cerr << "CHILD: Script executable: " << (access(script_path.c_str(), X_OK) == 0 ? "YES" : "NO") << std::endl;
-		// .
 
 		// Flie exist
 		if (access(script_path.c_str(), F_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script does not exist, exiting" << std::endl;
-    		perror("access F_OK");
-			// .
+			DEBUG_LOG("CHILD: Script does not exist, exiting // PATH: " << script_path);
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
 		
 		// Flie readable
 		if (access(script_path.c_str(), R_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script is not readable, exiting" << std::endl;
-    		perror("access R_OK");
-			// .
+			DEBUG_LOG("CHILD: Script is not readable, exiting");
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
 
 		// Flie executable
 		if (access(script_path.c_str(), X_OK) != 0) {
-			// TEST
-			std::cerr << "CHILD: Script is not executable, exiting" << std::endl;
-    		perror("access X_OK");
-			// .
+			DEBUG_LOG("CHILD: Script is not executable, exiting");
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
-
-		// TEST
-		std::cerr << "CHILD: About to execve " << argv[0] << std::endl;\
-		// .
 		
 		execve(argv[0], argv, envp);
 
-		// TEST
-		std::cerr << "CHILD: Failed to execute execve " << argv[0] << std::endl;\
-		perror("execve failed");
+		DEBUG_LOG("CHILD: Failed to execute execve " << argv[0]);
+		_cgi_response.buildInternalErrorResponse();
 		_exit(127);
-		// .
 	}
 	else
 	{
-		// TEST
-		std::cerr << "PARENT: Forked child PID=" << _pid << std::endl;
-		// .
-
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
 
 		if (!_req_body.empty())
 		{
-			// TEST
-			std::cerr << "PARENT: Writing " << _req_body.size() << " bytes to child" << std::endl;
-			// .
-
 			ssize_t written = write(_req_pipe[1], _req_body.c_str(), _req_body.size());
 			if (written == -1) 
 			{
-				// TEST
-				std::cerr << "PARENT: Failed to write to child" << std::endl;
-                perror("write to child failed");
-				// .
                 _cgi_status = CGI_ERROR;
                 _cgi_response.buildInternalErrorResponse();
                 close(_req_pipe[1]);
                 close(_cgi_pipe[0]);
                 return;
 			}
-			// TEST
-			std::cerr << "PARENT: Successfully wrote " << written << " bytes" << std::endl;
-			// .
 		}
 		close(_req_pipe[1]);
 
@@ -447,70 +354,57 @@ void CGI::runCGI()
 		ssize_t n;
 		std::string cgi_output;
 
-		// TEST
-		std::cerr << "PARENT: Starting to read from child" << std::endl;
-		// .
-
 		while ((n = read(_cgi_pipe[0], buffer, sizeof(buffer))) > 0)
 		{
 			cgi_output.append(buffer, n);
-			// TEST
-			std::cerr << "PARENT: Read " << n << " bytes from child" << std::endl;
-			// .
 		}
-
-		// TEST
-		if (n < 0)
-		{
-			std::cerr << "PARENT: Read " << n << " bytes from child" << std::endl;
-			perror("read from child failed.");
-		}
-		// .
-
-		std::cerr << "PARENT: Finished reading. Total output: "
-				  << cgi_output.length() << " bytes" << std::endl;
-        std::cerr << "PARENT: CGI OUTPUT: [" << cgi_output << "]" << std::endl;
 
 		close(_cgi_pipe[0]);
 
 		usleep(10000); // Timefor child to exit
 
-
-		// TEST
 		int status_check;
 		pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
+		status_check = status_check >> 8;
 
-		std::cerr << "PARENT: waitpid(WNOHANG) returned " << check_result << std::endl;
-
+		// TODO hay doble waitpid? se hace aqui abajo, sirve? o es demasiado?
 		if (check_result == -1)
         {
-            std::cerr << "PARENT: Child already closed or not exist" << std::endl;
+            DEBUG_LOG("PARENT: Child already closed or not exist");
             perror("waitpid WNOHANG failed");
         }
         else if (check_result == 0)
         {
-            std::cerr << "PARENT: Child still running, waiting..." << std::endl;
+            DEBUG_LOG("PARENT: Child still running, waiting...");
             // Child is running, wait until it finishes
             pid_t wait_result = waitpid(_pid, &status_check, 0);
-            std::cerr << "PARENT: blocking waitpid returned " << wait_result << std::endl;
+            DEBUG_LOG("PARENT: blocking waitpid returned " << wait_result);
             if (wait_result == -1)
             {
+				// TODO como manejar esto? no deberia pasar
                 perror("blocking waitpid failed");
             }
             else
             {
-                std::cerr << "PARENT: Child closed with status " << status_check << std::endl;
+                DEBUG_LOG("PARENT: Child closed with status " << status_check);
             }
         }
         else
         {
-            std::cerr << "PARENT: Child closed with status " << status_check << std::endl;
+			// TODO aqui esta el estatus de cierre del child, lo necesitamos?
+			DEBUG_LOG("PARENT: Child closed with status " << status_check);
         }
 
-		// .
 
-
+		// TODO create table of exit errors
 		_cgi_status = CGI_READING_OUTPUT;
+
+		if (status_check == 127)
+		{
+			_cgi_response.buildInternalErrorResponse();
+			_cgi_status = CGI_FINISHED;
+			return;
+		}
 
 		_cgi_response.parseFromCGIOutput(cgi_output);
 		_cgi_response.buildResponse();

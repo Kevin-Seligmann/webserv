@@ -345,8 +345,3 @@ std::string ServerConfig::getDocRoot(const Location* loc) const {
 	}
 	return root;
 }
-
-std::ostream& operator<<(std::ostream& os, const ServerConfig& config) {
-	os << "DEGUB INFO SUPRESSED (implementar aquí)";
-	return os;
-}
