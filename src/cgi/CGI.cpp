@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/24 18:35:04 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:57:53 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	{
 		cgi["SCRIPT_NAME"] = path;
 	}
-
+	DEBUG_LOG("SCRIPT_NAME ser : " << cgi["SCRIPT_NAME"]);
 	std::string pathInfo;
 	if (indx != std::string::npos && indx + 1 < parts.size())
 	{
@@ -147,6 +147,9 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 	{
     	cgi["PATH_INFO"] = pathInfo;
 	}
+	DEBUG_LOG(" PATH_INFO set: " << cgi["PATH_INFO"]);
+	DEBUG_LOG(" file_path -- case isTestScript (.bla): " << file_path);
+	DEBUG_LOG(" path_info -- nnormal use o cgi: " << pathInfo);
 
 	return (cgi);
 }
@@ -301,30 +304,29 @@ void CGI::runCGI()
 
 		// Flie exist
 		if (access(script_path.c_str(), F_OK) != 0) {
-			DEBUG_LOG("CHILD: Script does not exist, exiting");
-    		perror("access F_OK");
+			DEBUG_LOG("CHILD: Script does not exist, exiting // PATH: " << script_path);
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
 		
 		// Flie readable
 		if (access(script_path.c_str(), R_OK) != 0) {
 			DEBUG_LOG("CHILD: Script is not readable, exiting");
-    		perror("access R_OK");
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
 
 		// Flie executable
 		if (access(script_path.c_str(), X_OK) != 0) {
 			DEBUG_LOG("CHILD: Script is not executable, exiting");
-    		perror("access X_OK");
-			// .
+			_cgi_response.buildInternalErrorResponse();
 			_exit(127);
 		}
 		
 		execve(argv[0], argv, envp);
 
 		DEBUG_LOG("CHILD: Failed to execute execve " << argv[0]);
-		perror("execve failed");
+		_cgi_response.buildInternalErrorResponse();
 		_exit(127);
 	}
 	else
@@ -363,6 +365,7 @@ void CGI::runCGI()
 
 		int status_check;
 		pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
+		status_check = status_check >> 8;
 
 		// TODO hay doble waitpid? se hace aqui abajo, sirve? o es demasiado?
 		if (check_result == -1)
@@ -392,10 +395,16 @@ void CGI::runCGI()
 			DEBUG_LOG("PARENT: Child closed with status " << status_check);
         }
 
-		// .
 
-
+		// TODO create table of exit errors
 		_cgi_status = CGI_READING_OUTPUT;
+
+		if (status_check == 127)
+		{
+			_cgi_response.buildInternalErrorResponse();
+			_cgi_status = CGI_FINISHED;
+			return;
+		}
 
 		_cgi_response.parseFromCGIOutput(cgi_output);
 		_cgi_response.buildResponse();

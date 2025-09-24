@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIResponse.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:39:00 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:11:32 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:08:25 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include <sstream>
 # include <string>
 # include <unistd.h>   // write, close
+
+#include "DebugView.hpp"
 
 class CGIResponse
 {

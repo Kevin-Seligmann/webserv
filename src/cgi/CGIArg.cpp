@@ -6,11 +6,12 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/06 14:23:15 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/22 17:05:52 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:42:35 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIArg.hpp"
+#include "DebugView.hpp"
 #include <unistd.h>
 
 CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
@@ -20,6 +21,10 @@ CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 	std::string script_filename = env.getCGIEnvValue("SCRIPT_FILENAME");
 	
 	std::string interpreter = CGIInterpreter::findInterpreterForScript(script);
+
+	DEBUG_LOG("SCRIPT_NAME=" << script);
+	DEBUG_LOG("SCRIPT_FILENAME=" << script_filename);
+	DEBUG_LOG("INTERPREETER=" << interpreter);
 
 	if (interpreter.empty())
 	{
