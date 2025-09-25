@@ -1,7 +1,0 @@
-INTERPRETER, EXT
-/usr/bin/php-cgi, .php
-/usr/bin/python3, .py
-/usr/bin/node, .js
-./cgi-bin/cgi_test, .blabla
-./cgi-bin/mini.sh, .blax
-./www/YoupiBanane/youpi.bla,.bla
