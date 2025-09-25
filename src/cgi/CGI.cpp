@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/24 19:57:53 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/25 17:36:47 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,12 +249,12 @@ CGIEnv& CGI::getEnv()
 void CGI::runCGI()
 {
 	_cgi_status = CGI_RUNNING;
+	
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
-		// TEST 
-		perror("pipe failed"); // .
-		_cgi_status = CGI_ERROR;
+		close(_req_pipe[0]); close(_req_pipe[1]);
+		close(_cgi_pipe[0]); close(_cgi_pipe[1]);
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
@@ -272,6 +272,9 @@ void CGI::runCGI()
 
 	if (_pid == 0)
 	{
+		// TODO se puede usar alarm() ???
+		alarm(30);
+
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 

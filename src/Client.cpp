@@ -124,28 +124,12 @@ void Client::handle_processing_response()
 */
 
 
-void Client::handle_cgi_request() {	
-
-
-	/*
-		cgi.runCGI() // Read or write only once.
-		if (cgi.done())
-		{
-			prepareResponse();
-		}
-		else if (cgi.error()? ) ? SI existe
-		{
-			handleRequestError();
-		}
-		else
-		{
-			updateActiveFileDescriptor(cgi.get_active_file_descriptor());
-		}
-	*/
-	// cgi(_request, _vsm);
-
+void Client::handle_cgi_request()
+{	
 	ServerConfig * _server_config = NULL;
+
 	Location * _location = NULL;
+
 	get_config(&_server_config, &_location);
 
 	std::string path = "";
