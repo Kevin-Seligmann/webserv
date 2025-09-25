@@ -107,4 +107,6 @@ int main(int argc, char* argv[])
 /*
 1. cuando un conf no tiene puntos y comas se rompe... estaba arreglado, pero sigue fallando
     esto puede ser porque lo hemos hecho mal con algun merge
+2. alias resuelve mal, con alias = location, deberia quedarse solo con el alias
+
 */
