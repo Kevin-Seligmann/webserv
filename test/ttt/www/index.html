@@ -1,0 +1,58 @@
+<!-- index.html - Página principal -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv Test Server</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Welcome to Webserv</h1>
+    <nav>
+        <ul>
+            <li><a href="/static/">Static Files (Autoindex)</a></li>
+            <li><a href="/upload/">Upload Area</a></li>
+            <li><a href="/cgi-bin/">CGI Python Tests</a></li>
+            <li><a href="/php/">PHP CGI Tests</a></li>
+            <li><a href="/docs">Documentation</a></li>
+        </ul>
+    </nav>
+    
+    <section>
+        <h2>Test Forms</h2>
+        
+        <!-- GET Form -->
+        <h3>GET Request Test</h3>
+        <form action="/cgi-bin/form.py" method="GET">
+            <input type="text" name="name" placeholder="Your name">
+            <input type="email" name="email" placeholder="Your email">
+            <button type="submit">Send GET</button>
+        </form>
+        
+        <!-- POST Form -->
+        <h3>POST Request Test</h3>
+        <form action="/cgi-bin/form.py" method="POST">
+            <input type="text" name="username" placeholder="Username">
+            <textarea name="message" placeholder="Your message"></textarea>
+            <button type="submit">Send POST</button>
+        </form>
+        
+        <!-- File Upload -->
+        <h3>File Upload Test</h3>
+        <form action="/cgi-bin/upload.py" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <button type="submit">Upload File</button>
+        </form>
+    </section>
+    
+    <section>
+        <h2>Method Tests</h2>
+        <button onclick="testDelete()">Test DELETE</button>
+        <button onclick="testPut()">Test PUT</button>
+        <div id="result"></div>
+    </section>
+    
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
