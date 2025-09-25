@@ -109,4 +109,4 @@ int main(int argc, char* argv[])
     esto puede ser porque lo hemos hecho mal con algun merge
 2. alias resuelve mal, con alias = location, deberia quedarse solo con el alias
 3. en un listado de archivos, la direccion explicita se lista, pero los subdirectorios no... 
-*y algo en como procesa si termina en '/' o no, se decide si es directorio o archivo en base a eso? no deberia /
+*/
