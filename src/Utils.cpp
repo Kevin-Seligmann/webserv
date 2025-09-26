@@ -92,8 +92,11 @@ void printLocationConfig(const Location& loc)
 	std::cout << YELLOW << "    Alias: " << RESET << loc.getAlias() << std::endl;
 	std::vector<std::string> methods = loc.getMethods();
 	std::cout << YELLOW << "    Allowed Methods:" << RESET << std::endl;
+	
     for (size_t i = 0; i < methods.size(); ++i)
+	{
         std::cout << "      - " << methods[i] << std::endl;
+	}
 
 	std::cout << YELLOW << "    Max Body Size: " << RESET << loc.getMaxBodySize() << std::endl;
 
