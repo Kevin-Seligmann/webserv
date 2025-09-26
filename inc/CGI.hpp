@@ -67,7 +67,7 @@ class CGI
 
 	public:
 
-		CGI(const HTTPRequest& req, const VirtualServersManager& server);
+		CGI();
 		~CGI();
 
 		void buildEnv(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);

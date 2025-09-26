@@ -181,7 +181,6 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 
 void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
-
 	for (std::map<std::string, std::string >::const_iterator it = req.headers.fields.begin(); it != req.headers.fields.end(); it ++)
 	{
 		std::string name = it->first;
@@ -252,18 +251,17 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	// PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
-	// _env.setEnvValue("SCRIPT_FILENAME", system_path); 
-	// _env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
-	// _env.setEnvValue("REQUEST_URI", req.get_path());
-	// _env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
-	// _env.setEnvValue("SCRIPT_NAME", res["SCRIPT_NAME"]);
+	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
+	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
+	_env.setEnvValue("REQUEST_URI", req.get_path());
+	_env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
+	_env.setEnvValue("SCRIPT_NAME", res["SCRIPT_NAME"]);
 
 	// TODO: Mirar extensión
-	if (1) // .bla files
-		_env.setEnvValue("PATH_INFO", res["PATH_INFO_CUSTOM"]);
-	else
-		_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
-
+	_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
+	
+	(void) server;
+	(void) loc;
 }
 
 CGIEnv& CGI::getEnv()

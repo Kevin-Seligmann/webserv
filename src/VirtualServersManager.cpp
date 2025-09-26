@@ -263,7 +263,7 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			}
 			else 
 			{
-				client->process(socket_fd, event.events);
+				client->process(socket_fd);
 			}
 
 		} catch (const std::runtime_error& e) {

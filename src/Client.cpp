@@ -4,14 +4,13 @@
 // Constructors, destructors
 Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance of overloaded function Client::Client matches the specified type
 : _vsm(vsm)
-, _status(PROCESSING_REQUEST)
+, _status(IDLE)
 , _error()
 , _request()
-, _cgi(_request, _vsm)
+, _cgi()
 , _element_parser(_error)
 , _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 , _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-, _status(IDLE)
 , _socket(client_fd)
 , _error_retry_count(0)
 , _last_activity(time(NULL))
@@ -30,7 +29,7 @@ Client::~Client()
 } 
 
 // Entry point
-void Client::process(int fd, int mode)
+void Client::process(int fd)
 {
 	/*
 		Sometimes a file descriptor can lag in the poll even if we are not interested anymore.
@@ -52,7 +51,7 @@ void Client::process(int fd, int mode)
 	_last_activity = time(NULL);
 	switch (_status)
 	{
-		case Client::IDLE: setStatus(PROCESSING_REQUEST, "Processing Request");
+		case Client::IDLE: setStatus(PROCESSING_REQUEST, "Processing Request");  
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
 		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
 		case Client::PROCESSING_CGI: handle_cgi_request(fd); break;
@@ -100,8 +99,8 @@ void Client::prepareCgi()
         path = _location->getFilesystemLocation(_request.get_path());
     if (path.empty() && !_server_config->getRoot().empty())
         path = _server_config->getRoot() + _request.get_path();
-    else if (path.empty())
-        CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
+	else if (path.empty())
+		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
 
 	_cgi.init(_request, _vsm, path, _server_config, _location);
 

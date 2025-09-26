@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "ElementParser.hpp"
@@ -24,7 +26,7 @@ public:
 
     time_t getLastActivity() const { return _last_activity; }
 
-    void process(int fd, int mode);
+    void process(int fd);
 
     int getSocket() const { return _socket; }
     int ownsFd(int fd) const;
