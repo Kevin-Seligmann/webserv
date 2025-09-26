@@ -3,28 +3,64 @@
 /*                                                        :::      ::::::::   */
 /*   CGIArg.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/06 14:23:15 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/18 12:11:13 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:42:35 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIArg.hpp"
+#include "DebugView.hpp"
+#include <unistd.h>
 
 CGIArg::CGIArg(const CGIEnv& env) : _args(NULL), _size(0)
 {
 	std::string script = env.getCGIEnvValue("SCRIPT_NAME");
+
+	std::string script_filename = env.getCGIEnvValue("SCRIPT_FILENAME");
+	
 	std::string interpreter = CGIInterpreter::findInterpreterForScript(script);
 
-	if (interpreter.empty()) interpreter = script;
+	DEBUG_LOG("SCRIPT_NAME=" << script);
+	DEBUG_LOG("SCRIPT_FILENAME=" << script_filename);
+	DEBUG_LOG("INTERPREETER=" << interpreter);
 
-	_size = 3;
-	_args = new char*[_size];
+	if (interpreter.empty())
+	{
+		if (access(script_filename.c_str(), X_OK) == 0) 
+		{
+			interpreter = script_filename;
+		}
+		else
+		{
+			std::string ext = script.substr(script.find_last_of('.'));
+			if (ext == ".bla")
+			{
+				interpreter = "/";
+			}
+			else
+			{
+				interpreter = script_filename;
+			}
+		}
+	}
 
-	_args[0] = strdup(interpreter.c_str());
-	_args[1] = strdup(script.c_str());
-	_args[2] = NULL;
+	if (interpreter == script_filename)
+	{
+		_size = 2;
+        _args = new char*[_size];
+        _args[0] = strdup(interpreter.c_str());
+        _args[1] = NULL;
+	}
+	else{
+		_size = 3;
+		_args = new char*[_size];
+		
+		_args[0] = strdup(interpreter.c_str());
+		_args[1] = strdup(script_filename.c_str());
+		_args[2] = NULL;
+	}
 }
 
 

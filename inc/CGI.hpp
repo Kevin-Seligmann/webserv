@@ -36,6 +36,8 @@
 # include "HTTPRequest.hpp"
 # include "ServerConfig.hpp"
 # include "ActiveFileDescriptor.hpp"
+# include "DebugView.hpp"
+
 
 class VirtualServersManager;
 

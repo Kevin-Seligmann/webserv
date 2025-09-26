@@ -39,7 +39,6 @@ private:
 	Wspoll                                          _wspoll;
  
 	// Manejo de señales
-	static VirtualServersManager*                   s_instance;
 	static volatile sig_atomic_t					s_shutdown_requested;
 
 	// Métodos privados de socket management
@@ -68,6 +67,7 @@ private:
 
 	// Manejo de señales
 	static void signal_handler(int sig);
+	static void sigchild_handler(int sig);
 	void setupSignals();
 	void gracefulShutdown();
 	bool isShutdownRequested() const { return s_shutdown_requested != 0; }

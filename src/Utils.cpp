@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 14:01:57 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/22 17:28:25 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,9 @@ void printLocationConfig(const Location& loc)
 
 void printServerConfig(const ParsedServer& config)
 {
+	#if DEBUG_MODE != 1
+		return;
+	#endif
 
 	std::cout << GREEN << "\n=== ServerConfig ===" << RESET << std::endl;
 
@@ -263,4 +266,19 @@ std::string normalizePath(const std::string& base, const std::string& path) {
 	}
 
 	return result;
+}
+
+std::string normalizeWebPath(const std::string& root, const std::string& request_path) {
+	if (root.length() > 2 && root.substr(0, 2) == "./")
+	{
+		std::string root_dir = root.substr(2);
+
+		std::string expected_prefix = "/" + root_dir + "/";
+		if (request_path.length() >=  expected_prefix.length() && 
+			request_path.substr(0, expected_prefix.length()) == expected_prefix)
+		{
+			return "." + request_path;
+		}
+	}
+	return normalizePath(root, request_path);
 }

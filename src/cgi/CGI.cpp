@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:10:50 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/25 17:36:47 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
 
-CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
+CGI::CGI() : _env()
 {
 	_cgi_status = CGI_INIT;
 
@@ -86,9 +86,13 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 
 	std::stringstream ss(req.get_path());
 	std::string item;
+
 	while (std::getline(ss, item, '/'))
 	{
-		if (!item.empty()) { parts.push_back(item); }
+		if (!item.empty())
+		{
+			parts.push_back(item);
+		}
 	}
 
 	for (size_t i = 0; i < parts.size(); ++i)
@@ -102,16 +106,25 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 				break;
 			}
 		}
-
-		if (indx != std::string::npos) { break; }
+		if (indx != std::string::npos)
+		{
+			break;
+		}
 	}
 
-	std::string script_name;
-	if (indx != std::string::npos) {
+	if (indx != std::string::npos)
+	{
+		std::string scriptName = "";
 		for (size_t i = 0; i <= indx; ++i)
-			script_name += "/" + parts[i];
+		{
+			scriptName += "/" + parts[i];
+		}
+		cgi["SCRIPT_NAME"] = scriptName;
 	}
-	cgi["SCRIPT_NAME"] = script_name;
+	else
+	{
+		cgi["SCRIPT_NAME"] = req.get_path();
+	}
 
 	std::string pathInfo;
 	if (indx != std::string::npos && indx + 1 < parts.size())
@@ -120,8 +133,16 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 			pathInfo += "/" + parts[k];
 	}
 
-	cgi["PATH_INFO"] = pathInfo;
-	cgi["PATH_INFO_CUSTOM"] = req.get_path();
+	bool isTestScript = req.get_path().find(".bla") != std::string::npos;
+	// TODO: Confirmar
+	if (isTestScript)
+	{
+    	cgi["PATH_INFO"] = req.get_path();
+	}
+	else
+	{
+		cgi["PATH_INFO"] = pathInfo;
+	}
 
 	return (cgi);
 }
@@ -176,6 +197,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	// META/REQUEST
 	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
 	_env.setEnvValue("REDIRECT_STATUS", "200");
+	
 	_env.setEnvValue("REQUEST_METHOD", methodToString(req.method));
  	_env.setEnvValue("QUERY_STRING", req.uri.query);
 		
@@ -260,8 +282,9 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 		return ;
 	}
 
-	_pid = fork();
 
+	_pid = fork();
+	
 	if (_pid < 0)
 	{
 		setStatus(CGI_ERROR, "CGI ERROR FORK: " + std::string(strerror(errno)));
@@ -281,6 +304,7 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 		close(_cgi_pipe[1]);
 
 		CGIArg	arg(_env);
+
 
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();

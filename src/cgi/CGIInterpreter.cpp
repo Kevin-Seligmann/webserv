@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIInterpreter.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 11:11:22 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/18 12:10:10 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/23 15:26:51 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,9 @@ std::string CGIInterpreter::getInterpreterForExtension(const std::string& ext)
 		for (std::vector<std::string>::iterator s = it->extensions.begin(); s != it->extensions.end(); ++s)
 		{
 			if (ext == *s)
+			{
 				return (it->interpreter);
+			}
 		}
 	}
 	return ("");

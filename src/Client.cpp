@@ -3,8 +3,11 @@
 
 // Constructors, destructors
 Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance of overloaded function Client::Client matches the specified type
-:_vsm(vsm)
-, _cgi(_request, _vsm) 
+: _vsm(vsm)
+, _status(PROCESSING_REQUEST)
+, _error()
+, _request()
+, _cgi(_request, _vsm)
 , _element_parser(_error)
 , _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 , _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
@@ -24,7 +27,7 @@ Client::~Client()
 		_vsm.unhookFileDescriptor(*it);
 	_active_fds.clear();
 	close(_socket);
-}
+} 
 
 // Entry point
 void Client::process(int fd, int mode)
