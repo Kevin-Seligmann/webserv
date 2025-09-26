@@ -373,27 +373,27 @@ void CGI::runCGI(int fd)
 		CODE_ERR("Imposible CGI status");
 	}
 
-	if (_read_finished && _write_finished)
-	{
+	// if (_read_finished && _write_finished)
+	// {
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
-		int status_check;
-		pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
-		status_check = status_check >> 8;
+		// int status_check;
+		// pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
+		// status_check = status_check >> 8;
 
-		if (status_check > 0)
-		{
-			_cgi_response.buildInternalErrorResponse();
-			setStatus(CGI_ERROR, "CGI Error: " + wss::i_to_dec(status_check));
-		}
-		else 
-		{
+		// if (check_result > 0 && status_check > 0)
+		// {
+		// 	_cgi_response.buildInternalErrorResponse();
+		// 	setStatus(CGI_ERROR, "CGI Error: " + wss::i_to_dec(status_check));
+		// }
+		// else 
+		// {
 			_cgi_response.parseFromCGIOutput(_cgi_output);
 			_cgi_response.buildResponse();
 			setStatus(CGI_FINISHED, "CGI FINISHED");
-		}
-	}
+		// }
+	// }
 }
 
 const CGIResponse& CGI::getCGIResponse() const
