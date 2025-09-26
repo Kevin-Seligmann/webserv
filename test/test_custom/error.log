@@ -1,0 +1,11 @@
+[DEBUG] 
+DEBUG MODE ON
+
+[DEBUG] parseFromCGIOutput: total bytes = 0
+[DEBUG] SCRIPT_NAME=/cgi-bin/upload.py
+[DEBUG] SCRIPT_FILENAME=/home/kevin/42/webserv/test/test_custom/www/cgi-bin/upload.py
+[DEBUG] INTERPREETER=/usr/bin/python3
+/home/kevin/42/webserv/test/test_custom/www/cgi-bin/upload.py:4: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+  import cgi
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
