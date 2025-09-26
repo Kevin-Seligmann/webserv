@@ -5,3 +5,5 @@ obj
 *.o
 *.d
 *.txt
+claude/
+.claude-context
