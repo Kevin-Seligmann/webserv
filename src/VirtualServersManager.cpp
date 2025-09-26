@@ -400,8 +400,21 @@ void VirtualServersManager::run() {
 
 		}
 		checkTimeouts();
+		killZombies();
 	}
 	gracefulShutdown();
+}
+
+void VirtualServersManager::killZombies()
+{
+	while (1)
+	{
+		int status;
+		int res = waitpid(-1, &status, WNOHANG);
+		if (res > 0)
+			continue ;
+		break ;
+	}
 }
 
 void VirtualServersManager::checkTimeouts() {

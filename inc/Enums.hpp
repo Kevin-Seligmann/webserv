@@ -27,8 +27,6 @@ enum AutoIndexState {
 enum CGIStatus {
 	CGI_INIT,
 	CGI_RUNNING,
-	CGI_WRITING_BODY,
-	CGI_READING_OUTPUT,
 	CGI_FINISHED,
 	CGI_ERROR
 };

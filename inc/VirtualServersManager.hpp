@@ -64,6 +64,7 @@ private:
 
 	ServerConfig* findServerConfigForRequest(const HTTPRequest& request, int client_fd);
 	void checkTimeouts();
+    void killZombies();
 
 	// Manejo de señales
 	static void signal_handler(int sig);

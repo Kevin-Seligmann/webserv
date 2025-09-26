@@ -275,11 +275,12 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
+		close(_req_pipe[0]); close(_req_pipe[1]);
+		close(_cgi_pipe[0]); close(_cgi_pipe[1]);
 		setStatus(CGI_ERROR, "CGI ERROR PIPE: " + std::string(strerror(errno)));
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
-
 
 	_pid = fork();
 	
@@ -296,7 +297,7 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 			dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
-			_exit(1);
+			_exit(127);
 
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
@@ -307,7 +308,7 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();
 		execve(argv[0], argv, envp);
-        _exit(1);
+        _exit(127);
 	}
 	else 
 	{
@@ -320,7 +321,6 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 
 		flags = fcntl(_cgi_pipe[0], F_GETFL, 0);
 		fcntl(_cgi_pipe[0], F_SETFL, flags | O_NONBLOCK);
-
 
 		// Initialize reading and writing data
 		// Write setup
@@ -375,13 +375,24 @@ void CGI::runCGI(int fd)
 
 	if (_read_finished && _write_finished)
 	{
-		int	status_cgi;
-		waitpid(_pid, &status_cgi, 0);
-		_cgi_response.parseFromCGIOutput(_cgi_output);
-		_cgi_response.buildResponse();
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
-		setStatus(CGI_FINISHED, "CGI FINISHED");
+
+		int status_check;
+		pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
+		status_check = status_check >> 8;
+
+		if (status_check > 0)
+		{
+			_cgi_response.buildInternalErrorResponse();
+			setStatus(CGI_ERROR, "CGI Error: " + wss::i_to_dec(status_check));
+		}
+		else 
+		{
+			_cgi_response.parseFromCGIOutput(_cgi_output);
+			_cgi_response.buildResponse();
+			setStatus(CGI_FINISHED, "CGI FINISHED");
+		}
 	}
 }
 
