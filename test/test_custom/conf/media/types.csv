@@ -64,3 +64,18 @@ font, ttf, .ttf
 font, otf, .otf
 
 test, file
+
+estos_ultimos_son_para_cuando_el_server_sirva_archivos_ponga_el_Content_Type_correcto,es_correcto?Si_lo_es_agregar_en_el_media_principal
+html,text/html
+htm,text/html
+css,text/css
+js,application/javascript
+json,application/json
+jpg,image/jpeg
+jpeg,image/jpeg
+png,image/png
+gif,image/gif
+pdf,application/pdf
+txt,text/plain
+py,text/x-python
+php,application/x-httpd-php
