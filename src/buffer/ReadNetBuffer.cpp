@@ -3,7 +3,7 @@
 #include <cassert>
 
 const size_t ReadNetBuffer::START_BUFFER_SIZE = 1000;
-const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 1001;
+const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 50001;
 
 ReadNetBuffer::ReadNetBuffer()
 {
@@ -106,6 +106,15 @@ void ReadNetBuffer::consume_bytes(ssize_t bytes)
     _start += bytes;
 }
 
+/*
+    Not compatible with external pointer manipulation.
+*/
+void ReadNetBuffer::unsafe_consume_bytes(ssize_t bytes)
+{
+    _start += bytes;
+    // if (static_cast<size_t>(size()) >= SHRINK_BUFFER_SIZE)
+    //     shrink();
+}
 
 uint8_t * ReadNetBuffer::get_start(){return _start;}
 

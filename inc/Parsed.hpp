@@ -24,6 +24,7 @@
 #include "Enums.hpp"
 #include "Listen.hpp"
 #include "Location.hpp"
+#include "StringUtil.hpp"
 
 class ServersManager;
 

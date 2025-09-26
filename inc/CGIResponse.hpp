@@ -50,6 +50,7 @@ class CGIResponse
 		void setStatus(const std::string& stat);
 		void setLocation(const std::string& loc);
 		void setHeader(const std::string& header, const std::string& value);
+		void reset();
 
 };
 

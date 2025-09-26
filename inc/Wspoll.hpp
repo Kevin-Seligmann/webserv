@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <errno.h>
-#include <queue>
+#include <deque>
 #include <cstring>
 #include "Logger.hpp"
 #include "StringUtil.hpp"
@@ -44,13 +44,14 @@ private:
         int mode;
     };
 
-    const static int POLLING_SIZE = 64;
+    const static int POLLING_SIZE = 500;
     const static int TIMEOUT = 1000;
     const static int WSPOLL_DEBUG = 0;
 
     struct pollfd * _fds;
-    std::queue<Wspoll::Wspoll_request> _requests;
+    std::deque<Wspoll::Wspoll_request> _requests;
     int _size;
+    int _adding_queue_size;
 
     void update_fds();
     void real_add(int fd, int mode);

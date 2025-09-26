@@ -19,6 +19,7 @@ public:
     void shrink();
     void reserve(ssize_t n);
     void consume_bytes(ssize_t n);
+    void unsafe_consume_bytes(ssize_t bytes);
 
     ssize_t capacity() const;
     ssize_t size() const;

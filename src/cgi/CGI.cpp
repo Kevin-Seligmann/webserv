@@ -16,20 +16,13 @@ CGI::CGI(const HTTPRequest& req, const VirtualServersManager& server) : _env()
 {
 	_cgi_status = CGI_INIT;
 
-
-
 	_req_pipe[0] = -1;
 	_req_pipe[1] = -1;
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
-
 }
 
-void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path)
-{
-	buildEnv(req, server, path);
-}
 
 CGI::~CGI()
 {
@@ -75,7 +68,9 @@ std::string CGI::methodToString(HTTPMethod method) const
 	}
 }
 
-std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, const std::string &file_path) const
+
+
+std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) const
 {
 	std::map<std::string, std::string> cgi;
 	std::vector<std::string> parts;
@@ -89,7 +84,7 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 
 	size_t indx = std::string::npos;
 
-	std::stringstream ss(path);
+	std::stringstream ss(req.get_path());
 	std::string item;
 	while (std::getline(ss, item, '/'))
 	{
@@ -111,8 +106,12 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 		if (indx != std::string::npos) { break; }
 	}
 
-	if (indx != std::string::npos) {cgi["SCRIPT_NAME"] = parts[indx]; }
-	else { cgi["SCRIPT_NAME"] = ""; }
+	std::string script_name;
+	if (indx != std::string::npos) {
+		for (size_t i = 0; i <= indx; ++i)
+			script_name += "/" + parts[i];
+	}
+	cgi["SCRIPT_NAME"] = script_name;
 
 	std::string pathInfo;
 	if (indx != std::string::npos && indx + 1 < parts.size())
@@ -121,36 +120,73 @@ std::map<std::string, std::string> CGI::pathToBlocks(const std::string& path, co
 			pathInfo += "/" + parts[k];
 	}
 
-	std::cout << "PATH: " << file_path << std::endl;
-	cgi["PATH_INFO"] = "/";
+	cgi["PATH_INFO"] = pathInfo;
+	cgi["PATH_INFO_CUSTOM"] = req.get_path();
 
 	return (cgi);
 }
 
-void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & path)
+/*
+	EJEMPLO SOLICITUD CGI - /directory/youpi.php/path. Local: /etc/var/www/YoupiBanane/Youpi.php 
+
+	PHP_SELF: /directory/youpi.php - Autogenerado
+	GATEWAY_INTERFACE: CGI/1.1 - Estático 
+
+	# Meta
+	REQUEST_METHOD: GET
+	SERVER_PROTOCOL: HTTP/1.1 - Estático
+	REQUEST_TIME: timestamp - Generado al enviar la petición CGI
+
+	# Server
+	SERVER_ADDR: 127.0.0.1 - Dirección ip del servidor
+	SERVER_PORT: 8080 - Puerto del servidor
+	SERVER_NAME: localhost/servername - Nombre del servidor (Server name o dominio)
+	SERVER_SOFTWARE: webserv - Estático
+
+	# Client
+	REMOTE_ADDR: 127.0.0.1 - Dirección IP del cliente
+	REMOTE_HOST: localhost - Nombre del cliente
+	REMOTE_PORT: 60000 - Puerto de la solicitud
+
+	# Paths
+	SCRIPT_FILENAME: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física hacia el documento
+	PATH_TRANSLATED: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física del documento
+	SCRIPT_NAME: /directory/youpi.php - Nombre lógico del script
+	PATH_INFO: /path - Luego del script 
+	DOCUMENT_ROOT: /etc/var/www - Raiz física del servidor
+	REQUEST_URI: /directory/youpi.php/path - URI Completo
+	PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
+*/
+
+void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
-	std::map<std::string, std::string> res = pathToBlocks(req.uri.path, req.get_path());
 
+	for (std::map<std::string, std::string >::const_iterator it = req.headers.fields.begin(); it != req.headers.fields.end(); it ++)
+	{
+		std::string name = it->first;
+		for (std::string::iterator s = name.begin(); s != name.end(); s ++)
+		{
+			*s = toupper(*s);
+			if (*s == '-')
+				*s = '_';
+		}
+		_env.setEnvValue("HTTP_" + name, it->second);
+	}
+
+	// META/REQUEST
+	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
 	_env.setEnvValue("REDIRECT_STATUS", "200");
-	_env.setEnvValue("SCRIPT_FILENAME", path); 
-
+	_env.setEnvValue("REQUEST_METHOD", methodToString(req.method));
+ 	_env.setEnvValue("QUERY_STRING", req.uri.query);
+		
+	_req_body = & req.body.content;
 	if (!req.body.content.empty())
 	{
 		std::ostringstream ss;
 		ss << req.headers.content_length;
 		_env.setEnvValue("CONTENT_LENGTH", ss.str());
 		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.type + '/' + req.headers.content_type.subtype);
-		_req_body = req.body.content;
 	}
-	
-	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
-
-	if (req.uri.query.empty()) { _env.setEnvValue("QUERY_STRING", ""); }
-	else { _env.setEnvValue("QUERY_STRING", req.uri.query); }
-
-	_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
-	_env.setEnvValue("REQUEST_METHOD", methodToString(req.method));
-	_env.setEnvValue("SCRIPT_NAME", res["SCRIPT_NAME"]);
 
 	if (!req.headers.host.empty())
 	{
@@ -161,6 +197,15 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 //		_env.setEnvValue("SERVER_NAME", server->server_names[0]); // TODO check if you have to use getter
 	}
 
+	if (req.body.content.size() > 0)
+	{
+		_env.setEnvValue("CONTENT_LENGTH", wss::i_to_dec(req.body.content.size() ));
+		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
+	}
+
+	// CLIENT
+
+	// SERVER
 	if (req.headers.port != -1)
 	{
 		std::ostringstream ss;
@@ -171,9 +216,32 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	{
 		_env.setEnvValue("SERVER_PORT", "8080"); // TODO check how to get port from location OR server config
 	}
-
 	_env.setEnvValue("SERVER_PROTOCOL", req.protocol);
 	_env.setEnvValue("SERVER_SOFTWARE", "webserver"); // default
+
+
+	// # Paths
+	// SCRIPT_FILENAME: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física hacia el documento
+	// PATH_TRANSLATED: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física del documento
+	// SCRIPT_NAME: /directory/youpi.php - Nombre lógico del script
+	// PATH_INFO: /path - Luego del script 
+	// DOCUMENT_ROOT: /etc/var/www - Raiz física del servidor
+	// REQUEST_URI: /directory/youpi.php/path - URI Completo
+	// PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
+	std::map<std::string, std::string> res = pathToBlocks(req);
+	// PATHS
+	// _env.setEnvValue("SCRIPT_FILENAME", system_path); 
+	// _env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
+	// _env.setEnvValue("REQUEST_URI", req.get_path());
+	// _env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
+	// _env.setEnvValue("SCRIPT_NAME", res["SCRIPT_NAME"]);
+
+	// TODO: Mirar extensión
+	if (1) // .bla files
+		_env.setEnvValue("PATH_INFO", res["PATH_INFO_CUSTOM"]);
+	else
+		_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
+
 }
 
 CGIEnv& CGI::getEnv()
@@ -181,100 +249,118 @@ CGIEnv& CGI::getEnv()
     return (_env);
 }
 
-void CGI::runCGI()
+void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
-	_cgi_status = CGI_RUNNING;
+	buildEnv(req, server, system_path, sconf, loc);
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
-		_cgi_status = CGI_ERROR;
+		setStatus(CGI_ERROR, "CGI ERROR PIPE: " + std::string(strerror(errno)));
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
+
 	_pid = fork();
 
 	if (_pid < 0)
 	{
-		_cgi_status = CGI_ERROR;
+		setStatus(CGI_ERROR, "CGI ERROR FORK: " + std::string(strerror(errno)));
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
-
 	if (_pid == 0)
 	{
-		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
-			dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
-		{
-			_cgi_status = CGI_ERROR;
-			_cgi_response.buildInternalErrorResponse();
-			_exit(1);
-		}
-
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
+		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
+			dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
+			_exit(1);
+
+		close(_req_pipe[0]);
+		close(_cgi_pipe[1]);
+
 		CGIArg	arg(_env);
+
 		char** argv = arg.getArgs();
-
 		char** envp = _env.getEnvp();
-
-		// for (int i = 0; i < 100; i ++){
-		// 	if (!argv[i])
-		// 		break;
-		// 	std::cout << argv[i] << std::endl;
-		// }
-
-		// for (int i = 0; i < 100; i ++){
-		// 	if (!envp[i])
-		// 		break;
-		// 	std::cout << envp[i] << std::endl;
-		// }
 		execve(argv[0], argv, envp);
-
-		_cgi_status = CGI_ERROR;
-		_cgi_response.buildInternalErrorResponse();
         _exit(1);
-
 	}
-	else
+	else 
 	{
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
 
-		if (!_req_body.empty())
+		// Make pipes not blocking
+		int flags = fcntl(_req_pipe[1], F_GETFL, 0);
+		fcntl(_req_pipe[1], F_SETFL, flags | O_NONBLOCK);
+
+		flags = fcntl(_cgi_pipe[0], F_GETFL, 0);
+		fcntl(_cgi_pipe[0], F_SETFL, flags | O_NONBLOCK);
+
+
+		// Initialize reading and writing data
+		// Write setup
+		_wr_body = _req_body->c_str();
+		_wr_body_size = _req_body->size();
+		_wr_bytes_sent = 0;
+		_write_finished = false;
+
+		// Read setup
+		_read_finished = false;
+
+		if (_wr_body_size == 0)
 		{
-			ssize_t written = write(_req_pipe[1], _req_body.c_str(), _req_body.size());
-			if (written == -1) 
+			_write_finished = true;
+			close(_req_pipe[1]);
+		}
+		setStatus(CGI_RUNNING, "RUNNING CGI");
+	}
+}
+
+void CGI::runCGI(int fd)
+{
+	if (fd == _req_pipe[1])
+	{
+		ssize_t written = write(_req_pipe[1], _wr_body + _wr_bytes_sent, std::min(_wr_body_size - _wr_bytes_sent, 8000UL));
+		if (written >= 0)
+		{
+			_wr_bytes_sent += written;
+			if (_wr_bytes_sent >= _wr_body_size)
 			{
-				_cgi_status = CGI_ERROR;
-				_cgi_response.buildInternalErrorResponse();
-				return ;
+				_write_finished = true;
+				close(_req_pipe[1]);
 			}
 		}
 	}
-		close(_req_pipe[1]);
-
-		_cgi_status = CGI_WRITING_BODY;
-
-		char buffer[4096];
-		ssize_t n;
-		std::string cgi_output;
-		while ((n = read(_cgi_pipe[0], buffer, sizeof(buffer))) > 0)
+	else if (fd == _cgi_pipe[0])
+	{
+		ssize_t readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
+		if (readed > 0)
 		{
-			cgi_output.append(buffer, n);
+			_cgi_output.append(_rd_buffer, readed);
 		}
+		else if (readed == 0)
+		{
+			_read_finished = true;
+		}
+	}
+	else 
+	{
+		CODE_ERR("Imposible CGI status");
+	}
 
-		close(_cgi_pipe[0]);
-
+	if (_read_finished && _write_finished)
+	{
 		int	status_cgi;
 		waitpid(_pid, &status_cgi, 0);
-
-		_cgi_status = CGI_READING_OUTPUT;
-
-		_cgi_response.parseFromCGIOutput(cgi_output);
+		_cgi_response.parseFromCGIOutput(_cgi_output);
 		_cgi_response.buildResponse();
-
-		_cgi_status = CGI_FINISHED;
+		close(_req_pipe[1]);
+		close(_cgi_pipe[0]);
+		setStatus(CGI_FINISHED, "CGI FINISHED");
+	}
 }
 
 const CGIResponse& CGI::getCGIResponse() const
@@ -290,4 +376,44 @@ CGIStatus CGI::getStatus() const
 void CGI::setStatus(CGIStatus s) 
 { 
 	_cgi_status = s;
+}
+
+std::vector<ActiveFileDescriptor> CGI::getActiveFileDescriptors() const
+{
+	std::vector<ActiveFileDescriptor> fds;
+
+	if (_cgi_status == CGI_RUNNING)
+	{
+		if (!_read_finished)
+			fds.push_back(ActiveFileDescriptor(_cgi_pipe[0], POLLIN));
+		if (!_write_finished)
+			fds.push_back(ActiveFileDescriptor(_req_pipe[1], POLLOUT));
+	}
+	else
+		CODE_ERR("Trying to get active FDs from an invalid status");
+	return fds;
+}
+
+void CGI::reset()
+{
+    if (_pid > 0) {
+        int status;
+        waitpid(_pid, &status, 0);
+    }
+
+	setStatus(CGI_INIT, "CGI IDLE");
+	_req_pipe[0] = -1;
+	_req_pipe[1] = -1;
+	_cgi_pipe[0] = -1;
+	_cgi_pipe[1] = -1;
+	_pid = -1;
+	std::string().swap(_cgi_output);
+	_cgi_response.reset();
+}
+
+
+void CGI::setStatus(CGIStatus status, std::string const & txt)
+{
+	Logger::getInstance() << "CGI set status " << (int) status << " " << txt << std::endl;
+	_cgi_status = status;
 }

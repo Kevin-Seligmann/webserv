@@ -2,6 +2,7 @@
 #define LOCATION_HPP
 
 #include "Enums.hpp"
+#include "StringUtil.hpp"
 #include "HTTPRequest.hpp"
 #include <string>
 #include <vector>
@@ -75,7 +76,7 @@ public:
 	void setPath(const std::string& path) { _path = path; }
 	void setMatchType(const MatchType& match_type) { _match_type = match_type; }
     void setMethods(const std::vector<std::string>& methods) { _methods = methods; }
-    void setRoot(const std::string& root) { _root = root; }
+    void setRoot(const std::string& root) { _root = wss::guarantee_absolute_path(root); }
 	void setIndex(const std::vector<std::string>& index) { _index = index; }
 	void setAutoindex(AutoIndexState state) { _autoindex = state; }
 	void setRedirect(const std::string& redirect) { _redirect = redirect; }
@@ -83,7 +84,7 @@ public:
 	void setAllowUpload(const bool allow_upload) { _allow_upload = allow_upload; }
 	void setErrorPage(int code, const std::string& path) { _error_pages[code]=path; }
 	void setMaxBodySize(size_t max) { _max_body_size = max; }
-	void setAlias(const std::string & alias){_alias = alias;}
+	void setAlias(const std::string & alias){_alias = wss::guarantee_absolute_path(alias);}
 };
 
 #endif

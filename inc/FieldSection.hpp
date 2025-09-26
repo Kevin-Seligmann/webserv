@@ -36,6 +36,7 @@ struct FieldSection : public HTTPElement
     void reset();
     void print(std::ostream & os) const;
     void put(std::string const & name, std::string const & value);
+    std::string const getContentType() const;
     void put_cookie(std::string::iterator name_start, std::string::iterator name_end, std::string::iterator value_start, std::string::iterator value_end);
 };
 

@@ -171,7 +171,7 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 		return ;
 	}
 
-	CODE_ERR("The server tried to find a client that does not exists. This is not possible.");
+	CODE_ERR("The server tried to find a client that does not exists. This is not possible. " + wss::i_to_dec(client_fd)); // Maybe it's possible
 }
 
 // ================ EVENT ================
@@ -186,24 +186,26 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 		try {
 			Client* client = searchClient(socket_fd);
 			if (!client)
-				CODE_ERR("A file descriptor that doesn't belong to any client has been found");
-
-			if (event.events & (POLLRDHUP | POLLHUP | POLLERR))
 			{
-				if (event.events & POLLRDHUP) // Better to set up a close routine. Client might still waits for a response.
-					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection." << std::endl;
-				else if (event.events & POLLHUP)
-					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " closed the connection abrutply." << std::endl;
-				if (event.events & POLLRDHUP)
-					Logger::getInstance() << "Client " + wss::i_to_dec(socket_fd) + " socket error. Closing connection abruptly." << std::endl;
+				// unhookFileDescriptor(ActiveFileDescriptor(socket_fd, 0));
+				CODE_ERR("A file descriptor that doesn't belong to any client has been found: " + wss::i_to_dec(socket_fd));
+			}
 
-				disconnectClient(socket_fd);
+			if (event.events & POLLERR)
+			{
+				Logger::getInstance() << "Client " + wss::i_to_dec(client->getSocket())+ " POLLERR on socket " << socket_fd << ": "<< strerror(errno) << std::endl;
+				disconnectClient(client->getSocket());
+			}
+			else if (event.events & POLLRDHUP && client->idle())
+			{
+				Logger::getInstance() << "Client " + wss::i_to_dec(client->getSocket())+ ": connection closed by peer " << std::endl;
+				disconnectClient(client->getSocket());
 			}
 			else 
 			{
 				client->process(socket_fd, event.events);
 			}
-				
+
 		} catch (const std::runtime_error& e) {
 			std::cerr << "Exception processing client data: " << e.what() << std::endl;
 			disconnectClient(socket_fd);
@@ -241,6 +243,7 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	}
 
 	_client_to_listen[client_fd] = *listen;
+	
 	_clients[client_fd] = new Client(*this, client_fd); // TODO crear constructor si aplica
 }
 
@@ -256,17 +259,9 @@ void VirtualServersManager::unhookFileDescriptor(ActiveFileDescriptor const & ac
 	_wspoll.del(actf.fd);
 }
 
-void VirtualServersManager::swapFileDescriptor(ActiveFileDescriptor const & oldfd, ActiveFileDescriptor const & newfd)
+void VirtualServersManager::updateFiledescriptor(ActiveFileDescriptor const & actf)
 {
-	if (oldfd == newfd)
-		return;
-	if (oldfd.fd == newfd.fd)
-		_wspoll.mod(newfd.fd, newfd.mode);
-	else 
-	{
-		unhookFileDescriptor(oldfd);
-		hookFileDescriptor(newfd);
-	}
+	_wspoll.mod(actf.fd, actf.mode);
 }
 
 // ================ REQUEST ROUTER ================

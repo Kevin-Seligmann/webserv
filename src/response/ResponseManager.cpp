@@ -135,7 +135,13 @@ void ResponseManager::generate_cgi_response()
 {
     Logger::getInstance() << "Generating CGI response. " << std::endl;
     _buffer.put_body(_cgi.getCGIResponse().getResponseBuffer());
-    // std::cout << "BODY SIZE: " << _buffer.end() - _buffer.begin() << std::endl;
+     
+    _cgi.reset();
+
+    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". CGI Generated. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+    if (msg.size() > 500) {msg = msg.substr(0, 500);}
+    Logger::getInstance() << msg << std::endl;
+    
     _status = WRITING_RESPONSE;
 }
 
@@ -401,7 +407,7 @@ void ResponseManager::write_response()
     ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {
-        _buffer.consume_bytes(written_bytes);
+        _buffer.unsafe_consume_bytes(written_bytes);
     }
     else if (written_bytes == 0)
     {
@@ -411,9 +417,12 @@ void ResponseManager::write_response()
     }
     else
     {
-        Logger & i = Logger::getInstance();
-        i.error("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close: " + std::string(strerror(errno)));
-        CODE_ERR("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close.");
+        // We asume writting never fails due to errno restrictions. (also this is not a code error)
+        // We asume the writing bloqued for some reason (It CAN happen even if it's non-blocking. Will just return -1)
+
+        // Logger & i = Logger::getInstance();
+        // i.error("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close: " + std::string(strerror(errno)));
+        // CODE_ERR("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close.");
     }
 }
 

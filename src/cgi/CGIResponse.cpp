@@ -109,7 +109,7 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 		}
 		else
 		{
-			bodyTmp << line << "\n";
+			bodyTmp << line;
 		}
 	}
 
@@ -180,4 +180,18 @@ void CGIResponse::setHeader(const std::string& header, const std::string& value)
     if (it != _cgiResponseHeaders.end())
 		throw std::runtime_error("This header already exist: " + header);
     _cgiResponseHeaders[header] = value;
+}
+
+void CGIResponse::reset()
+{
+	std::string().swap(_contentType);
+	std::string().swap(_status);
+	std::string().swap(_location);
+	std::string().swap(_responseBuffer);
+
+	_cgiResponseHeaders.clear();
+	std::map<std::string, std::string>().swap(_cgiResponseHeaders);
+
+	_bodyStream.str("");
+	_bodyStream.clear();
 }

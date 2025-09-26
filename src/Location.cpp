@@ -9,7 +9,9 @@ Location::Location()
     , _redirect("")
     , _cgi_extension("")
     , _allow_upload(false)
+    , _max_body_size(0)
     , _alias("")
+
 {
 	_index.push_back("index.html");
 }
@@ -25,6 +27,7 @@ Location::Location(const Location& other)
     , _cgi_extension(other._cgi_extension)
     , _allow_upload(other._allow_upload)
     , _error_pages(other._error_pages)
+    , _max_body_size(other._max_body_size)
     , _alias(other._alias)
 {
 }

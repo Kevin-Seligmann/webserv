@@ -1,4 +1,5 @@
 #include "StringUtil.hpp"
+#include "ElementParser.hpp"
 
 void wss::to_upper(std::string & s)
 {
@@ -249,4 +250,69 @@ std::string wss::i_to_dec(size_t size)
     }
     std::reverse(res.begin(), res.end());
     return res.empty() ? "0" : res;
+}
+
+std::string const wss::guarantee_absolute_path(std::string const & src)
+{
+    if (src.empty() || src[0] == '/')
+        return src;
+
+    char working_dir[PATH_MAX];
+
+    if (!getcwd(working_dir, sizeof(working_dir)))
+        throw std::runtime_error("Working directory fetch failed");
+
+    std::string result = std::string(working_dir) + "/" + src;
+
+    wss::normalize_any_path(result);
+
+    return result;
+}
+
+
+void wss::normalize_any_path(std::string & str)
+{
+	std::string::iterator it = str.begin();
+	std::string out = "";
+
+	while (it != str.end())
+	{  
+		while (std::distance(it, str.end()) >= 2 && wss::str_equal(it, 2, "//"))
+			it ++;
+		if (std::distance(it, str.end()) >= 3 && wss::str_equal(it, 3, "../"))
+			it += 3;
+		else if (std::distance(it, str.end()) >= 2 && wss::str_equal(it, 2, "./"))
+			it += 2;
+
+		else if (std::distance(it, str.end()) >= 3 && wss::str_equal(it, 3, "/./"))
+			it += 2;
+		else if (std::distance(it, str.end()) == 2 && wss::str_equal(it, "/."))
+		{
+			it ++;
+			*it = '/';
+		}
+
+		else if (std::distance(it, str.end()) >= 4 && wss::str_equal(it, 4, "/../"))
+		{
+			it += 3;
+			wss::remove_uri_segment(out);
+		}
+		else if (std::distance(it, str.end()) == 3 && wss::str_equal(it, "/.."))
+		{
+			it += 2;
+			*it = '/';
+			wss::remove_uri_segment(out);
+		}
+
+		else if (wss::str_equal(it, ".."))
+			it +=2;
+		else if (wss::str_equal(it, "."))
+			it ++;
+
+		else
+			it = wss::move_uri_segment(out, str, it);
+	}
+	if (out.empty())
+		out = "/";
+	str = out;
 }

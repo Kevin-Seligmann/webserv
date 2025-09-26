@@ -27,11 +27,13 @@ public:
     void process(int fd, int mode);
 
     int getSocket() const { return _socket; }
-    int ownsFd(int fd) const { return fd == _socket || fd == _active_fd.fd; }
+    int ownsFd(int fd) const;
     bool closing() const;
+    bool idle() const;
 
 private:
     enum Status {
+        IDLE,
         PROCESSING_REQUEST,
         PROCESSING_RESPONSE,
         PROCESSING_CGI,
@@ -50,14 +52,14 @@ private:
     ResponseManager         _response_manager;
     int                     _socket;
     id_t                    _error_retry_count;
-    ActiveFileDescriptor    _active_fd;
+    std::vector<ActiveFileDescriptor> _active_fds;
     time_t                  _last_activity;
     bool                    _is_cgi;
 
     // int             error_retry_count;
 
 
-    void handle_cgi_request();
+    void handle_cgi_request(int fd);
     void handle_processing_request();
     void handle_processing_response();
 
@@ -66,10 +68,14 @@ private:
 
     void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
     void prepareRequest();
+    void prepareCgi();
 
     bool isCgiRequest();
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
+    void updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> fds);
 
 	void get_config(ServerConfig ** server, Location ** location);
+
+    void setStatus(Status status, std::string const & txt);
 };

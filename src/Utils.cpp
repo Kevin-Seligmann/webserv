@@ -95,6 +95,7 @@ void printLocationConfig(const Location& loc)
     for (size_t i = 0; i < methods.size(); ++i)
         std::cout << "      - " << methods[i] << std::endl;
 
+	std::cout << YELLOW << "    Max Body Size: " << RESET << loc.getMaxBodySize() << std::endl;
 
 	// TODO: Implement when Location class has proper getters
 //	(void)loc; // Suppress unused parameter warning

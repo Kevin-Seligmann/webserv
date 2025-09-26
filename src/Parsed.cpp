@@ -434,7 +434,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 		else if (key == "root") {
-			server.root = tokens[i++];
+			server.root = wss::guarantee_absolute_path(tokens[i++]);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
 				CODE_ERR("Missing ';' after 'root' directive.");

@@ -4,7 +4,11 @@
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
+#include <limits.h> 
+#include <unistd.h>
 #include "ParsingUtil.hpp"
+
+class ElementParser;
 
 namespace wss 
 {
@@ -39,6 +43,9 @@ namespace wss
     std::string::iterator skip_until_dquoted_string_end(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_whitespace(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_hexa_token(std::string::iterator begin, std::string::iterator end);
+
+    std::string const guarantee_absolute_path(std::string const & src);
+    void normalize_any_path(std::string & str);
 
 }
 

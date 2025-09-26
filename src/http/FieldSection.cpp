@@ -26,6 +26,14 @@ void FieldSection::put(std::string const & str, std::string const & value)
         fields[str] += ", " + value;
 }
 
+std::string const FieldSection::getContentType() const
+{
+    if (!this->content_type.type.empty())
+        return this->content_type.getString();
+    else
+        return "application/octet-stream";
+}
+
 void FieldSection::print(std::ostream & os) const
 {
     for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); it ++)

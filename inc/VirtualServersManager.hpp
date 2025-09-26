@@ -60,7 +60,7 @@ private:
 	
 	void hookFileDescriptor(const ActiveFileDescriptor& actf);
 	void unhookFileDescriptor(const ActiveFileDescriptor& actf);
-	void swapFileDescriptor(const ActiveFileDescriptor& oldfd, const ActiveFileDescriptor& newfd);
+    void updateFiledescriptor(ActiveFileDescriptor const & actf);
 	void disconnectClient(int client_fd);
 
 	ServerConfig* findServerConfigForRequest(const HTTPRequest& request, int client_fd);

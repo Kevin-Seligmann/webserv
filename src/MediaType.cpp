@@ -66,6 +66,19 @@ MediaType::MediaType(){}
 
 MediaType::MediaType(std::string type, std::string subtype):type(type), subtype(subtype){}
 
+const std::string MediaType::getString() const
+{
+    std::stringstream s; 
+    s << type << "/" << subtype << "; ";
+    for (std::vector<std::pair<std::string, std::string> >::const_iterator params = parameters.begin(); params != parameters.end(); params ++)
+    {
+        s << params->first << "=" << params->second;
+        if (params + 1 != parameters.end())
+            s << "; ";
+    }
+    return s.str();
+}
+
 std::ostream & operator<<(std::ostream & os,  MediaType const & media)
 {
     os << media.type << "/" << media.subtype << "; ";

@@ -8,36 +8,51 @@ Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance o
 , _element_parser(_error)
 , _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
 , _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-, _status(PROCESSING_REQUEST)
+, _status(IDLE)
 , _socket(client_fd)
 , _error_retry_count(0)
-, _active_fd(client_fd, POLLIN | POLLRDHUP)
 , _last_activity(time(NULL))
 , _is_cgi(false)
 {
-	_vsm.hookFileDescriptor(_active_fd);
+	_vsm.hookFileDescriptor(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
+	_active_fds.push_back(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
 }
 
 Client::~Client() 
 {
-	if (_active_fd.fd >= 0)
-		_vsm.unhookFileDescriptor(_active_fd);
+	for (std::vector<ActiveFileDescriptor>::iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
+		_vsm.unhookFileDescriptor(*it);
+	_active_fds.clear();
 	close(_socket);
 }
 
 // Entry point
 void Client::process(int fd, int mode)
 {
+	/*
+		Sometimes a file descriptor can lag in the poll even if we are not interested anymore.
+		This snippet makes sure we don't execute anything we don't want.
+	*/
+	bool found = false;
+	for (std::vector<ActiveFileDescriptor>::iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
+	{
+		if (fd == it->fd)
+		{
+			found = true;
+			break ;
+		}
+	}
+	if (!found)
+		return ;
+
+
 	_last_activity = time(NULL);
-
-	if (fd != _active_fd.fd && !(_active_fd.mode & mode))
-		CODE_ERR("Trying to access client with an invalid socket or mode");
-
 	switch (_status)
 	{
+		case Client::IDLE: setStatus(PROCESSING_REQUEST, "Processing Request");
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
 		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
-		case Client::PROCESSING_CGI: handle_cgi_request(); break;
+		case Client::PROCESSING_CGI: handle_cgi_request(fd); break;
 		case Client::CLOSING: CODE_ERR("Using CLOSE status"); break;
 	}
 }
@@ -48,8 +63,8 @@ void Client::prepareRequest()
 	_error_retry_count = 0;
 	updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
 	_request_manager.new_request();
-	// Reset CGI.
-	_status = PROCESSING_REQUEST;
+	_cgi.reset();
+	setStatus(IDLE, "Idle");
 }
 
 void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
@@ -66,9 +81,37 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	else 
 	{
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
-		_status = PROCESSING_RESPONSE;
+		setStatus(PROCESSING_RESPONSE, "Processing Request");
 	}
 }
+
+void Client::prepareCgi()
+{
+	setStatus(PROCESSING_CGI, "Processing CGI");
+
+	ServerConfig * _server_config = NULL;
+	Location * _location = NULL;
+	get_config(&_server_config, &_location);
+	std::string path = "";
+    if (_location)
+        path = _location->getFilesystemLocation(_request.get_path());
+    if (path.empty() && !_server_config->getRoot().empty())
+        path = _server_config->getRoot() + _request.get_path();
+    else if (path.empty())
+        CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
+
+	_cgi.init(_request, _vsm, path, _server_config, _location);
+
+	if (_cgi.error())
+	{
+		_error.set("Error processing CGI", INTERNAL_SERVER_ERROR);
+		handleRequestError();
+	}
+	else 
+	{
+		updateActiveFileDescriptors(_cgi.getActiveFileDescriptors());
+	}
+};
 
 // State handlers
 void Client::handle_processing_request()
@@ -77,12 +120,12 @@ void Client::handle_processing_request()
 
 	if (_request_manager.request_done() && _error.status() == OK)
 	{
-		Logger::getInstance() <<  "Request processed: " << _error.to_string() + ". " + _error.msg() << " Body size: " << _request.body.content.size() << std::endl;
+		Logger::getInstance() <<  "Request processed: " << _error.to_string() + _error.msg() << " Body size: " << _request.body.content.size() << std::endl;
 		handleRequestDone();
 	}
 	else if (_error.status() != OK)
 	{
-		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + ". " + _error.msg() << std::endl;
+		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
 		handleRequestError();
 	}
 }
@@ -93,18 +136,20 @@ void Client::handle_processing_response()
 	_response_manager.process();
 	if (_response_manager.is_error())
 		handleRequestError();
-	else if (_response_manager.response_done()) // Handle error
+	else if (_response_manager.response_done())
 	{		
-		if (_request_manager.close())
-		{
-			_status = CLOSING;
-			_vsm.unhookFileDescriptor(_active_fd);
-			_active_fd.fd = -1;
-		}
-		else 
-		{
+
+		// TODO: Closing
+		
+		// if (_request_manager.close())
+		// {
+		// 	setStatus(CLOSING, "Closing");
+		// 	updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
+		// }
+		// else 
+		// {
 			prepareRequest();
-		}
+		// }
 	}
 	else 
 	{
@@ -122,44 +167,24 @@ void Client::handle_processing_response()
 */
 
 
-void Client::handle_cgi_request() {	
-
-
-	/*
-		cgi.runCGI() // Read or write only once.
-		if (cgi.done())
-		{
-			prepareResponse();
-		}
-		else if (cgi.error()? ) ? SI existe
-		{
-			handleRequestError();
-		}
-		else
-		{
-			updateActiveFileDescriptor(cgi.get_active_file_descriptor());
-		}
-	*/
-	// cgi(_request, _vsm);
-
-	ServerConfig * _server_config = NULL;
-	Location * _location = NULL;
-	get_config(&_server_config, &_location);
-	std::string path = "";
-    if (_location)
-        path = _location->getFilesystemLocation(_request.get_path());
-    if (path.empty() && !_server_config->getRoot().empty())
-        path = _server_config->getRoot() + _request.get_path();
-    else if (path.empty())
-        CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
-
-	std::cout << "SENDING CGI" << std::endl;
-	_cgi.init(_request, _vsm, path);
-	_cgi.runCGI();
-
-	// std::cout << "HERE IS THE CGI ANSWER: " << _cgi.getCGIResponse().getResponseBuffer() << std::endl;
-
-	prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+void Client::handle_cgi_request(int fd) 
+{	
+	_cgi.runCGI(fd);
+	if (_cgi.done())
+	{
+		prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+		_cgi.reset();
+		_request.reset();
+	}
+	else if (_cgi.error())
+	{
+		_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR);
+		handleRequestError();
+	}
+	else 
+	{
+		updateActiveFileDescriptors(_cgi.getActiveFileDescriptors());
+	}
 }
 
 void Client::handleRequestDone()
@@ -168,16 +193,25 @@ void Client::handleRequestDone()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
+	size_t max_size = 0;
+	if (location && location->getMaxBodySize() > 0)
+		max_size = location->getMaxBodySize();
+	else
+		max_size = server_config->getClientMaxBodySize();
+
+	if (max_size < _request.body.content.length())
+    {
+        _error.set("Body size too large: " + wss::i_to_dec(max_size) + " \\ " + wss::i_to_dec(_request.body.content.length()), CONTENT_TOO_LARGE);
+		handleRequestError();
+		return ;
+    }
+
 	if (!server_config)
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
-	else if (isCgiRequest()) {
-			_status = PROCESSING_CGI; 
-			// prepareCgi();
-			handle_cgi_request();
-	}
-	else {
+	else if (isCgiRequest())
+		prepareCgi();
+	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
-	}
 }
 
 void Client::handleRequestError() 
@@ -211,23 +245,6 @@ void Client::handleRequestError()
 }
 
 // Util, getters, setters, etc
-void Client::updateActiveFileDescriptor(int fd, int mode)
-{
-	ActiveFileDescriptor newfd(fd, mode);
-	if (newfd == _active_fd)
-		return ;
-	_vsm.swapFileDescriptor(_active_fd, newfd);
-	_active_fd = newfd;
-}
-
-void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
-{
-	if (newfd == _active_fd)
-		return ;
-	_vsm.swapFileDescriptor(_active_fd, newfd);
-	_active_fd = newfd;
-}
-
 bool Client::isCgiRequest()
 {
 	const std::string& path = _request.uri.path;
@@ -313,4 +330,93 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 bool Client::closing() const
 {
 	return _status == CLOSING;
+}
+
+void Client::setStatus(Status status, std::string const & txt)
+{
+	_status = status;
+	Logger::getInstance() << "Client " << _socket << " set status " << (int) status << " " << txt << std::endl;
+}
+
+bool Client::idle() const
+{
+	return _status == IDLE;
+}
+
+
+
+// FD Management
+int Client::ownsFd(int fd) const
+{
+	for (std::vector<ActiveFileDescriptor>::const_iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
+		if (it->fd == fd)
+			return true;
+	return false;
+}
+
+void Client::updateActiveFileDescriptor(int fd, int mode)
+{
+	updateActiveFileDescriptor(ActiveFileDescriptor(fd, mode));
+}
+
+void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
+{
+	bool hooked = false;
+
+	for (std::vector<ActiveFileDescriptor>::const_iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
+	{
+		if (it->fd == newfd.fd && it->mode == newfd.mode)
+		{
+			hooked = true;
+
+		}
+		else if (it->fd == newfd.fd)
+		{
+			hooked = true;
+			_vsm.updateFiledescriptor(newfd);
+		}
+		else 
+			_vsm.unhookFileDescriptor(*it);
+	}
+	if (!hooked)
+		_vsm.hookFileDescriptor(newfd);
+
+	_active_fds.clear();
+	_active_fds.push_back(newfd);
+}
+
+void Client::updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> newfds)
+{
+    for (std::vector<ActiveFileDescriptor>::const_iterator old_it = _active_fds.begin(); old_it != _active_fds.end(); old_it ++)
+    {
+        bool still_needed = false;
+        for (std::vector<ActiveFileDescriptor>::const_iterator new_it = newfds.begin(); new_it != newfds.end(); new_it ++)
+        {
+            if (old_it->fd == new_it->fd)
+            {
+                still_needed = true;
+                break;
+            }
+        }
+        if (!still_needed)
+            _vsm.unhookFileDescriptor(*old_it);
+    }
+
+    for (std::vector<ActiveFileDescriptor>::const_iterator new_it = newfds.begin(); new_it != newfds.end(); new_it ++)
+    {
+        bool exists = false;
+        for (std::vector<ActiveFileDescriptor>::const_iterator old_it = _active_fds.begin(); old_it != _active_fds.end(); old_it ++)
+        {
+            if (old_it->fd == new_it->fd)
+            {
+                exists = true;
+                if (old_it->mode != new_it->mode)
+                    _vsm.updateFiledescriptor(*new_it);
+                break;
+            }
+        }
+        if (!exists)
+            _vsm.hookFileDescriptor(*new_it);
+    }
+    _active_fds = newfds;
 }
