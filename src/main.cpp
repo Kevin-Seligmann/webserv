@@ -107,10 +107,37 @@ int main(int argc, char* argv[])
 /*
 1. cuando un conf no tiene puntos y comas se rompe... estaba arreglado, pero sigue fallando
     esto puede ser porque lo hemos hecho mal con algun merge
-2. alias resuelve mal, con alias = location, deberia quedarse solo con el alias
+
 3. en un listado de archivos, la direccion explicita se lista, pero los subdirectorios no... 
 
+4. sin index en location, con autonidex off, da 404 y debe dar 403 forbiden 
+(TESED con test_custom > GET /static/ )
 
+5. Con directiva alias comentada, el acceso a un location va bien, con alias va mal.
+
+6. @test/test_custom -> sh make_run.sh debug <-- LA FLAG debug 
+    location /static/ {
+        allow_methods GET;
+        alias ./www/static;
+        autoindex off;
+    }
+    CON FILE INDEX.HTML EN static/
+    Aqui encuentra el index.html pero se va a ejecutar un CGI .js y peta
+    (compilar con )
+
+
+7.
+    location /static/ {
+        allow_methods GET;
+        alias ./www/static;
+        autoindex on;
+    }
+
+    No permite navegar a subdirectorios
+
+8. no se esta comportando ok la logica de jerarquia para index.html > autoindex on/off > 404/403
+
+9.
 CRASH CONFIG SIN ;
 CRASH UPLOADING FILE SIN: multipart, form-data
 

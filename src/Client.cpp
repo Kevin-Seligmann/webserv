@@ -135,12 +135,13 @@ void Client::handle_processing_request()
 void Client::handle_processing_response()
 {
 	// Check and handle error if exists. 
+	DEBUG_LOG(" ++++++++ REQUEST PROCESS ++++++++++ ");
 	_response_manager.process();
-	if (_response_manager.is_error())
+	if (_response_manager.is_error()) {
 		handleRequestError();
+	}
 	else if (_response_manager.response_done())
 	{		
-
 		// TODO: Closing
 		
 		// if (_request_manager.close())
@@ -155,6 +156,8 @@ void Client::handle_processing_response()
 	}
 	else 
 	{
+		DEBUG_LOG(" QUE HAY AQUI " << _request.get_path());
+		DEBUG_LOG(" ESTO ES LA REQUEST : " << _request);
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
