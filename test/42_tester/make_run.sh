@@ -1,3 +1,5 @@
-make -C ../.. && mv ../../webserv .
+rm webserv
 
-./webserv ./conf/42.conf
+make -C ../.. && cp ../../webserv .
+
+./webserv conf/42.conf
