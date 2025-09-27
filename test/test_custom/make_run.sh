@@ -8,4 +8,4 @@ cp -f ../../webserv webserv
 
 chmod +x webserv
 
-./webserv conf/webserv.conf > >(tee ../../logs/salida.log) 2> >(tee error.log >&2)
+./webserv conf/webserv.conf
