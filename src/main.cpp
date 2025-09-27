@@ -183,6 +183,23 @@ BrokenPipeError: [Errno 32] Broken pipe...
 /usr/bin/python3: can't open file '/home/irozhkov/ws_repo/test/test_custom/www/form.py': [Errno 2] No such file or directory
 [DEBUG] parseFromCGIOutput: total bytes = 0[Sat Sep 27 17:53:49 2025] Debug. CGI set status 2 CGI FINISHED
 
+===== SOLUTION =====
+
+He anadido una funcion al CGI.cpp:
+std::string systemPathToCgi(const std::string &system_path);
+
+tambien he hecho cambios de SCRIPT_NAME en std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) const
+
+si en el path no hay cgi-bin - lo anada, p.e. http://localhost:8081/form.py se convierta a 
+[DEBUG] SCRIPT_NAME=/cgi-bin/form.py
+[DEBUG] SCRIPT_FILENAME=/home/irozhkov/ws_repo/test/test_custom/www/cgi-bin/form.py
+
+entonces usamos una regla estricta: todos los scripts se ejecuta a traves cgi-bin, si no hay script [nombre].[extencion] - devuelva 404
+
+===== END OF SOLUTION =====
+
+11. upload no funciona, http://localhost:8081/cgi-bin/upload.py siempre da el mismo error
+Error with status: Unsupported Media-Type (415)
 
 9.
 CRASH CONFIG SIN ;

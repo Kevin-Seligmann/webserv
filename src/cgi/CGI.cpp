@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/25 17:36:47 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/27 21:22:17 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,11 +119,18 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 		{
 			scriptName += "/" + parts[i];
 		}
+
+		if (scriptName.compare(0, 9, "/cgi-bin/") != 0)
+			scriptName = "/cgi-bin" + scriptName;
+
 		cgi["SCRIPT_NAME"] = scriptName;
 	}
 	else
 	{
-		cgi["SCRIPT_NAME"] = req.get_path();
+		std::string path = req.get_path();
+		if (path.compare(0, 9, "/cgi-bin/") != 0)
+			path = "/cgi-bin" + path;
+		cgi["SCRIPT_NAME"] = path;
 	}
 
 	std::string pathInfo;
@@ -178,6 +185,62 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 	REQUEST_URI: /directory/youpi.php/path - URI Completo
 	PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
 */
+
+
+std::string CGI::systemPathToCgi(const std::string &system_path)
+{
+	if (system_path.empty())
+		return system_path;
+
+	std::vector<std::string> parts;
+	std::string current;
+	for (size_t i = 0; i < system_path.size(); ++i) 
+	{
+		if (system_path[i] == '/')
+		{
+			if (!current.empty())
+			{
+				parts.push_back(current);
+				current.clear();
+			}
+		}
+		else
+		{
+			current += system_path[i];
+		}
+	}
+
+	if (!current.empty())
+		parts.push_back(current);
+
+	for (size_t i = 0; i < parts.size(); ++i)
+	{
+		for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+			 it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+		{
+			for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+				 ext != it->extensions.end(); ++ext)
+			{
+				const std::string &extension = *ext;
+				if (parts[i].size() >= extension.size() &&
+					parts[i].compare(parts[i].size() - extension.size(), extension.size(), extension) == 0)
+				{
+					parts[i] = "cgi-bin/" + parts[i];
+
+                
+					std::string result;
+					for (size_t j = 0; j < parts.size(); ++j) 
+					{
+						result += "/" + parts[j];
+					}
+					return result;
+				}
+			}
+		}
+	}
+
+	return system_path;
+}
 
 void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
@@ -251,7 +314,9 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	// PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
-	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
+
+	std::string cgi_path = systemPathToCgi(system_path);
+	_env.setEnvValue("SCRIPT_FILENAME", cgi_path); 
 	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
 	_env.setEnvValue("REQUEST_URI", req.get_path());
 	_env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
