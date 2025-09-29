@@ -438,8 +438,8 @@ void CGI::runCGI(int fd)
 		CODE_ERR("Imposible CGI status");
 	}
 
-	// if (_read_finished && _write_finished)
-	// {
+	if (_read_finished && _write_finished)
+	{
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
@@ -458,7 +458,7 @@ void CGI::runCGI(int fd)
 			_cgi_response.buildResponse();
 			setStatus(CGI_FINISHED, "CGI FINISHED");
 		// }
-	// }
+	}
 }
 
 const CGIResponse& CGI::getCGIResponse() const
