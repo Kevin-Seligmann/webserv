@@ -96,11 +96,16 @@ std::vector<std::string> tokenize(const std::string& content)
 	{
 		tokens.push_back(current);
 	}
+
 	return (tokens);
 }
 
 size_t expect(const std::vector<std::string>& tokens, size_t i, const std::string& expected)
 {
+	if (i >= tokens.size())
+	{
+		throw std::runtime_error("Expected: " + expected + ", but reached end of tokens");
+	}
 	if (tokens[i] != expected)
 	{
 		throw std::runtime_error("Expected: " + expected + ", got: " + tokens[i]);
@@ -118,15 +123,10 @@ bool isServerDirective(const std::string& token) {
 bool isLocationDirective(const std::string& token) {
 	return (token == "allow_methods" || token == "root" || token == "index" || 
 			token == "autoindex" || token == "redirect" || token == "cgi_extension" ||
-			token == "allow_upload" || token == "error_page" || token == "client_max_body_size");
+			token == "allow_upload" || token == "error_page" || token == "client_max_body_size" ||
+			token == "alias");
 }
 
-/*
-TODO
-En parseLocation
-error_page
-debería validar que los archivos existan al parsear el path
-*/
 Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 {
 	Location loc;
@@ -159,6 +159,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "allow_methods")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'allow_methods' directive in location block");
+			}
 			std::vector<std::string> methods;
 			while (i < tokens.size() && tokens[i] !=  ";" && !isLocationDirective(tokens[i]))
 				methods.push_back(tokens[i++]);
@@ -175,7 +178,10 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "root")
 		{
-			if (i < tokens.size()) loc.setRoot(tokens[i++]);
+			if (i >= tokens.size()) {
+				CODE_ERR("Missing value for 'root' directive in location block");
+			}
+			loc.setRoot(tokens[i++]);
 
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
@@ -184,8 +190,10 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "index")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'index' directive in location block");
+			}
 			std::vector<std::string> index_vec;
-// TODO eliminar el cso de que sea un directive como nombre de pagina index??
 			while (i < tokens.size() && tokens[i] != ";" && !isLocationDirective(tokens[i])) {
 				index_vec.push_back(tokens[i++]);
 			}
@@ -204,6 +212,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "autoindex")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'autoindex' directive");
+			}
 			std::string autoindex_value = tokens[i++];
 			if (autoindex_value == "true" || autoindex_value == "on")
 				loc.setAutoindex(AINDX_LOC_ON);
@@ -221,7 +232,10 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "redirect") 
 		{
-            if (i < tokens.size()) loc.setRedirect(tokens[i++]);
+			if (i >= tokens.size()) {
+				CODE_ERR("Missing value for 'redirect' directive");
+			}
+			loc.setRedirect(tokens[i++]);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
 				CODE_ERR("Missing ';' after 'redirect' directive.");
@@ -229,7 +243,10 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
         }
         else if (key == "cgi_extension")
 		{
-            if (i < tokens.size()) loc.setCgixtension(tokens[i++]);
+			if (i >= tokens.size()) {
+				CODE_ERR("Missing value for 'cgi_extension' directive");
+			}
+			loc.setCgixtension(tokens[i++]);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
 				CODE_ERR("Missing ';' after 'cgi_extension' directive.");
@@ -268,6 +285,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 		else if (key == "client_max_body_size") {
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'client_max_body_size' directive");
+			}
 			std::string value = tokens[i++];
 			size_t limit = str_to_sizet(value, ULONG_MAX);
 			loc.setMaxBodySize(limit);
@@ -278,6 +298,9 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 		else if (key == "alias"){
+			if (i >= tokens.size()) {
+				CODE_ERR("Missing value for 'alias' directive");
+			}
 			loc.setAlias(tokens[i++]);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
@@ -288,19 +311,16 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 		{
 			Logger::getInstance() << "Location directive not supported: " << key << std::endl;
 			
-			// Avanzar hasta ; o }
 			while (i < tokens.size() && tokens[i] != ";" && tokens[i] != "}") {
 				++i;
 			}
 			
-			// Saltar ; si existe
 			if (i < tokens.size() && tokens[i] == ";") {
 				++i;
 			}
 		}
 	}
 	if (i < tokens.size() && tokens[i] == "}") ++i;
-
 
 /* TO_DELETE
 // debug
@@ -400,30 +420,55 @@ Listen parse_listen(const std::vector<std::string>& tokens)
  
 ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 {
+
+	if (tokens.empty())
+		CODE_ERR("Config file empty.");
+
 	ParsedServer server;
 
 	i = expect(tokens, i, "server");
 	i = expect(tokens, i, "{");
-	while (tokens[i] != "}")
+	while (i < tokens.size() && tokens[i] != "}")
 	{
+		if (i >= tokens.size()) break;
 		std::string key = tokens[i++];
+
+		if (i >= tokens.size() && key != "}")
+		{
+			CODE_ERR("Unexpected end of tokens in server block after '" + key + "'. Missing '}'");
+		}
+
 		if (key == "listen")
 		{
 			std::vector<std::string> listen_tokens;
-			while (tokens[i] != ";")
+			while (i < tokens.size() 
+				   && tokens[i] != ";"
+				   && !isServerDirective(tokens[i]))
 			{
 				listen_tokens.push_back(tokens[i++]);
 			}
 
+			if (i < tokens.size() && tokens[i] == ";")
+			{
+				++i;
+			}
+			else
+			{
+				CODE_ERR("Missing ';' after 'listen' directive.");
+			}
+
 			Listen ld = parse_listen(listen_tokens);
 			server.listens.push_back(ld);
-			++i;
+			// ++i; // Este ++i es extra y causa el salto de tokens
 		}
 		else if (key == "server_name")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'server_name' directive");
+			}
 			std::vector<std::string> names;
 
-			while (tokens[i] != ";" && !isServerDirective(tokens[i]))
+			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]))
 				names.push_back(tokens[i++]);
 			
 			server.server_names = names;
@@ -434,6 +479,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 		else if (key == "root") {
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'root' directive");
+			}
 			server.root = wss::guarantee_absolute_path(tokens[i++]);
 			if (i < tokens.size() && tokens[i] == ";") ++i;
 			else {
@@ -442,6 +490,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "index")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'index' directive in server block");
+			}
 			std::vector<std::string> index_files;
 
 			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]))
@@ -469,7 +520,6 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			if (codes.empty())
 				CODE_ERR("'error_page' directive requieres at least one error code.");
 
-
 			if (i >= tokens.size() || tokens[i] == ";" || isServerDirective(tokens[i]))
 				CODE_ERR("'error_page' directive requires a file path after error codes");
 
@@ -486,6 +536,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "allow_methods")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'allow_methods' directive in server block");
+			}
 
 			std::vector<std::string> methods;
 
@@ -505,6 +558,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		}
 		else if (key == "autoindex")
 		{
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'autoindex' directive in server block");
+			}
 			std::string autoindex_value = tokens[i++];
 			if (autoindex_value == "true" || autoindex_value == "on")
 				server.autoindex = AINDX_SERV_ON;
@@ -521,6 +577,9 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 		else if (key == "client_max_body_size") {
+			if (i >= tokens.size() || tokens[i] == ";") {
+				CODE_ERR("Missing value for 'client_max_body_size' directive in server block");
+			}
 			server.client_max_body_size = tokens[i++];
 
 			if (i < tokens.size() && tokens[i] == ";") ++i;
@@ -538,10 +597,13 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 			if (server.locations.find(map_key) != server.locations.end()) {
 				CODE_ERR("Duplicate location '" + map_key + "' in location block found, KILLING.");
-				// TODO Fixed
 			}
 
 			server.locations[map_key] = loc;
+		}
+		else if (key == "server")
+		{
+			CODE_ERR("'server' directive cannot be nested inside another server block");
 		}
 		else
 		{
@@ -557,7 +619,13 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 			}
 		}
 	}
-
+	// Unir las condiciones
+	if (i >= tokens.size()) {
+		CODE_ERR("Unexpected end of file - server block not closed (missing '}')");
+	}
+	if (tokens[i] != "}") {
+		CODE_ERR("Expected '}' to close server block, got: '" + tokens[i] + "'");
+	}
 	++i;
 
 	applyAutoindex(server);
@@ -571,13 +639,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 Posibles mejoras de robustez de la validacion en server validator
  Códigos de error HTTP válidos (100-599)
- Valores de autoindex válidos (on/off/true/false)
  Tamaños de client_max_body_size válidos
- Métodos HTTP válidos en allow_methods
- Rutas de archivos válidas en root, index, error_page
- Sintaxis de locations válida
- Sintaxis de listen válida (puertos 1-65535)
-
 */
 
 std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
@@ -600,7 +662,6 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 	return (servers);
 }
 
-// SIMPLE ARBOL DE CONDICIONES QUE EVALUA ARGUMENTOS, PARA SACARLO DEL FLUJO DEL MAIN
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 
     if (argc > 2)
@@ -654,5 +715,3 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
     
     return (0);
 }
-
-

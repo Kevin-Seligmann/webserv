@@ -27,6 +27,7 @@ int checkFile(const char* argv)
 
     if (!infile.is_open())
     {
+		// reemplazar por CODE_ERR 
         std::cerr << std::endl << RED <<
         "ERROR: file does not exist or can not be opened." <<
         RESET << std::endl << std::endl;
@@ -36,6 +37,7 @@ int checkFile(const char* argv)
     infile.seekg(0, std::ios_base::end);
     if (infile.tellg() == 0)
     {
+		// reemplazar por CODE_ERR // resolver file empty
         std::cerr << std::endl << RED <<
         "ERROR: file is empty." <<
         RESET << std::endl << std::endl;
@@ -45,6 +47,7 @@ int checkFile(const char* argv)
 
     if (infile.fail())
     {
+		// reemplazar por CODE_ERR
         std::cerr << std::endl << RED <<
         "ERROR: file stream error detected." <<
         RESET << std::endl << std::endl;

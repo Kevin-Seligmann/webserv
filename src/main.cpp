@@ -141,4 +141,8 @@ int main(int argc, char* argv[])
 CRASH CONFIG SIN ;
 CRASH UPLOADING FILE SIN: multipart, form-data
 
+
+10. si la pagina de error no se encuentra se pasa a una default sin warning
+
+
 */
