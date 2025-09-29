@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 11:11:22 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/23 15:26:51 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:40:54 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,17 @@ void CGIInterpreter::load_interpreters()
 
 			if (interpreter.empty()) // Skip if there is no interpreter
 				continue;
+
+			// Validate that the interpreter is accessible
+			if (access(interpreter.c_str(), F_OK) != 0)
+			{
+				throw std::runtime_error("Couldn't find: " + interpreter + " Errno: " + strerror(errno));
+			}
+			
+			if (access(interpreter.c_str(), X_OK) != 0)
+			{
+				throw std::runtime_error("Faild to execute: " + interpreter + " Errno: " + strerror(errno));
+			}
 
 			std::vector<std::string> extensions;
 			std::string ext;
