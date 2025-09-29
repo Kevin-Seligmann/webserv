@@ -135,7 +135,7 @@ void Client::handle_processing_request()
 void Client::handle_processing_response()
 {
 	// Check and handle error if exists. 
-	DEBUG_LOG(" ++++++++ REQUEST PROCESS ++++++++++ ");
+//	DEBUG_LOG(" ++++++++ REQUEST PROCESS ++++++++++ ");
 	_response_manager.process();
 	if (_response_manager.is_error()) {
 		handleRequestError();
@@ -156,8 +156,8 @@ void Client::handle_processing_response()
 	}
 	else 
 	{
-		DEBUG_LOG(" QUE HAY AQUI " << _request.get_path());
-		DEBUG_LOG(" ESTO ES LA REQUEST : " << _request);
+//		DEBUG_LOG(" QUE HAY AQUI " << _request.get_path());
+//		DEBUG_LOG(" ESTO ES LA REQUEST : " << _request);
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
@@ -252,6 +252,8 @@ void Client::handleRequestError()
 // Util, getters, setters, etc
 bool Client::isCgiRequest()
 {
+//	DEBUG_LOG(" >>>>>>>>>> YES IT'S CGI REQUEST " << _request.uri.path);
+
 	const std::string& path = _request.uri.path;
 
     for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();

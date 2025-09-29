@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 16:10:44 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/27 20:44:08 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,7 @@ class CGI
 		std::string							_cgi_output;
 		std::string methodToString(HTTPMethod method) const;
 		std::map<std::string, std::string> pathToBlocks(const HTTPRequest& req) const;
+		std::string systemPathToCgi(const std::string &system_path);
 
 	public:
 
