@@ -1,0 +1,1151 @@
+desc: (none)
+cmd: ./webserv conf/42.conf
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=67104563
+mem_heap_B=17748767
+mem_heap_extra_B=6529
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=134228165
+mem_heap_B=34542258
+mem_heap_extra_B=6526
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=203669339
+mem_heap_B=68145960
+mem_heap_extra_B=6560
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=247395331
+mem_heap_B=68121287
+mem_heap_extra_B=6537
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=301414790
+mem_heap_B=68174543
+mem_heap_extra_B=6553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=378350454
+mem_heap_B=135258926
+mem_heap_extra_B=6530
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=436482563
+mem_heap_B=135314804
+mem_heap_extra_B=6548
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=476797684
+mem_heap_B=135289613
+mem_heap_extra_B=6531
+mem_stacks_B=0
+heap_tree=detailed
+n2: 135289613 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n0: 1071884 in 46 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=9
+#-----------
+time=525846161
+mem_heap_B=152069501
+mem_heap_extra_B=10739
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=569962045
+mem_heap_B=168846717
+mem_heap_extra_B=10739
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=630332700
+mem_heap_B=202401141
+mem_heap_extra_B=10723
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=674167544
+mem_heap_B=202401141
+mem_heap_extra_B=10723
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=729848752
+mem_heap_B=269510029
+mem_heap_extra_B=10747
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=779183667
+mem_heap_B=369510104
+mem_heap_extra_B=14480
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=852906816
+mem_heap_B=905054420
+mem_heap_extra_B=34140
+mem_stacks_B=0
+heap_tree=peak
+n4: 905054420 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n3: 468435460 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n4: 368435459 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n1: 134217729 0x16EC77: CGI::runCGI(int) (CGI.cpp:429)
+    n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+     n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+      n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+       n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+        n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+         n0: 134217729 0x1100FB: main (main.cpp:101)
+   n2: 100000001 0x493E26B: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n1: 100000001 0x172EEC: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:65)
+     n1: 100000001 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+      n1: 100000001 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+       n1: 100000001 0x163CE6: Client::process(int) (Client.cpp:57)
+        n1: 100000001 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+         n1: 100000001 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+          n1: 100000001 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+           n0: 100000001 0x1100FB: main (main.cpp:101)
+    n0: 0 in 6 places, all below massif's threshold (1.00%)
+   n0: 0 in 2 places, all below massif's threshold (1.00%)
+  n2: 100000001 0x49D182A: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_replace(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 100000001 0x49C912E: std::__cxx11::basic_ostringstream<char, std::char_traits<char>, std::allocator<char> >::str() const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n1: 100000001 0x172F28: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:118)
+     n1: 100000001 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+      n1: 100000001 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+       n1: 100000001 0x163CE6: Client::process(int) (Client.cpp:57)
+        n1: 100000001 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+         n1: 100000001 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+          n1: 100000001 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+           n0: 100000001 0x1100FB: main (main.cpp:101)
+    n0: 0 in 2 places, all below massif's threshold (1.00%)
+   n0: 0 in 3 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 335544447 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 335544323 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 335544323 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n3: 335544323 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 201326594 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 201326594 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 201326594 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 201326594 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 201326594 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 201326594 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 201326594 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 201326594 0x1100FB: main (main.cpp:101)
+     n1: 134217729 0x172ED0: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:114)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 2 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n1: 100000059 0x49C6F22: std::__cxx11::basic_istringstream<char, std::char_traits<char>, std::allocator<char> >::basic_istringstream(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::_Ios_Openmode) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 100000059 0x172B12: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:52)
+   n1: 100000059 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+    n1: 100000059 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+     n1: 100000059 0x163CE6: Client::process(int) (Client.cpp:57)
+      n1: 100000059 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+       n1: 100000059 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+        n1: 100000059 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+         n0: 100000059 0x1100FB: main (main.cpp:101)
+ n0: 1074454 in 44 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=16
+#-----------
+time=914102049
+mem_heap_B=603527655
+mem_heap_extra_B=22225
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=3414112014
+mem_heap_B=469309953
+mem_heap_extra_B=18215
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=3482700169
+mem_heap_B=367909334
+mem_heap_extra_B=13530
+mem_stacks_B=0
+heap_tree=detailed
+n4: 367909334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 98600046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 98600046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 98600046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 98600046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 98600046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 98600046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 98600046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 98600046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 98600046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 98600046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=19
+#-----------
+time=3550132730
+mem_heap_B=366309334
+mem_heap_extra_B=11994
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=3616461957
+mem_heap_B=364709334
+mem_heap_extra_B=14554
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=3681686324
+mem_heap_B=363109334
+mem_heap_extra_B=13018
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=3745807357
+mem_heap_B=361509334
+mem_heap_extra_B=11482
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=3808824293
+mem_heap_B=359909334
+mem_heap_extra_B=14042
+mem_stacks_B=0
+heap_tree=detailed
+n4: 359909334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 90600046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 90600046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 90600046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 90600046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 90600046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 90600046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 90600046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 90600046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 90600046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 90600046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=24
+#-----------
+time=3870737132
+mem_heap_B=358309334
+mem_heap_extra_B=12506
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=3931546637
+mem_heap_B=356709334
+mem_heap_extra_B=10970
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=3991251282
+mem_heap_B=355109334
+mem_heap_extra_B=13530
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=4049852593
+mem_heap_B=353509334
+mem_heap_extra_B=11994
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=4107350570
+mem_heap_B=351909334
+mem_heap_extra_B=14554
+mem_stacks_B=0
+heap_tree=detailed
+n4: 351909334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 82600046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 82600046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 82600046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 82600046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 82600046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 82600046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 82600046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 82600046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 82600046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 82600046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=29
+#-----------
+time=4163743687
+mem_heap_B=350309334
+mem_heap_extra_B=13018
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=4246264039
+mem_heap_B=347909334
+mem_heap_extra_B=12762
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=4326300745
+mem_heap_B=345509334
+mem_heap_extra_B=12506
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=4391100071
+mem_heap_B=343509334
+mem_heap_extra_B=13658
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=4441698014
+mem_heap_B=341909334
+mem_heap_extra_B=12122
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=4491192623
+mem_heap_B=340309334
+mem_heap_extra_B=14682
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=4539582372
+mem_heap_B=338709334
+mem_heap_extra_B=13146
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=4586868024
+mem_heap_B=337109334
+mem_heap_extra_B=11610
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=4633051105
+mem_heap_B=335509334
+mem_heap_extra_B=14170
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=4678129326
+mem_heap_B=333909334
+mem_heap_extra_B=12634
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=4722103450
+mem_heap_B=332309334
+mem_heap_extra_B=11098
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=4764974240
+mem_heap_B=330709334
+mem_heap_extra_B=13658
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=4847403529
+mem_heap_B=327509334
+mem_heap_extra_B=14682
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=4911126010
+mem_heap_B=324909334
+mem_heap_extra_B=13722
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=4958159923
+mem_heap_B=322909334
+mem_heap_extra_B=10778
+mem_stacks_B=0
+heap_tree=detailed
+n4: 322909334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 53600046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 53600046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 53600046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 53600046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 53600046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 53600046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 53600046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 53600046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 53600046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 53600046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=44
+#-----------
+time=5003468446
+mem_heap_B=320909334
+mem_heap_extra_B=11930
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=5047052342
+mem_heap_B=318909334
+mem_heap_extra_B=13082
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=5129045490
+mem_heap_B=314909334
+mem_heap_extra_B=11290
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=5174930919
+mem_heap_B=312509334
+mem_heap_extra_B=11034
+mem_stacks_B=0
+heap_tree=detailed
+n4: 312509334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 43200046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 43200046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 43200046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 43200046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 43200046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 43200046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 43200046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 43200046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 43200046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 43200046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=48
+#-----------
+time=5218331176
+mem_heap_B=310109334
+mem_heap_extra_B=10778
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=5259248550
+mem_heap_B=307709334
+mem_heap_extra_B=14618
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=5300771815
+mem_heap_B=305109334
+mem_heap_extra_B=13658
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=5342229756
+mem_heap_B=302309334
+mem_heap_extra_B=11994
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=5382897404
+mem_heap_B=299309334
+mem_heap_extra_B=13722
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=5424296319
+mem_heap_B=295909334
+mem_heap_extra_B=14042
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=5464665552
+mem_heap_B=292109334
+mem_heap_extra_B=12954
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=5505203285
+mem_heap_B=287509334
+mem_heap_extra_B=13146
+mem_stacks_B=0
+heap_tree=detailed
+n4: 287509334 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 18200046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 18200046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 18200046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 18200046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 18200046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 18200046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 18200046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 18200046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 18200046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 18200046 0x1100FB: main (main.cpp:101)
+ n0: 873706 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=56
+#-----------
+time=5546711843
+mem_heap_B=282309334
+mem_heap_extra_B=11226
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=57
+#-----------
+time=5587507468
+mem_heap_B=273709334
+mem_heap_extra_B=13722
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=58
+#-----------
+time=5627856728
+mem_heap_B=269599436
+mem_heap_extra_B=10756
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=59
+#-----------
+time=5668202912
+mem_heap_B=269607191
+mem_heap_extra_B=10745
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=5708564350
+mem_heap_B=269616186
+mem_heap_extra_B=10758
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=61
+#-----------
+time=5748955325
+mem_heap_B=269628281
+mem_heap_extra_B=10759
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=5789288090
+mem_heap_B=269604083
+mem_heap_extra_B=10725
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=63
+#-----------
+time=5829638903
+mem_heap_B=269608192
+mem_heap_extra_B=10728
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=5870011484
+mem_heap_B=269624097
+mem_heap_extra_B=10727
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=65
+#-----------
+time=5910340147
+mem_heap_B=269636339
+mem_heap_extra_B=10725
+mem_stacks_B=0
+heap_tree=detailed
+n3: 269636339 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n0: 1200757 in 46 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=66
+#-----------
+time=5950701885
+mem_heap_B=269673737
+mem_heap_extra_B=10759
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=67
+#-----------
+time=5991096453
+mem_heap_B=269689738
+mem_heap_extra_B=10758
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=68
+#-----------
+time=6031472540
+mem_heap_B=269699738
+mem_heap_extra_B=10758
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=69
+#-----------
+time=6071873407
+mem_heap_B=269706418
+mem_heap_extra_B=10750
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=70
+#-----------
+time=6112191352
+mem_heap_B=286451013
+mem_heap_extra_B=14771
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=71
+#-----------
+time=6152507059
+mem_heap_B=303228221
+mem_heap_extra_B=14755
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=72
+#-----------
+time=6192822248
+mem_heap_B=336782669
+mem_heap_extra_B=14763
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=73
+#-----------
+time=6233140100
+mem_heap_B=336782661
+mem_heap_extra_B=14771
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=74
+#-----------
+time=6273455523
+mem_heap_B=403891525
+mem_heap_extra_B=14771
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=75
+#-----------
+time=6313770665
+mem_heap_B=403891517
+mem_heap_extra_B=14755
+mem_stacks_B=0
+heap_tree=detailed
+n3: 403891517 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 268435458 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n3: 268435458 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n1: 134217729 0x16EC77: CGI::runCGI(int) (CGI.cpp:429)
+    n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+     n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+      n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+       n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+        n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+         n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 3 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n0: 1238206 in 46 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=76
+#-----------
+time=6363282521
+mem_heap_B=603891648
+mem_heap_extra_B=22288
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=77
+#-----------
+time=6413733650
+mem_heap_B=738109337
+mem_heap_extra_B=26311
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=78
+#-----------
+time=6454818143
+mem_heap_B=838109372
+mem_heap_extra_B=30060
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=79
+#-----------
+time=8972101562
+mem_heap_B=469473878
+mem_heap_extra_B=18194
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=80
+#-----------
+time=9015118453
+mem_heap_B=368673259
+mem_heap_extra_B=11541
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=81
+#-----------
+time=9057651726
+mem_heap_B=367673259
+mem_heap_extra_B=12117
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=82
+#-----------
+time=9099753660
+mem_heap_B=366673259
+mem_heap_extra_B=12693
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=83
+#-----------
+time=9141425001
+mem_heap_B=365673259
+mem_heap_extra_B=13269
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=84
+#-----------
+time=9182665003
+mem_heap_B=364673259
+mem_heap_extra_B=13845
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=85
+#-----------
+time=9223473649
+mem_heap_B=363673259
+mem_heap_extra_B=14421
+mem_stacks_B=0
+heap_tree=detailed
+n4: 363673259 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 134217853 0x49D0DAB: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n1: 134217729 0x49C561E: std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::overflow(int) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n2: 134217729 0x49CEEA0: std::basic_streambuf<char, std::char_traits<char> >::xsputn(char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+    n2: 134217729 0x49BEDC3: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+     n1: 134217729 0x172FC4: CGIResponse::parseFromCGIOutput(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (CGIResponse.cpp:124)
+      n1: 134217729 0x16EE71: CGI::runCGI(int) (CGI.cpp:457)
+       n1: 134217729 0x164E86: Client::handle_cgi_request(int) (Client.cpp:177)
+        n1: 134217729 0x163CE6: Client::process(int) (Client.cpp:57)
+         n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+          n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+           n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+            n0: 134217729 0x1100FB: main (main.cpp:101)
+     n0: 0 in 4 places, all below massif's threshold (1.00%)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 124 in 1 place, below massif's threshold (1.00%)
+ n2: 134217729 0x49D070E: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+  n2: 134217729 0x49D204F: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33)
+   n1: 134217729 0x11875D: RequestParser::parse_chunked_body() (RequestParser.cpp:253)
+    n1: 134217729 0x12B0B4: RequestManager::process() (RequestManager.cpp:55)
+     n1: 134217729 0x164A20: Client::handle_processing_request() (Client.cpp:121)
+      n1: 134217729 0x163CB6: Client::process(int) (Client.cpp:55)
+       n1: 134217729 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 134217729 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 134217729 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 134217729 0x1100FB: main (main.cpp:101)
+   n0: 0 in 4 places, all below massif's threshold (1.00%)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n2: 94200046 0x1209F1: ReadNetBuffer::shrink() (ReadNetBuffer.cpp:54)
+  n1: 94200046 0x120E6F: ReadNetBuffer::unsafe_consume_bytes(long) (ReadNetBuffer.cpp:122)
+   n1: 94200046 0x134510: ResponseManager::write_response() (ResponseManager.cpp:403)
+    n1: 94200046 0x13427B: ResponseManager::process() (ResponseManager.cpp:389)
+     n1: 94200046 0x164DDB: Client::handle_processing_response() (Client.cpp:139)
+      n1: 94200046 0x163CCA: Client::process(int) (Client.cpp:56)
+       n1: 94200046 0x13A14D: VirtualServersManager::handleEvent(Wspoll_event) (VirtualServersManager.cpp:266)
+        n1: 94200046 0x13B54C: VirtualServersManager::run() (VirtualServersManager.cpp:393)
+         n1: 94200046 0x10FA3B: runServer(std::vector<ParsedServer, std::allocator<ParsedServer> > const&) (main.cpp:40)
+          n0: 94200046 0x1100FB: main (main.cpp:101)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 1037631 in 45 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=86
+#-----------
+time=9263850956
+mem_heap_B=362673259
+mem_heap_extra_B=10901
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=87
+#-----------
+time=9311734188
+mem_heap_B=361473259
+mem_heap_extra_B=10773
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=88
+#-----------
+time=9359050154
+mem_heap_B=360273259
+mem_heap_extra_B=10645
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=89
+#-----------
+time=9405839242
+mem_heap_B=359073259
+mem_heap_extra_B=14613
+mem_stacks_B=0
+heap_tree=empty
