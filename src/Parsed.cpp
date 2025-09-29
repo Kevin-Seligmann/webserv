@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/20 14:00:16 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:22:28 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -441,10 +441,15 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 		if (key == "listen")
 		{
 			std::vector<std::string> listen_tokens;
-			while (i < tokens.size() 
-				   && tokens[i] != ";"
-				   && !isServerDirective(tokens[i]))
+
+			while (i < tokens.size() && tokens[i] != ";" && !isServerDirective(tokens[i]))
 			{
+				int temp_port;
+				std::stringstream ss(tokens[i]);
+				ss >> temp_port;
+
+				// TODO validate range of port value
+
 				listen_tokens.push_back(tokens[i++]);
 			}
 
@@ -634,7 +639,12 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 	if (server.listens.empty())
 	{
-		CODE_ERR("Server block requieres at leas tn 'listen' directive");
+		// CODE_ERR("Server block requieres at leas tn 'listen' directive");
+		Logger::getInstance().warning("Sever block without 'listen' directive. Using default: '0.0.0.0:8080");
+		Listen default_listen;
+		default_listen.host = "0.0.0.0";
+		default_listen.port = 8080;
+		server.listens.push_back(default_listen);
 	}
 
 	return (server);
@@ -650,6 +660,11 @@ Posibles mejoras de robustez de la validacion en server validator
 std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 {
 	std::vector<ParsedServer> servers;
+
+	if (tokens.empty())
+	{
+		CODE_ERR("Config file is empty or containes only comments");
+	}
 
 	size_t i = 0;
 	while (i < tokens.size())
