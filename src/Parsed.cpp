@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/29 17:22:28 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/29 18:32:33 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,9 @@ ParsedServer::~ParsedServer() {}
 std::vector<std::string> tokenize(const std::string& content)
 {
 	std::vector<std::string> tokens;
+	tokens.reserve(100);
 	std::string current;
+	current.reserve(64);
 	bool is_comment = false;
 
 	for (size_t i = 0; i < content.length(); ++i)

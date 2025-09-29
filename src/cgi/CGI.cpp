@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/27 21:22:17 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/09/29 18:15:35 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -438,8 +438,8 @@ void CGI::runCGI(int fd)
 		CODE_ERR("Imposible CGI status");
 	}
 
-	// if (_read_finished && _write_finished)
-	// {
+	if (_read_finished && _write_finished)
+	{
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
@@ -458,7 +458,7 @@ void CGI::runCGI(int fd)
 			_cgi_response.buildResponse();
 			setStatus(CGI_FINISHED, "CGI FINISHED");
 		// }
-	// }
+	}
 }
 
 const CGIResponse& CGI::getCGIResponse() const

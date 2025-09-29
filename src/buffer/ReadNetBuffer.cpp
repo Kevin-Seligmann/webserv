@@ -2,8 +2,8 @@
 #include "ReadNetBuffer.hpp"
 #include <cassert>
 
-const size_t ReadNetBuffer::START_BUFFER_SIZE = 1000;
-const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 50001;
+const size_t ReadNetBuffer::START_BUFFER_SIZE = 4096;
+const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 32768;
 
 ReadNetBuffer::ReadNetBuffer()
 {
@@ -48,7 +48,8 @@ void ReadNetBuffer::manual_increase(size_t n)
 void ReadNetBuffer::shrink()
 {
     size_t size = this->size();
-    size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
+//    size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
+    size_t new_capacity = capacity() < 16384 ? capacity() * 2 : capacity() + 8192;
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
     memcpy(new_buffer, _start, size);
