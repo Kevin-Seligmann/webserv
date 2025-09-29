@@ -49,8 +49,7 @@ void ReadNetBuffer::manual_increase(size_t n)
 void ReadNetBuffer::shrink()
 {
     size_t size = this->size();
-//    size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
-    size_t new_capacity = capacity() < 16384 ? capacity() * 2 : capacity() + 8192;
+    size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
     memcpy(new_buffer, _start, size);
