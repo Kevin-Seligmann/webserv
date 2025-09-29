@@ -632,6 +632,11 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 	applyAllowMethods(server);
 	applyIndexFiles(server);
 
+	if (server.listens.empty())
+	{
+		CODE_ERR("Server block requieres at leas tn 'listen' directive");
+	}
+
 	return (server);
 }
 
