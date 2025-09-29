@@ -250,6 +250,7 @@ void RequestParser::parse_chunked_size()
 
 void RequestParser::parse_chunked_body()
 {
+    _request.body.content.reserve(_request.body.content.size() + std::distance(_begin, _end));
     _request.body.content += std::string(_begin, _end - 2);
     _status = PRS_CHUNKED_SIZE;
 }

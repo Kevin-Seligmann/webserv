@@ -146,12 +146,17 @@ void CGIResponse::buildResponse()
 	}
 
 	std::string body = _bodyStream.str();
-	response << "Content-Length: " << body.size() << "\r\n";
 
+	_bodyStream.str("");
+	_bodyStream.clear();
+
+	response << "Content-Length: " << body.size() << "\r\n";
+	
 	response << "\r\n";
 	response << body;
 
     _responseBuffer = response.str();
+
 	_sentBytes = 0;
 }
 

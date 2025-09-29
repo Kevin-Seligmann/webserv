@@ -21,7 +21,7 @@ CGIArg.o CGI.o CGIEnv.o CGIInterpreter.o CGIResponse.o
 OBJ_PATH = $(addprefix $(OBJ_DIR)/, $(OBJ))
 DEPS = $(OBJ_PATH:.o=.d)
 
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -I$(INC_DIR)
+CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -g -O0 -I$(INC_DIR)
 LDFLAGS =
 
 YELLOW = "\e[33m"

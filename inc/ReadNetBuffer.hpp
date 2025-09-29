@@ -44,6 +44,7 @@ protected:
 private:
     static const size_t START_BUFFER_SIZE;
     static const size_t SHRINK_BUFFER_SIZE;
+    static const size_t CRITICAL_SIZE;
 
     ReadNetBuffer(ReadNetBuffer &);
     ReadNetBuffer & operator=(ReadNetBuffer &);

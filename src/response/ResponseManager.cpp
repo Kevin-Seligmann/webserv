@@ -128,12 +128,12 @@ void ResponseManager::generate_cgi_response()
 {
     Logger::getInstance() << "Generating CGI response. " << std::endl;
     _buffer.put_body(_cgi.getCGIResponse().getResponseBuffer());
-     
+
     _cgi.reset();
 
-    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". CGI Generated. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-    if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    Logger::getInstance() << msg << std::endl;
+    // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". CGI Generated. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+    // if (msg.size() > 500) {msg = msg.substr(0, 500);}
+    // Logger::getInstance() << msg << std::endl;
     
     _status = WRITING_RESPONSE;
 }
@@ -251,9 +251,9 @@ void ResponseManager::read_file()
     }
     if (bytes_read == 0)
     {
-        std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File read. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-        if (msg.size() > 500) {msg = msg.substr(0, 500);}
-        Logger::getInstance() << msg << std::endl;
+        // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File read. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+        // if (msg.size() > 500) {msg = msg.substr(0, 500);}
+        // Logger::getInstance() << msg << std::endl;
         _status = WRITING_RESPONSE;
     }
 }
@@ -287,9 +287,9 @@ void ResponseManager::write_file()
         _buffer.put_new_line();
         _buffer.put_body(_request.body.content);
 
-        std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-        if (msg.size() > 500) {msg = msg.substr(0, 500);}
-        Logger::getInstance() << msg << std::endl;
+        // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+        // if (msg.size() > 500) {msg = msg.substr(0, 500);}
+        // Logger::getInstance() << msg << std::endl;
 
         _status = WRITING_RESPONSE;
     }
@@ -340,9 +340,9 @@ void ResponseManager::read_directory()
         _buffer.put_body(dirs);
 
         
-    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-    if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    Logger::getInstance() << msg << std::endl;
+    // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+    // if (msg.size() > 500) {msg = msg.substr(0, 500);}
+    // Logger::getInstance() << msg << std::endl;
 
     _status = WRITING_RESPONSE;
 }
@@ -373,9 +373,9 @@ void ResponseManager::generate_default_status_response()
             _buffer.put_body(error_page);
     }
 
-    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-    if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    Logger::getInstance() << msg << std::endl;
+    // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+    // if (msg.size() > 500) {msg = msg.substr(0, 500);}
+    // Logger::getInstance() << msg << std::endl;
 
     _status = WRITING_RESPONSE;
 }
