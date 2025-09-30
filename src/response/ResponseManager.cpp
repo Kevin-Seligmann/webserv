@@ -139,7 +139,7 @@ void ResponseManager::generate_get_response(bool from_autoindex)
         case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
         case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
     }
-
+    
     switch (_file.filetype)
     {
         case File::REGULAR: prepare_file_reading(); break;
