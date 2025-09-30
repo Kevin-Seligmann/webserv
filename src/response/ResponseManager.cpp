@@ -105,7 +105,20 @@ void ResponseManager::generate_get_response()
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET/HEAD response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
 
+    // debuging!
+   /*  const ServerConfig* server_for_response = getServerForResponse();
+    if (!server_for_response->getIndexFiles()[0].empty())
+        final_path = normalizePath(final_path, server_for_response->getIndexFiles()[0]);
+    DEBUG_LOG("=== <<< Server for response >>> ===");
+    DEBUG_LOG("Host path: " << final_path);
+    DEBUG_LOG("Autoindex: " << server_for_response->autoindex);
+    DEBUG_LOG("Index file [0]: " << server_for_response->getIndexFiles()[0]);
+  */   // not degub x1
     _file.open(final_path, O_RDONLY);
+/*     DEBUG_LOG("File status: " << _file.get_status());
+    DEBUG_LOG("==========================");
+    (void)server_for_response; */
+
 	
     switch (_file.get_status())
     {

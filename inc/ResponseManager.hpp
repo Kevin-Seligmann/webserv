@@ -39,6 +39,7 @@ public:
     void new_response();
     void set_error_action(RM_error_action action);
     bool is_error();
+    const ServerConfig* getServerForResponse() { return _server; }
 
     ActiveFileDescriptor get_active_file_descriptor();
 
