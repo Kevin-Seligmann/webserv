@@ -119,7 +119,7 @@ void ResponseManager::generate_get_response(bool from_autoindex)
                           << final_path << " . Status: " + _error.to_string()
                           << std::endl;
 
-    if (from_autoindex)
+    if (!from_autoindex)
     {
         const ServerConfig* server_for_response = getServerForResponse();
         if (!server_for_response->getIndexFiles()[0].empty())
@@ -144,7 +144,7 @@ void ResponseManager::generate_get_response(bool from_autoindex)
     {
         case File::REGULAR: prepare_file_reading(); break;
         case File::DIRECTORY: 
-            if (from_autoindex)
+            if (!from_autoindex)
             {
                 read_directory(); 
             }
