@@ -84,6 +84,7 @@ void ReadNetBuffer::expand(size_t min_size)
     if (min_size >= CRITICAL_SIZE)
         new_capacity = min_size;
     else
+        
         new_capacity = std::max<size_t>(std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE), min_size);;
 
     size_t size = this->size();

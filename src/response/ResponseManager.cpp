@@ -313,6 +313,9 @@ void ResponseManager::read_directory()
 {
     std::string final_path = get_host_path();
 
+    DEBUG_LOG("+++ FINAL PATH +++ Justo antes de lanzar el forbidden");
+    DEBUG_LOG("final_path = " << final_path);
+
     if (_request.get_path().at(_request.get_path().size() - 1) != '/')
     {
         set_error("The user requested a directory that is a file but doesn't end with a backslash", MOVED_PERMANENTLY);
@@ -486,9 +489,33 @@ bool ResponseManager::allow_upload()
 // fixed at ConfigInheritance.cpp  applyAutoindex
 bool ResponseManager::is_autoindex()
 {
-    if (_location && _location->getAutoindex() != AINDX_DEF_OFF) {
-        return _location->getAutoindex() == AINDX_LOC_ON;
+    if (!_location)
+    {
+        return false;
     }
+
+    AutoIndexState st = _location->getAutoindex();
+
+    if (st == AINDX_LOC_ON || st == AINDX_DEF_ON)
+    {
+        return true;
+    }
+
+/*     if (_location && _location->getAutoindex() != AINDX_DEF_OFF) {
+        return _location->getAutoindex() == AINDX_LOC_ON;
+    } */
+    DEBUG_LOG("             IN AUTOINDEX             ");
+
+    if (_location && (_location->getAutoindex() == AINDX_DEF_ON ||
+        _location->getAutoindex() == AINDX_LOC_ON ||
+        _location->getAutoindex() == AINDX_SERV_ON))
+    {
+        DEBUG_LOG("              HERE             ");
+        return true;
+    }
+   
+    DEBUG_LOG("EN is_autoindex() -> LOCATION getAutoindex(): " << _location->getAutoindex());
+    DEBUG_LOG("EN is_autoindex() -> LOCATION getPath: " << _location->getPath());
     
     if (_server) {
         AutoIndexState serv_state = _server->getAutoindex(NULL);
