@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/29 18:15:35 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/30 12:37:15 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -336,6 +336,8 @@ CGIEnv& CGI::getEnv()
 
 void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
+	std::cout << "DA YOBANIY V ROT" << std::endl;
+
 	buildEnv(req, server, system_path, sconf, loc);
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
@@ -362,18 +364,36 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 			dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
-			_exit(127);
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_500__", 17);
+			_exit(1);
+		}
+
 
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
 
 		CGIArg	arg(_env);
 
-
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();
+
+		if (access(argv[1], F_OK) != 0)
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_404__", 17);
+			_exit(1);
+		}
+		
+		if (access(argv[1], X_OK) != 0) 
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_403__", 17);
+            _exit(1);
+		}
+
 		execve(argv[0], argv, envp);
-        _exit(127);
+
+		write(STDOUT_FILENO, "__CGI_ERROR_500__", 17);
+		_exit(1);
 	}
 	else 
 	{
@@ -386,6 +406,7 @@ void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std:
 
 		flags = fcntl(_cgi_pipe[0], F_GETFL, 0);
 		fcntl(_cgi_pipe[0], F_SETFL, flags | O_NONBLOCK);
+
 
 		// Initialize reading and writing data
 		// Write setup
@@ -433,7 +454,31 @@ void CGI::runCGI(int fd)
 			_read_finished = true;
 		}
 	}
-	else 
+
+	if (_read_finished && _write_finished)
+	{
+		close(_req_pipe[1]);
+		close(_cgi_pipe[0]);
+
+		if (_cgi_output.find("__CGI_ERROR_404__") != std::string::npos) {
+			_cgi_response.buildNotFoundErrorResponse();
+			setStatus(CGI_ERROR, "CGI Script not found");
+		}
+		else if (_cgi_output.find("__CGI_ERROR_403__") != std::string::npos) {
+			_cgi_response.buildForbiddenErrorResponse();
+			setStatus(CGI_ERROR, "CGI Script permission denied");
+		}
+		else if (_cgi_output.find("__CGI_ERROR_500__") != std::string::npos) {
+			_cgi_response.buildInternalErrorResponse();
+			setStatus(CGI_ERROR, "CGI Execve failed");
+		}
+		else {
+			_cgi_response.parseFromCGIOutput(_cgi_output);
+			_cgi_response.buildResponse();
+			setStatus(CGI_FINISHED, "CGI FINISHED");
+		}
+}	
+/*	else 
 	{
 		CODE_ERR("Imposible CGI status");
 	}
@@ -458,7 +503,7 @@ void CGI::runCGI(int fd)
 			_cgi_response.buildResponse();
 			setStatus(CGI_FINISHED, "CGI FINISHED");
 		// }
-	}
+	}*/
 }
 
 const CGIResponse& CGI::getCGIResponse() const

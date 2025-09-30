@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:39:00 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/24 19:08:25 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/29 22:41:42 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,9 @@ class CGIResponse
 		void parseFromCGIOutput(const std::string& cgiOutput);
 		void buildResponse();
 		void buildInternalErrorResponse();
+		void buildNotFoundErrorResponse();
+		void buildForbiddenErrorResponse();
+
 
 		void setContentType(const std::string& type);
 		void setStatus(const std::string& stat);

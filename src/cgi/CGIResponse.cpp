@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/24 19:22:35 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/29 22:41:07 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,10 +167,35 @@ void CGIResponse::buildInternalErrorResponse()
 	_location.clear();
 	_cgiResponseHeaders.clear();
 	_bodyStream.str("");
-	_bodyStream << "Internal Server Error";
+	_bodyStream << "500 Internal Server Error";
 
 	buildResponse();
 }
+
+void CGIResponse::buildNotFoundErrorResponse()
+{
+    _status = "404 Not Found";
+    _contentType = "text/plain";
+    _location.clear();
+    _cgiResponseHeaders.clear();
+    _bodyStream.str("");
+    _bodyStream << "404 Not Found";
+
+    buildResponse();
+}
+
+void CGIResponse::buildForbiddenErrorResponse()
+{
+    _status = "403 Forbidden";
+    _contentType = "text/plain";
+    _location.clear();
+    _cgiResponseHeaders.clear();
+    _bodyStream.str("");
+    _bodyStream << "403 Forbidden";
+
+    buildResponse();
+}
+
 
 void CGIResponse::setContentType(const std::string& type)
 {
