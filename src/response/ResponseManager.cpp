@@ -48,16 +48,18 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 /*
     Called once request is done
 */
-void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
+void ResponseManager::generate_response(RM_error_action action, bool is_cgi, bool from_autoindex)
 {
     Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     _error_action = action;
-    if (is_cgi)
+
+    if (is_cgi && !from_autoindex)
     {
         generate_cgi_response();
         return ;
     }
+
     switch (::status::status_type(_error.status()))
     {
         case STYPE_BODY_ERROR_RESPONSE:
@@ -73,7 +75,16 @@ void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
             switch (_request.method)
             {
                 case HEAD:
-                case GET: generate_get_response(); break ;
+                case GET: 
+                    if (from_autoindex)
+                    {
+                        generate_get_response(from_autoindex);
+                    }
+                    else
+                    {
+                        generate_get_response();
+                    }
+                    break;
                 case POST: generate_post_response(); break ;
                 case DELETE: generate_delete_response(); break ;
                 default: CODE_ERR("Not implemented");
@@ -99,26 +110,25 @@ void ResponseManager::new_response()
     _status = WAITING_REQUEST;
 }
 
-void ResponseManager::generate_get_response()
+void ResponseManager::generate_get_response(bool from_autoindex)
 {
     std::string final_path = get_host_path();
 
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET/HEAD response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd)
+                          << ": Generating GET/HEAD response. File: "
+                          << final_path << " . Status: " + _error.to_string()
+                          << std::endl;
 
-    // debuging!
-   /*  const ServerConfig* server_for_response = getServerForResponse();
-    if (!server_for_response->getIndexFiles()[0].empty())
-        final_path = normalizePath(final_path, server_for_response->getIndexFiles()[0]);
-    DEBUG_LOG("=== <<< Server for response >>> ===");
-    DEBUG_LOG("Host path: " << final_path);
-    DEBUG_LOG("Autoindex: " << server_for_response->autoindex);
-    DEBUG_LOG("Index file [0]: " << server_for_response->getIndexFiles()[0]);
-  */   // not degub x1
+    if (from_autoindex)
+    {
+        const ServerConfig* server_for_response = getServerForResponse();
+        if (!server_for_response->getIndexFiles()[0].empty())
+        {
+            final_path = normalizePath(final_path, server_for_response->getIndexFiles()[0]);
+        }
+    }
+
     _file.open(final_path, O_RDONLY);
-/*     DEBUG_LOG("File status: " << _file.get_status());
-    DEBUG_LOG("==========================");
-    (void)server_for_response; */
-
 	
     switch (_file.get_status())
     {
@@ -129,10 +139,16 @@ void ResponseManager::generate_get_response()
         case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
         case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
     }
+
     switch (_file.filetype)
     {
         case File::REGULAR: prepare_file_reading(); break;
-        case File::DIRECTORY: read_directory(); break;
+        case File::DIRECTORY: 
+            if (from_autoindex)
+            {
+                read_directory(); 
+            }
+            break;
         case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
     }
 }

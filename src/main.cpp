@@ -51,7 +51,7 @@ void runServer(const ParsedServers& configs)
 int main(int argc, char* argv[])
 {
 
-    DEBUG_LOG("\nDEBUG MODE ON\n");
+    DEBUG_LOG("DEBUG MODE ON\n");
     std::cout << "\n Webserv Test" << std::endl;
     std::cout << "==============\n" << std::endl;
     
@@ -109,18 +109,7 @@ int main(int argc, char* argv[])
 debe coger ./api.html como index file
 no ve el index file... generar 404
 
-2. en custom test, localhors:8080
-static tiene directorios, no todos heredan bien el autoindex on
-mientras que en documents sí se heradan bien
-
-1 y 2 pueden estar relacionados, en ambos un 404 intercepta una respuesta que debería funcionar
-
-3. en un listado de archivos, la direccion explicita se lista, pero los subdirectorios no... 
-
-4. sin index en location, con autonidex off, da 404 y debe dar 403 forbiden 
-(TESED con test_custom > GET /static/ )
-
-5. Con directiva alias comentada, el acceso a un location va bien, con alias va mal.
+2. Upload a traves de test_custom da unsupported media type 415
 
 6. @test/test_custom -> sh make_run.sh debug <-- LA FLAG debug 
     location /static/ {
