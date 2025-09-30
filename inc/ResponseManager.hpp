@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <poll.h>
+#include <algorithm>
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "SysBufferFactory.hpp"

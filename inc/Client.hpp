@@ -58,9 +58,7 @@ private:
     std::vector<ActiveFileDescriptor> _active_fds;
     time_t                  _last_activity;
     bool                    _is_cgi;
-
-    // int             error_retry_count;
-
+    std::string             _previous_directory_path; // Almacena ruta del último directorio
 
     void handle_cgi_request(int fd);
     void handle_processing_request();
@@ -74,11 +72,13 @@ private:
     void prepareCgi();
 
     bool isCgiRequest();
+    // Intento razonable de saber que el click viene de un directorio
+    bool probablyAutoindex() const;
+
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);
     void updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> fds);
 
 	void get_config(ServerConfig ** server, Location ** location);
-
     void setStatus(Status status, std::string const & txt);
 };

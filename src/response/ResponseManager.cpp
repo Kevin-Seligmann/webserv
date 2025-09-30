@@ -119,15 +119,6 @@ void ResponseManager::generate_get_response(bool from_autoindex)
                           << final_path << " . Status: " + _error.to_string()
                           << std::endl;
 
-    if (!from_autoindex)
-    {
-        const ServerConfig* server_for_response = getServerForResponse();
-        if (!server_for_response->getIndexFiles()[0].empty())
-        {
-            final_path = normalizePath(final_path, server_for_response->getIndexFiles()[0]);
-        }
-    }
-
     _file.open(final_path, O_RDONLY);
 	
     switch (_file.get_status())
@@ -142,7 +133,9 @@ void ResponseManager::generate_get_response(bool from_autoindex)
     
     switch (_file.filetype)
     {
-        case File::REGULAR: prepare_file_reading(); break;
+        case File::REGULAR:
+            prepare_file_reading();
+            break;
         case File::DIRECTORY: 
             if (!from_autoindex)
             {
@@ -329,9 +322,6 @@ void ResponseManager::read_directory()
 {
     std::string final_path = get_host_path();
 
-    DEBUG_LOG("+++ FINAL PATH +++ Justo antes de lanzar el forbidden");
-    DEBUG_LOG("final_path = " << final_path);
-
     if (_request.get_path().at(_request.get_path().size() - 1) != '/')
     {
         set_error("The user requested a directory that is a file but doesn't end with a backslash", MOVED_PERMANENTLY);
@@ -348,33 +338,82 @@ void ResponseManager::read_directory()
 
     // Tester asks for NOT_FOUND. Honestly, makes more sense than FORBIDDEN (As: Index not found)
     if (!is_autoindex())
+    {    
         return set_error("Directory listing is forbidden", NOT_FOUND);
+    }
 
     std::string dir_prefix = "";
     if (!_request.uri.path.empty() && _request.uri.path[_request.uri.path.size() - 1] != '/')
+    {
         dir_prefix = _request.uri.path + "/";
+    }
     else
+    {
         dir_prefix = _request.uri.path;
+    }
     
-    std::string dirs;
+    std::vector<std::string> directories;
+    std::vector<std::string> files;
 
-    dirs += "<!DOCTYPE html><html><body>";
-    while (struct dirent * dir = _file.dir_next())
+    while (struct dirent* dir = _file.dir_next())
+    {
+        std::string name = dir->d_name;
+
+        if (name == "." || name == "..")
+        {
+            continue;
+        }
+
         if (dir->d_type == DT_DIR)
-            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
+        {
+            directories.push_back(name);
+        }
         else
-            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
-    dirs += "</html></body>";
+        {
+            files.push_back(name);
+        }        
+    }
 
-    _buffer.put_header("Content-Length", wss::i_to_dec(dirs.size()));
-    _buffer.put_new_line();
-    if (_request.method != HEAD)
-        _buffer.put_body(dirs);
+    std::sort(directories.begin(), directories.end());
+    std::sort(files.begin(), files.end());
 
-        
+    std::string html;
+
+    html += "<!DOCTYPE html>\n<html>\n<head>\n";
+    html += "<meta charset=\"UTF-8\">\n";
+    html += "<title>Index of " + _request.uri.path + "</title>\n";
+    html += "<style>body{font-family:monospace;padding:20px}a{display:block;padding:5px;text-decoration:none}a:hover{background:#eee}.dir{font-weight:bold}</style>\n";
+    html += "</head>\n<body>\n";
+    html += "<h1>Index of " + _request.uri.path + "</h1>\n<hr>\n";
+
+    if (_request.uri.path != "/")
+    {
+        html += "<a href=\"../\">📁 ../</a>\n";
+    }
+
+    for (size_t i = 0; i < directories.size(); ++i)
+    {
+        html += "<a class=\"dir\" href=\"" + dir_prefix + directories[i] + "/\">📁 " + directories[i] + "/</a>\n";
+    }
+
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        html += "<a href=\"" + dir_prefix + files[i] + "\">📄 " + files[i] + "/</a>\n";
+    }
+
+    html += "<hr>\n</body>\n</html>";
+
     // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
     // if (msg.size() > 500) {msg = msg.substr(0, 500);}
     // Logger::getInstance() << msg << std::endl;
+
+    _buffer.put_header("Content-Length", wss::i_to_dec(html.size()));
+    _buffer.put_new_line();
+
+    if (_request.method != HEAD)
+    {
+        _buffer.put_body(html);
+    }
 
     _status = WRITING_RESPONSE;
 }

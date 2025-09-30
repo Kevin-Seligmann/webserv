@@ -2,4 +2,4 @@ INTERPRETER, EXT
 /usr/bin/php-cgi, .php
 /usr/bin/python3, .py
 /usr/bin/node, .js
-/home/mvisca-g/code/webserv/test/42_tester/ubuntu_cgi_tester, .bla
+/home/m/code/webserv/test/42_tester/ubuntu_cgi_tester, .bla
