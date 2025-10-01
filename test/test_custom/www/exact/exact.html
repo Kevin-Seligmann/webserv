@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Exact Match</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .works { color: green; }
+        .fails { color: red; }
+
+  </style>
+</head>
+<body>
+  <h1>Try this...</h1>
+    <div class="test-list">
+    <h3>Exact Match Behavior:</h3>
+    <ul>
+        <li class="works">✓ <a href="/exact">/exact</a> - WORKS (exact match)</li>
+        <li class="fails">✗ <a href="/exact/">/exact/</code> - FAILS (not exact)</li>
+        <li class="fails">✗ <a href="/exact/plus">/exact/plus</a> - FAILS (not exact)</li>
+        <li class="fails">✗ <a href="/exactly">/exactly</code> - FAILS (not exact)</li>
+    </ul>
+    <p><small>Only the exact path <code>/exact</code> triggers this location.</small></p>
+</div>
+</body>
+</html>
