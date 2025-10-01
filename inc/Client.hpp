@@ -69,9 +69,9 @@ private:
 
     void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
     void prepareRequest();
-    void prepareCgi();
+    void prepareCgi(ServerConfig* server, Location* location);
 
-    bool isCgiRequest();
+    bool isCgiRequest(Location* location);
     // Intento razonable de saber que el click viene de un directorio
     bool probablyAutoindex() const;
 

@@ -315,8 +315,8 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
 
-	std::string cgi_path = systemPathToCgi(system_path);
-	_env.setEnvValue("SCRIPT_FILENAME", cgi_path); 
+//	std::string cgi_path = systemPathToCgi(system_path);
+	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
 	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
 	_env.setEnvValue("REQUEST_URI", req.get_path());
 	_env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());

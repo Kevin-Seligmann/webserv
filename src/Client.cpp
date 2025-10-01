@@ -121,22 +121,29 @@ bool Client::probablyAutoindex() const
 	return (added_path.find('/') == std::string::npos);
 }
 
-void Client::prepareCgi()
+void Client::prepareCgi(ServerConfig* server, Location* location)
 {
 	setStatus(PROCESSING_CGI, "Processing CGI");
 
-	ServerConfig * _server_config = NULL;
-	Location * _location = NULL;
-	get_config(&_server_config, &_location);
 	std::string path = "";
-    if (_location)
-        path = _location->getFilesystemLocation(_request.get_path());
-    if (path.empty() && !_server_config->getRoot().empty())
-        path = _server_config->getRoot() + _request.get_path();
-	else if (path.empty())
-		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
 
-	_cgi.init(_request, _vsm, path, _server_config, _location);
+    if (location)
+	{
+        path = location->getFilesystemLocation(_request.get_path());
+	}
+
+    if (path.empty() && !server->getRoot().empty())
+	{
+        path = server->getRoot() + _request.get_path();
+	}
+	else if (path.empty())
+	{
+		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + server->getRoot());
+	}
+
+	DEBUG_LOG("CGI physical path: " << path);
+
+	_cgi.init(_request, _vsm, path, server, location);
 
 	if (_cgi.error())
 	{
@@ -183,6 +190,10 @@ void Client::handle_processing_response()
 			DEBUG_LOG("Client"<< _socket
 					  << ": Posible autoindex directory: "
 					   << _previous_directory_path);
+		}
+		else if (_error.status() == OK && !probablyAutoindex())
+		{
+			_previous_directory_path = "";
 		}
 		// TODO: Closing
 		// if (_request_manager.close())
@@ -255,9 +266,9 @@ void Client::handleRequestDone()
 	{
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
-	else if (!probablyAutoindex() && isCgiRequest())
+	else if (!probablyAutoindex() && isCgiRequest(location))
 	{
-		prepareCgi();
+		prepareCgi(server_config, location);
 	}
 	else
 	{
@@ -296,11 +307,11 @@ void Client::handleRequestError()
 }
 
 // Util, getters, setters, etc
-bool Client::isCgiRequest()
+bool Client::isCgiRequest(Location* location)
 {
-	ServerConfig* server_config = NULL;
+/* 	ServerConfig* server_config = NULL;
 	Location* location = NULL;
-	get_config(&server_config, &location);
+	get_config(&server_config, &location); */
 
 	if (!location || location->getCgiExtension().empty())
 	{
