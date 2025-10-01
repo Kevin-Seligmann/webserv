@@ -2,6 +2,7 @@
 
 ARG="$1"
 
+make clean -C ../..
 make -C ../.. $ARG
 
 cp -f ../../webserv webserv

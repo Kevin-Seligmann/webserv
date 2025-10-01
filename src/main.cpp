@@ -105,8 +105,15 @@ int main(int argc, char* argv[])
 // TODO
 
 /*
-1. cuando un conf no tiene puntos y comas se rompe... estaba arreglado, pero sigue fallando
-    esto puede ser porque lo hemos hecho mal con algun merge
+1.  en custom test, localohost:8082
+debe coger ./api.html como index file
+no ve el index file... generar 404
+
+2. en custom test, localhors:8080
+static tiene directorios, no todos heredan bien el autoindex on
+mientras que en documents sí se heradan bien
+
+1 y 2 pueden estar relacionados, en ambos un 404 intercepta una respuesta que debería funcionar
 
 3. en un listado de archivos, la direccion explicita se lista, pero los subdirectorios no... 
 
