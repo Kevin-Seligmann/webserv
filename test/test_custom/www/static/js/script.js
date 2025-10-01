@@ -1,31 +1,17 @@
-function testDelete() {
-    fetch('/upload/test.txt', {
-        method: 'DELETE',
-    })
-    .then(response => {
-        document.getElementById('result').innerHTML = 
-            `DELETE request sent. Status: ${response.status}`;
-    })
-    .catch(error => {
-        document.getElementById('result').innerHTML = 
-            `DELETE request failed: ${error}`;
-    });
-}
-
+// Remover testDelete(), ya no se necesita
 function testPut() {
-    fetch('/upload/test.txt', {
+    fetch('/test.txt', {
         method: 'PUT',
-        body: 'Test content for PUT request',
-        headers: {
-            'Content-Type': 'text/plain'
-        }
+        headers: {'Content-Type': 'text/plain'},
+        body: 'Content created via PUT method'
     })
-    .then(response => {
+    .then(response => response.text())
+    .then(data => {
         document.getElementById('result').innerHTML = 
-            `PUT request sent. Status: ${response.status}`;
+            '<p>PUT Response: ' + data + '</p>';
     })
     .catch(error => {
         document.getElementById('result').innerHTML = 
-            `PUT request failed: ${error}`;
+            '<p>Error: ' + error + '</p>';
     });
 }
