@@ -299,8 +299,11 @@ void Client::handleRequestDone()
 
 void Client::handleRequestError() 
 {
-	Logger::getInstance() << "Handling request error. Retry count " << _error_retry_count << std::endl;
+	DEBUG_LOG("Handling request error. Retry count " << _error_retry_count);
 	_error_retry_count ++;
+
+	// Si estamos aqui no debe ejecutar cgi
+	_is_cgi = false;
 
 	ServerConfig * server_config = NULL;
 	Location * location = NULL;
