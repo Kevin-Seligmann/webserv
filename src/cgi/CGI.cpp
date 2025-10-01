@@ -284,7 +284,8 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	if (req.body.content.size() > 0)
 	{
 		_env.setEnvValue("CONTENT_LENGTH", wss::i_to_dec(req.body.content.size() ));
-		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
+//		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
+		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.getString());
 	}
 
 	// CLIENT
