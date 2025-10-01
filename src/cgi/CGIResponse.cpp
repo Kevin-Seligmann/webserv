@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/29 22:41:07 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/01 13:51:58 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,8 +167,22 @@ void CGIResponse::buildInternalErrorResponse()
 	_location.clear();
 	_cgiResponseHeaders.clear();
 	_bodyStream.str("");
-	_bodyStream << "500 Internal Server Error";
-
+	_bodyStream << "<!DOCTYPE html>\n"
+                << "<html lang=\"en\">\n"
+                << "<head>\n"
+                << "    <meta charset=\"UTF-8\">\n"
+                << "    <title>500 - Internal Server Error</title>\n"
+                << "    <style>\n"
+                << "        body { font-family: Arial; text-align: center; padding: 50px; }\n"
+                << "        h1 { color: #e67e22; }\n"
+                << "    </style>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << "    <h1>500 - Internal Server Error</h1>\n"
+                << "    <p>Jim Lovell says: Houston, we’ve had a problem here.</p>\n"
+                << "    <a href=\"/\">Go Home</a>\n"
+                << "</body>\n"
+                << "</html>";
 	buildResponse();
 }
 
@@ -179,8 +193,22 @@ void CGIResponse::buildNotFoundErrorResponse()
     _location.clear();
     _cgiResponseHeaders.clear();
     _bodyStream.str("");
-    _bodyStream << "404 Not Found";
-
+	_bodyStream << "<!DOCTYPE html>\n"
+                << "<html lang=\"en\">\n"
+                << "<head>\n"
+                << "    <meta charset=\"UTF-8\">\n"
+                << "    <title>404 - Not Found</title>\n"
+                << "    <style>\n"
+                << "        body { font-family: Arial; text-align: center; padding: 50px; }\n"
+                << "        h1 { color: #e67e22; }\n"
+                << "    </style>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << "    <h1>404 - Not Found</h1>\n"
+                << "    <p>Dora the Explorer says: That sneaky fox is always trying to swipe our stuff!</p>\n"
+                << "    <a href=\"/\">Go Home</a>\n"
+                << "</body>\n"
+                << "</html>";
     buildResponse();
 }
 
@@ -191,8 +219,22 @@ void CGIResponse::buildForbiddenErrorResponse()
     _location.clear();
     _cgiResponseHeaders.clear();
     _bodyStream.str("");
-    _bodyStream << "403 Forbidden";
-
+	_bodyStream << "<!DOCTYPE html>\n"
+                << "<html lang=\"en\">\n"
+                << "<head>\n"
+                << "    <meta charset=\"UTF-8\">\n"
+                << "    <title>403 - Forbidden</title>\n"
+                << "    <style>\n"
+                << "        body { font-family: Arial; text-align: center; padding: 50px; }\n"
+                << "        h1 { color: #e67e22; }\n"
+                << "    </style>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << "    <h1>403 - Forbidden</h1>\n"
+				<< "    <p>Lady Galadriel says: You have no power here, servant of Morgoth! You are nameless, faceless, formless. Go back to the void from whence you came!</p>\n"
+                << "    <a href=\"/\">Go Home</a>\n"
+                << "</body>\n"
+                << "</html>";
     buildResponse();
 }
 
