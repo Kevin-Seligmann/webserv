@@ -48,16 +48,18 @@ ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 /*
     Called once request is done
 */
-void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
+void ResponseManager::generate_response(RM_error_action action, bool is_cgi, bool from_autoindex)
 {
     Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     _error_action = action;
-    if (is_cgi)
+
+    if (is_cgi && !from_autoindex)
     {
         generate_cgi_response();
         return ;
     }
+
     switch (::status::status_type(_error.status()))
     {
         case STYPE_BODY_ERROR_RESPONSE:
@@ -73,7 +75,16 @@ void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
             switch (_request.method)
             {
                 case HEAD:
-                case GET: generate_get_response(); break ;
+                case GET: 
+                    if (from_autoindex)
+                    {
+                        generate_get_response(from_autoindex);
+                    }
+                    else
+                    {
+                        generate_get_response();
+                    }
+                    break;
                 case POST: generate_post_response(); break ;
                 case DELETE: generate_delete_response(); break ;
                 default: CODE_ERR("Not implemented");
@@ -99,26 +110,16 @@ void ResponseManager::new_response()
     _status = WAITING_REQUEST;
 }
 
-void ResponseManager::generate_get_response()
+void ResponseManager::generate_get_response(bool from_autoindex)
 {
     std::string final_path = get_host_path();
 
-    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd) + ": Generating GET/HEAD response. File: " + final_path + " . Status: " + _error.to_string() << std::endl;
+    Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd)
+                          << ": Generating GET/HEAD response. File: "
+                          << final_path << " . Status: " + _error.to_string()
+                          << std::endl;
 
-    // debuging!
-   /*  const ServerConfig* server_for_response = getServerForResponse();
-    if (!server_for_response->getIndexFiles()[0].empty())
-        final_path = normalizePath(final_path, server_for_response->getIndexFiles()[0]);
-    DEBUG_LOG("=== <<< Server for response >>> ===");
-    DEBUG_LOG("Host path: " << final_path);
-    DEBUG_LOG("Autoindex: " << server_for_response->autoindex);
-    DEBUG_LOG("Index file [0]: " << server_for_response->getIndexFiles()[0]);
-  */   // not degub x1
     _file.open(final_path, O_RDONLY);
-/*     DEBUG_LOG("File status: " << _file.get_status());
-    DEBUG_LOG("==========================");
-    (void)server_for_response; */
-
 	
     switch (_file.get_status())
     {
@@ -129,10 +130,18 @@ void ResponseManager::generate_get_response()
         case File::RAREFILE: set_error("File type is not operational", FORBIDDEN); return ;
         case File::ERROR: set_error("Error reading file", INTERNAL_SERVER_ERROR); return ;
     }
+    
     switch (_file.filetype)
     {
-        case File::REGULAR: prepare_file_reading(); break;
-        case File::DIRECTORY: read_directory(); break;
+        case File::REGULAR:
+            prepare_file_reading();
+            break;
+        case File::DIRECTORY: 
+            if (!from_autoindex)
+            {
+                read_directory(); 
+            }
+            break;
         case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
     }
 }
@@ -313,9 +322,6 @@ void ResponseManager::read_directory()
 {
     std::string final_path = get_host_path();
 
-    DEBUG_LOG("+++ FINAL PATH +++ Justo antes de lanzar el forbidden");
-    DEBUG_LOG("final_path = " << final_path);
-
     if (_request.get_path().at(_request.get_path().size() - 1) != '/')
     {
         set_error("The user requested a directory that is a file but doesn't end with a backslash", MOVED_PERMANENTLY);
@@ -332,33 +338,82 @@ void ResponseManager::read_directory()
 
     // Tester asks for NOT_FOUND. Honestly, makes more sense than FORBIDDEN (As: Index not found)
     if (!is_autoindex())
+    {    
         return set_error("Directory listing is forbidden", NOT_FOUND);
+    }
 
     std::string dir_prefix = "";
     if (!_request.uri.path.empty() && _request.uri.path[_request.uri.path.size() - 1] != '/')
+    {
         dir_prefix = _request.uri.path + "/";
+    }
     else
+    {
         dir_prefix = _request.uri.path;
+    }
     
-    std::string dirs;
+    std::vector<std::string> directories;
+    std::vector<std::string> files;
 
-    dirs += "<!DOCTYPE html><html><body>";
-    while (struct dirent * dir = _file.dir_next())
+    while (struct dirent* dir = _file.dir_next())
+    {
+        std::string name = dir->d_name;
+
+        if (name == "." || name == "..")
+        {
+            continue;
+        }
+
         if (dir->d_type == DT_DIR)
-            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
+        {
+            directories.push_back(name);
+        }
         else
-            dirs += "<a href=\"" + dir_prefix + dir->d_name + "\">" + dir->d_name + "</a><hr>";
-    dirs += "</html></body>";
+        {
+            files.push_back(name);
+        }        
+    }
 
-    _buffer.put_header("Content-Length", wss::i_to_dec(dirs.size()));
-    _buffer.put_new_line();
-    if (_request.method != HEAD)
-        _buffer.put_body(dirs);
+    std::sort(directories.begin(), directories.end());
+    std::sort(files.begin(), files.end());
 
-        
+    std::string html;
+
+    html += "<!DOCTYPE html>\n<html>\n<head>\n";
+    html += "<meta charset=\"UTF-8\">\n";
+    html += "<title>Index of " + _request.uri.path + "</title>\n";
+    html += "<style>body{font-family:monospace;padding:20px}a{display:block;padding:5px;text-decoration:none}a:hover{background:#eee}.dir{font-weight:bold}</style>\n";
+    html += "</head>\n<body>\n";
+    html += "<h1>Index of " + _request.uri.path + "</h1>\n<hr>\n";
+
+    if (_request.uri.path != "/")
+    {
+        html += "<a href=\"../\">📁 ../</a>\n";
+    }
+
+    for (size_t i = 0; i < directories.size(); ++i)
+    {
+        html += "<a class=\"dir\" href=\"" + dir_prefix + directories[i] + "/\">📁 " + directories[i] + "/</a>\n";
+    }
+
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        html += "<a href=\"" + dir_prefix + files[i] + "\">📄 " + files[i] + "/</a>\n";
+    }
+
+    html += "<hr>\n</body>\n</html>";
+
     // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
     // if (msg.size() > 500) {msg = msg.substr(0, 500);}
     // Logger::getInstance() << msg << std::endl;
+
+    _buffer.put_header("Content-Length", wss::i_to_dec(html.size()));
+    _buffer.put_new_line();
+
+    if (_request.method != HEAD)
+    {
+        _buffer.put_body(html);
+    }
 
     _status = WRITING_RESPONSE;
 }

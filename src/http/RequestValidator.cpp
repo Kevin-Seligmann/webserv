@@ -95,10 +95,22 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
             _request.headers.content_type.subtype = "octet-stream";
         }
 
+        std::string full_type = _request.headers.content_type.type 
+                                + "/" + _request.headers.content_type.subtype;
+
+        // early return para POST con file dentro del body, content type no matcheara
+        if (full_type == "multipart/form-data" ||
+            full_type == "application/x-www-form-urlencoded")
+        {
+            return;
+        }
+
+        // post nativo, completa validacion de content type == extension del archivo
         t_mime_conf::iterator it;
         for (it = MediaType::ACCEPTED_TYPES.begin(); it != MediaType::ACCEPTED_TYPES.end(); it ++)
         {
-            if (wss::casecmp(it->first.type, _request.headers.content_type.type) && wss::casecmp(it->first.subtype, _request.headers.content_type.subtype))
+            if (wss::casecmp(it->first.type, _request.headers.content_type.type) &&
+                wss::casecmp(it->first.subtype, _request.headers.content_type.subtype))
             {
                 validate_extensions(_request.get_path(), it->second);
                 break ;
@@ -128,6 +140,7 @@ void RequestValidator::validate_extensions(std::string const & filename, std::ve
 
 void RequestValidator::validate_body(HTTPBody const & body)
 {
-    (void)body; // Suppress unused parameter warning
+    (void)body; // Suppress unused parameter warning 
+    // TODO queremos hacer algo con esto?
 }
 

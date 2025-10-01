@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <poll.h>
+#include <algorithm>
 #include "HTTPRequest.hpp"
 #include "HTTPError.hpp"
 #include "SysBufferFactory.hpp"
@@ -33,7 +34,7 @@ public:
     void set_location(Location const * location);
     // void generate_response(CGIResponse & response);
 
-    void generate_response(RM_error_action action, bool is_cgi);
+    void generate_response(RM_error_action action, bool is_cgi, bool from_autoindex = false);
     void process();
     bool response_done();
     void new_response();
@@ -62,7 +63,7 @@ private:
     CGI & _cgi;
 
     void generate_default_status_response();
-    void generate_get_response();
+    void generate_get_response(bool from_autoindex = false);
     void generate_post_response();
     void generate_delete_response();
     void generate_cgi_response();

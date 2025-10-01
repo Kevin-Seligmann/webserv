@@ -15,6 +15,7 @@ Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance o
 , _error_retry_count(0)
 , _last_activity(time(NULL))
 , _is_cgi(false)
+, _previous_directory_path("")
 {
 	_vsm.hookFileDescriptor(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
 	_active_fds.push_back(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
@@ -66,6 +67,7 @@ void Client::prepareRequest()
 	updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
 	_request_manager.new_request();
 	_cgi.reset();
+	// no resetear _previous_directory_path, tiene que persistir entre requests consecutivos
 	setStatus(IDLE, "Idle");
 }
 
@@ -87,22 +89,82 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	}
 }
 
-void Client::prepareCgi()
+bool Client::probablyAutoindex() const
+{
+	/*
+		Sin _previousdirectory_path es false
+		Si el directorio actual empieza con el previo, es posible
+		Si solo hay 1 nivel de profundidad de diferencia es muy posible
+	*/
+
+	if (_previous_directory_path.empty())
+	{
+		return false;
+	}
+
+	std::string current = _request.uri.path;
+	size_t prev_dir_len = _previous_directory_path.length();
+
+
+	if (current.compare(0, prev_dir_len, _previous_directory_path) != 0)
+	{
+		return false;
+	}
+
+	if (current.length() <= prev_dir_len)
+	{
+		return false;
+	}
+
+	std::string added_path = current.substr(prev_dir_len);
+
+	return (added_path.find('/') == std::string::npos);
+}
+
+void Client::prepareCgi(ServerConfig* server, Location* location)
 {
 	setStatus(PROCESSING_CGI, "Processing CGI");
 
-	ServerConfig * _server_config = NULL;
-	Location * _location = NULL;
-	get_config(&_server_config, &_location);
 	std::string path = "";
-    if (_location)
-        path = _location->getFilesystemLocation(_request.get_path());
-    if (path.empty() && !_server_config->getRoot().empty())
-        path = _server_config->getRoot() + _request.get_path();
-	else if (path.empty())
-		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
 
-	_cgi.init(_request, _vsm, path, _server_config, _location);
+	// para extraer el path sin path_info
+	std::string request_path = _request.uri.path;
+	std::string script_path = request_path;
+
+	// buscar fin del script
+	for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+		it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+	{
+		for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+			 ext != it->extensions.end(); ++ext)
+		{
+			size_t pos = request_path.find(*ext);
+			if (pos != std::string::npos)
+			{
+				script_path = request_path.substr(0, pos + ext->size());
+				break;
+			}
+		}
+	}
+
+	// construir path físico solo del script
+    if (location)
+	{
+        path = location->getFilesystemLocation(script_path);
+	}
+
+    if (path.empty() && !server->getRoot().empty())
+	{
+        path = server->getRoot() + script_path;
+	}
+	else if (path.empty())
+	{
+		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + server->getRoot());
+	}
+
+	DEBUG_LOG("CGI physical path: " << path);
+
+	_cgi.init(_request, _vsm, path, server, location);
 
 	if (_cgi.error())
 	{
@@ -134,16 +196,27 @@ void Client::handle_processing_request()
 
 void Client::handle_processing_response()
 {
-	// Check and handle error if exists. 
-//	DEBUG_LOG(" ++++++++ REQUEST PROCESS ++++++++++ ");
 	_response_manager.process();
-	if (_response_manager.is_error()) {
+
+	if (_response_manager.is_error())
+	{
 		handleRequestError();
 	}
 	else if (_response_manager.response_done())
-	{		
+	{
+		if (_error.status() == OK && !_request.uri.path.empty()
+			&& _request.uri.path[_request.uri.path.length() - 1] == '/') // Es probable que sea autoindex, se guarda
+		{
+			_previous_directory_path = _request.uri.path;
+			DEBUG_LOG("Client"<< _socket
+					  << ": Posible autoindex directory: "
+					   << _previous_directory_path);
+		}
+		else if (_error.status() == OK && !probablyAutoindex())
+		{
+			_previous_directory_path = "";
+		}
 		// TODO: Closing
-		
 		// if (_request_manager.close())
 		// {
 		// 	setStatus(CLOSING, "Closing");
@@ -151,13 +224,12 @@ void Client::handle_processing_response()
 		// }
 		// else 
 		// {
-			prepareRequest();
+		//	prepareRequest();
 		// }
+		prepareRequest();
 	}
 	else 
 	{
-//		DEBUG_LOG(" QUE HAY AQUI " << _request.get_path());
-//		DEBUG_LOG(" ESTO ES LA REQUEST : " << _request);
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
@@ -212,11 +284,17 @@ void Client::handleRequestDone()
     }
 
 	if (!server_config)
+	{
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
-	else if (isCgiRequest())
-		prepareCgi();
-	else 
+	}
+	else if (!probablyAutoindex() && isCgiRequest(location))
+	{
+		prepareCgi(server_config, location);
+	}
+	else
+	{
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+	} 
 }
 
 void Client::handleRequestError() 
@@ -250,9 +328,17 @@ void Client::handleRequestError()
 }
 
 // Util, getters, setters, etc
-bool Client::isCgiRequest()
+bool Client::isCgiRequest(Location* location)
 {
-//	DEBUG_LOG(" >>>>>>>>>> YES IT'S CGI REQUEST " << _request.uri.path);
+/* 	ServerConfig* server_config = NULL;
+	Location* location = NULL;
+	get_config(&server_config, &location); */
+
+	if (!location || location->getCgiExtension().empty())
+	{
+		_is_cgi = false;
+		return false;
+	}
 
 	const std::string& path = _request.uri.path;
 
@@ -262,12 +348,18 @@ bool Client::isCgiRequest()
         for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
              ext != it->extensions.end(); ++ext)
         {
-            if (path.size() >= ext->size() &&
-                path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
-            {
-				_is_cgi = true;
-                return (true);
-            }
+			// hay que buscar .py o .php en cualquier uicacion del path no solo al final
+            size_t pos = path.find(*ext);
+			if (pos != std::string::npos)
+			{
+				// verificar que despues de la extension hay '/' o nada
+				size_t after = pos + ext->size();
+				if (after == path.size() || path[after] == '/')
+				{
+					_is_cgi = true;
+					return (true);
+				}
+			}
         }
     }
 	_is_cgi = false;

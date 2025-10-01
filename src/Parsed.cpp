@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/30 15:56:56 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/09/30 17:58:37 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,7 +162,6 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 	{
 		temp_path = temp_path.substr(0, temp_path.size() - 1);
 	}
-	DEBUG_LOG(" DEBUG DE TEMP PATH: " << temp_path);
 	loc.setPath(temp_path);
 	++i;
 

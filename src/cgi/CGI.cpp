@@ -284,7 +284,8 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	if (req.body.content.size() > 0)
 	{
 		_env.setEnvValue("CONTENT_LENGTH", wss::i_to_dec(req.body.content.size() ));
-		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
+//		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
+		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.getString());
 	}
 
 	// CLIENT
@@ -315,8 +316,8 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
 
-	std::string cgi_path = systemPathToCgi(system_path);
-	_env.setEnvValue("SCRIPT_FILENAME", cgi_path); 
+//	std::string cgi_path = systemPathToCgi(system_path);
+	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
 	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
 	_env.setEnvValue("REQUEST_URI", req.get_path());
 	_env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
@@ -336,8 +337,6 @@ CGIEnv& CGI::getEnv()
 
 void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
-	std::cout << "DA YOBANIY V ROT" << std::endl;
-
 	buildEnv(req, server, system_path, sconf, loc);
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)

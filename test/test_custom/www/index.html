@@ -6,13 +6,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv Test Server</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .uploaded-files {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .uploaded-files h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .uploaded-files ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .uploaded-files li {
+            padding: 5px;
+            font-size: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .uploaded-files li:last-child {
+            border-bottom: none;
+        }
+        .file-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .file-size {
+            color: #888;
+            font-size: 11px;
+        }
+        .no-files {
+            color: #999;
+            font-style: italic;
+            font-size: 12px;
+        }
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+        .refresh-btn:hover {
+            background: #218838;
+        }
+    </style>
 </head>
 <body>
     <h1>Welcome to Webserv</h1>
     <nav>
         <ul>
             <li><a href="/static/">Static Files (Autoindex)</a></li>
-            <li><a href="/upload/">Upload Area</a></li>
+            <li><a href="/uploads_dest/">Upload Area</a></li>
             <li><a href="/cgi-bin/">CGI Python Tests</a></li>
             <li><a href="/php/">PHP CGI Tests</a></li>
             <li><a href="/docs">Documentation</a></li>
@@ -44,15 +98,65 @@
             <input type="file" name="file" required>
             <button type="submit">Upload File</button>
         </form>
+        
+        <!-- Lista de archivos subidos -->
+        <div id="uploadedFiles" class="uploaded-files">
+            <h4>
+                Uploaded Files:
+                <button class="refresh-btn" onclick="loadUploadedFiles()">Refresh</button>
+            </h4>
+            <p class="no-files">Loading...</p>
+        </div>
     </section>
     
-    <section>
-        <h2>Method Tests</h2>
-        <button onclick="testDelete()">Test DELETE</button>
-        <button onclick="testPut()">Test PUT</button>
-        <div id="result"></div>
-    </section>
+<section>
+    <h2>Method Tests</h2>
+    <button onclick="window.location.href='/cgi-bin/delete.py'">Manage Files (DELETE)</button>
+    <div id="result"></div>
+</section>
     
     <script src="/static/js/script.js"></script>
+    <script>
+        // Cargar lista de archivos subidos
+        function loadUploadedFiles() {
+            const container = document.getElementById('uploadedFiles');
+            const headerHTML = '<h4>Uploaded Files: <button class="refresh-btn" onclick="loadUploadedFiles()">Refresh</button></h4>';
+            
+            container.innerHTML = headerHTML + '<p class="no-files">Loading...</p>';
+            
+            fetch('/cgi-bin/list_files.py')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Files data:', data);
+                    const files = data.files || [];
+                    
+                    if (files.length === 0) {
+                        container.innerHTML = headerHTML + '<p class="no-files">No files uploaded yet</p>';
+                    } else {
+                        let html = headerHTML + '<ul>';
+                        files.forEach(file => {
+                            const sizeKB = (file.size / 1024).toFixed(1);
+                            html += `<li><span class="file-name">${file.name}</span> <span class="file-size">(${sizeKB} KB)</span></li>`;
+                        });
+                        html += '</ul>';
+                        container.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading files:', error);
+                    container.innerHTML = headerHTML + 
+                        `<p class="no-files" style="color: red;">Error: ${error.message}<br>Check console for details</p>`;
+                });
+        }
+        
+        // Cargar archivos al cargar la página
+        window.addEventListener('DOMContentLoaded', loadUploadedFiles);
+    </script>
 </body>
 </html>
