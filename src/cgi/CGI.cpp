@@ -337,8 +337,6 @@ CGIEnv& CGI::getEnv()
 
 void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
-	std::cout << "DA YOBANIY V ROT" << std::endl;
-
 	buildEnv(req, server, system_path, sconf, loc);
 
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)

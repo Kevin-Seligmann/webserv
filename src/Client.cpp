@@ -127,14 +127,35 @@ void Client::prepareCgi(ServerConfig* server, Location* location)
 
 	std::string path = "";
 
+	// para extraer el path sin path_info
+	std::string request_path = _request.uri.path;
+	std::string script_path = request_path;
+
+	// buscar fin del script
+	for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+		it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+	{
+		for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+			 ext != it->extensions.end(); ++ext)
+		{
+			size_t pos = request_path.find(*ext);
+			if (pos != std::string::npos)
+			{
+				script_path = request_path.substr(0, pos + ext->size());
+				break;
+			}
+		}
+	}
+
+	// construir path físico solo del script
     if (location)
 	{
-        path = location->getFilesystemLocation(_request.get_path());
+        path = location->getFilesystemLocation(script_path);
 	}
 
     if (path.empty() && !server->getRoot().empty())
 	{
-        path = server->getRoot() + _request.get_path();
+        path = server->getRoot() + script_path;
 	}
 	else if (path.empty())
 	{
@@ -327,12 +348,18 @@ bool Client::isCgiRequest(Location* location)
         for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
              ext != it->extensions.end(); ++ext)
         {
-            if (path.size() >= ext->size() &&
-                path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
-            {
-				_is_cgi = true;
-                return (true);
-            }
+			// hay que buscar .py o .php en cualquier uicacion del path no solo al final
+            size_t pos = path.find(*ext);
+			if (pos != std::string::npos)
+			{
+				// verificar que despues de la extension hay '/' o nada
+				size_t after = pos + ext->size();
+				if (after == path.size() || path[after] == '/')
+				{
+					_is_cgi = true;
+					return (true);
+				}
+			}
         }
     }
 	_is_cgi = false;
