@@ -66,6 +66,6 @@ void ERRORlogsEntry(const std::string& title, const std::string& str);
 size_t str_to_sizet(const std::string& str, size_t max_value);
 
 std::string normalizePath(const std::string& base, const std::string& path);
-std::string normalizeWebPath(const std::string& root, const std::string& request_path);
+//std::string normalizeWebPath(const std::string& root, const std::string& request_path);
 
 #endif

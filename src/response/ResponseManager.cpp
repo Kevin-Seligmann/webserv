@@ -112,6 +112,23 @@ void ResponseManager::new_response()
 
 void ResponseManager::generate_get_response(bool from_autoindex)
 {
+    DEBUG_LOG("generate get response : location : " << (_location ? "EXIST" : "NULL"));
+    if (_location)
+    {
+        DEBUG_LOG("redirect : '" << _location->getRedirect() << "'");
+        DEBUG_LOG("matchtype : '" << _location->getMatchType() << "'");
+        DEBUG_LOG("root : '" << _location->getRoot() << "'");
+    }
+
+    if (_location && !_location->getRedirect().empty()) 
+    {
+        _error.set("Redirect configured", MOVED_PERMANENTLY);
+        _redirecting_location = _location->getRedirect();
+        generate_default_status_response();
+        return;
+
+    }
+
     std::string final_path = get_host_path();
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd)

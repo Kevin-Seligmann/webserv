@@ -18,6 +18,7 @@
 
 class CGIMapping
 {
+/*
 	private:
 		std::map<std::string, std::string> mapping;
 
@@ -35,6 +36,7 @@ class CGIMapping
 	private:
 		CGIMapping(const CGIMapping&);
 		CGIMapping& operator=(const CGIMapping&);
+*/
 };
 
 #endif

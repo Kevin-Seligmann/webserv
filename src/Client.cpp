@@ -375,23 +375,35 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	// Location
 	*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 	
-	// Procesar index files solo para GET con request OK
-	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK &&
-		_request.get_path().at(_request.get_path().size() - 1) == '/')
+	// redirect manejado
+	if (*ptr_location && !(*ptr_location)->getRedirect().empty())
 	{
-		std::string full_path;
+		_error.set("Redirect configured", MOVED_PERMANENTLY);
+		return;
+	}
+
+	// alias manejado en Location::getFilesystemLocation()
+
+	// index files manejado para GET/HEAD con request OK
+	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK)
+		// && _request.get_path().at(_request.get_path().size() - 1) == '/')
+	{
 		std::vector<std::string> try_index;
 
-		// Get indexes vector
-		if (*ptr_location && !(*ptr_location)->getIndex().empty()) {
+		// Get index files o fallback 
+		if (*ptr_location && !(*ptr_location)->getIndex().empty())
+		{
 			try_index = (*ptr_location)->getIndex();
 		}
-		else if (!(*ptr_server_config)->index_files.empty()) {
-			try_index = (*ptr_server_config)->index_files; 
+		else if (!(*ptr_server_config)->index_files.empty())
+		{
+			try_index = (*ptr_server_config)->getIndexFiles();
 		}
 		else {
 			try_index.push_back("index.html");
 		}
+
+		
 
 		for (size_t i = 0; i < try_index.size(); ++i) {
 

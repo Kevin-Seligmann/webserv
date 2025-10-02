@@ -2,6 +2,7 @@
 
 #include "ServerConfig.hpp"
 #include "StringUtil.hpp"
+#include "DebugView.hpp"
 #include <algorithm>
 #include <sstream>
 #include <iostream>
@@ -121,7 +122,7 @@ bool ServerConfig::matchesServerName(const std::string& hostname) const {
 // findLocation
 Location* ServerConfig::findLocation(const std::string& path) const {
 
-	// Buscar match exacto primero
+	// Buscar match EXACT primero
 	std::string exact_key = "=" + path;
 	std::map<std::string, Location>::const_iterator exact_it = locations.find(exact_key);
 	if (exact_it != locations.end() && exact_it->second.getMatchType() == Location::EXACT) {
@@ -150,24 +151,59 @@ Location* ServerConfig::findLocation(const std::string& path) const {
 	return best_match;
 }
 
-// RESOLVE REQUEST
+/* RESOLVE REQUEST
 Location* ServerConfig::resolveRequest(const std::string& request_path, std::string& final_path) const {
 
 	final_path = request_path;
+
+	DEBUG_LOG(">>> in resolveRequest()");
+
+	// try to resolve exact location first
+	std::string exact_key = "=" + request_path;
+	std::map<std::string, Location>::const_iterator exact_it = locations.find(exact_key);
+	if (exact_it != locations.end() && exact_it->second.getMatchType() == Location::EXACT)
+	{
+		Location* exact_location = const_cast<Location*>(&exact_it->second);
+
+		std::vector<std::string> indexes = getIndexes(exact_location);
+		std::string doc_root = getDocRoot(exact_location);
+
+		DEBUG_LOG(">>> resolveRequest() : indexes size : " << indexes.size());
+		DEBUG_LOG(">>> resolveRequest() : indexes : " << indexes[0]);
+
+		for (size_t i = 0; i < indexes.size(); ++i)
+		{
+			if (indexes[i].empty()) continue;
+
+			std::string try_logic_path = request_path + "/" + indexes[i];
+			std::string try_physical_path = normalizePath(doc_root, try_logic_path);
+
+			DEBUG_LOG(">>> resolveRequest() : try physical path : " << try_physical_path);
+
+			if (access(try_physical_path.c_str(), F_OK) == 0)
+			{
+				final_path = try_logic_path;
+				return exact_location;
+			}
+
+			return exact_location;
+		}
+	}
+
 	Location* location = findLocation(request_path);
 	
 	// Verificar si es un directorio física
 	if (!request_path.empty() && request_path[request_path.length() - 1] != '/') {
-		std::string try_dir_path = request_path + "/";
-		Location* dir_location = findLocation(try_dir_path);
+		std::string try_request_path = request_path + "/";
+		Location* try_location = findLocation(try_request_path);
 
-		if (dir_location && dir_location != location) {
+		if (try_location && try_location != location) {
 
-			std::string phys_path = getDocRoot(dir_location) + request_path;
+			std::string phys_path = getDocRoot(try_location) + request_path;
 			struct stat statbuf;
 			if (stat(phys_path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-				final_path = try_dir_path;
-				return dir_location;
+				final_path = try_request_path;
+				return try_location;
 			}
 			return location;
 		}
@@ -196,7 +232,7 @@ Location* ServerConfig::resolveRequest(const std::string& request_path, std::str
 	}
 	return location;
 }
-
+*/
 
 bool ServerConfig::isDefaultServer() const {
 	return server_names.empty() || 
