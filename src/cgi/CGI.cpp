@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/30 12:37:15 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/02 13:09:00 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -459,50 +459,55 @@ void CGI::runCGI(int fd)
 		close(_req_pipe[1]);
 		close(_cgi_pipe[0]);
 
-		if (_cgi_output.find("__CGI_ERROR_404__") != std::string::npos) {
-			_cgi_response.buildNotFoundErrorResponse();
-			setStatus(CGI_ERROR, "CGI Script not found");
-		}
-		else if (_cgi_output.find("__CGI_ERROR_403__") != std::string::npos) {
-			_cgi_response.buildForbiddenErrorResponse();
-			setStatus(CGI_ERROR, "CGI Script permission denied");
-		}
-		else if (_cgi_output.find("__CGI_ERROR_500__") != std::string::npos) {
-			_cgi_response.buildInternalErrorResponse();
-			setStatus(CGI_ERROR, "CGI Execve failed");
-		}
-		else {
-			_cgi_response.parseFromCGIOutput(_cgi_output);
-			_cgi_response.buildResponse();
-			setStatus(CGI_FINISHED, "CGI FINISHED");
-		}
-}	
-/*	else 
-	{
-		CODE_ERR("Imposible CGI status");
-	}
+		int error_check = cgiErrorCheck(_cgi_output);
 
-	if (_read_finished && _write_finished)
-	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
+		switch (error_check) {
 
-		// int status_check;
-		// pid_t check_result = waitpid(_pid, &status_check, WNOHANG);
-		// status_check = status_check >> 8;
+			case 200:
+				{
+					_cgi_response.parseFromCGIOutput(_cgi_output);
+					_cgi_response.buildResponse();
+					setStatus(CGI_FINISHED, "CGI FINISHED");
+					break;
 
-		// if (check_result > 0 && status_check > 0)
-		// {
-		// 	_cgi_response.buildInternalErrorResponse();
-		// 	setStatus(CGI_ERROR, "CGI Error: " + wss::i_to_dec(status_check));
-		// }
-		// else 
-		// {
-			_cgi_response.parseFromCGIOutput(_cgi_output);
-			_cgi_response.buildResponse();
-			setStatus(CGI_FINISHED, "CGI FINISHED");
-		// }
-	}*/
+				}
+			case 403:
+				{
+					_cgi_response.buildForbiddenErrorResponse();
+					setStatus(CGI_ERROR, "CGI Script permission denied");
+					break;
+				}	
+
+			case 404: 
+				{
+					_cgi_response.buildNotFoundErrorResponse();
+					setStatus(CGI_ERROR, "CGI Script not found");
+					break;
+				}
+
+			case 500:
+				{
+					_cgi_response.buildInternalErrorResponse();
+					setStatus(CGI_ERROR, "CGI Execve failed");
+					break;
+				}
+
+			case 502:
+				{
+					_cgi_response.buildBadGatewayResponse();
+					setStatus(CGI_ERROR, "CGI Bad Gateway");
+					break;
+				}
+
+			default:
+				{
+					_cgi_response.buildInternalErrorResponse();
+					setStatus(CGI_ERROR, "CGI Execve failed");
+					break;
+				}
+		}
+		
+	}	
 }
 
 const CGIResponse& CGI::getCGIResponse() const

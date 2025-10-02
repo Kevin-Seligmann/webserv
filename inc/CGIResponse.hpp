@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:39:00 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/29 22:41:42 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/02 12:21:49 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ class CGIResponse
 		void buildInternalErrorResponse();
 		void buildNotFoundErrorResponse();
 		void buildForbiddenErrorResponse();
-
+		void buildBadGatewayResponse();
 
 		void setContentType(const std::string& type);
 		void setStatus(const std::string& stat);

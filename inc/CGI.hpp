@@ -6,7 +6,7 @@
 /*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/07 16:02:03 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/30 12:32:55 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/02 12:54:27 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 
 # include "CGIArg.hpp"
 # include "CGIEnv.hpp"
+# include "CGIError_check.hpp"
 # include "CGIInterpreter.hpp"
 # include "CGIResponse.hpp"
 # include "Enums.hpp"

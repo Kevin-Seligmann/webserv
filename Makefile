@@ -16,7 +16,7 @@ SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
 File.o HTTPResponseBuffer.o VirtualServersManager.o Wspoll.o \
 Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
 Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
-CGIArg.o CGI.o CGIEnv.o CGIInterpreter.o CGIResponse.o
+CGIArg.o CGI.o CGIEnv.o CGIError_check.o CGIInterpreter.o CGIResponse.o
 
 OBJ_PATH = $(addprefix $(OBJ_DIR)/, $(OBJ))
 DEPS = $(OBJ_PATH:.o=.d)

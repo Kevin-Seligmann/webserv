@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 11:38:25 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/10/01 13:51:58 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/02 12:21:57 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,6 +185,33 @@ void CGIResponse::buildInternalErrorResponse()
                 << "</html>";
 	buildResponse();
 }
+
+void CGIResponse::buildBadGatewayResponse()
+{
+    _status = "502 Bad Gateway";
+    _contentType = "text/plain";
+    _location.clear();
+    _cgiResponseHeaders.clear();
+    _bodyStream.str("");
+    _bodyStream << "<!DOCTYPE html>\n"
+                << "<html lang=\"en\">\n"
+                << "<head>\n"
+                << "    <meta charset=\"UTF-8\">\n"
+                << "    <title>502 - Bad Gateway</title>\n"
+                << "    <style>\n"
+                << "        body { font-family: Arial; text-align: center; padding: 50px; }\n"
+                << "        h1 { color: #e67e22; }\n"
+                << "    </style>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << "    <h1>502 - Bad Gateway</h1>\n"
+                << "    <p>Filip Kirkorov says: I just came to the wrong door.</p>\n"
+                << "    <a href=\"/\">Go Home</a>\n"
+                << "</body>\n"
+                << "</html>";
+    buildResponse();
+}
+
 
 void CGIResponse::buildNotFoundErrorResponse()
 {
