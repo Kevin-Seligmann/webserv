@@ -182,14 +182,17 @@ void Client::handle_processing_request()
 {
 	_request_manager.process();
 
+	DEBUG_LOG("At handle_processing_request");
+
 	if (_request_manager.request_done() && _error.status() == OK)
 	{
-		Logger::getInstance() <<  "Request processed: " << _error.to_string() + _error.msg() << " Body size: " << _request.body.content.size() << std::endl;
+		DEBUG_LOG("\n\n");
+		DEBUG_LOG("Request processed: " << _error.to_string() + _error.msg() << " Body size: " << _request.body.content.size());
 		handleRequestDone();
 	}
 	else if (_error.status() != OK)
 	{
-		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
+		DEBUG_LOG("Request processed with error: " << (_error.to_string() + _error.msg()));
 		handleRequestError();
 	}
 }
@@ -379,6 +382,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	if (*ptr_location && !(*ptr_location)->getRedirect().empty())
 	{
 		_error.set("Redirect configured", MOVED_PERMANENTLY);
+		// asignar _redirecting_location
 		return;
 	}
 
@@ -403,8 +407,6 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			try_index.push_back("index.html");
 		}
 
-		
-
 		for (size_t i = 0; i < try_index.size(); ++i) {
 
 			if (try_index[i].empty())
@@ -412,26 +414,33 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	
 			std::string new_request_path = _request.get_path() + try_index[i];
 
+			DEBUG_LOG(">>> Valor de new_request_path : " + new_request_path);
+
+			std::string full_path;
 			// Get root path
 			if (ptr_location)
+			{
 				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
+				// DEBUG_LOG(">>> Valor de full_path con location : " + full_path);
+			}
 			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
+			{
 				full_path = (*ptr_server_config)->getRoot() + new_request_path;
-    		else if (full_path.empty())
-				CODE_ERR("No root path found");
-	
-			if (access(full_path.c_str(), F_OK) == 0) {
+				// DEBUG_LOG(">>> Valor de full_path con server : " + full_path);
 
-				Logger::getInstance() << "Index found: " + new_request_path << std::endl;
+			}
+    		else if (full_path.empty())
+			{
+				CODE_ERR("No root path found");
+			}
+	
+			if (access(full_path.c_str(), F_OK) == 0)
+			{
+				Logger::getInstance() << ">>> Index found: " + new_request_path << std::endl;
 				
 				// Guardar index encontrado
 				_request.uri.path = new_request_path;
 				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
-/*				Para un location con configuración para el archivo index en sí 
-				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
-				if (new_loc) {
-				}
-*/
 				break;
 			}
 		}

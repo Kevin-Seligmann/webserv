@@ -123,7 +123,8 @@ void ResponseManager::generate_get_response(bool from_autoindex)
     if (_location && !_location->getRedirect().empty()) 
     {
         _error.set("Redirect configured", MOVED_PERMANENTLY);
-        _redirecting_location = _location->getRedirect();
+//      _redirecting_location = _location->getRedirect();
+//      centralizada en generate_default_status_response
         generate_default_status_response();
         return;
 
@@ -437,6 +438,13 @@ void ResponseManager::read_directory()
 
 void ResponseManager::generate_default_status_response()
 {
+    if (_error.status() == MOVED_PERMANENTLY && _redirecting_location.empty())
+    {
+        if (_location && !_location->getRedirect().empty())
+        {
+            _redirecting_location = _location->getRedirect();
+        }
+    }
     Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
 
     _buffer.put_protocol("HTTP/1.1");
