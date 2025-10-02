@@ -386,7 +386,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	}
 
 	// alias manejado en Location::getFilesystemLocation()
-
+	// HERE
 	// index files manejado para GET/HEAD con request OK
 	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK)
 		// && _request.get_path().at(_request.get_path().size() - 1) == '/')
@@ -406,7 +406,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			try_index.push_back("index.html");
 		}
 
-		
+
 
 		for (size_t i = 0; i < try_index.size(); ++i) {
 
