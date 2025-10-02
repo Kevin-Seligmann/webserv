@@ -461,9 +461,9 @@ void ResponseManager::generate_default_status_response()
             _buffer.put_body(error_page);
     }
 
-    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
+/*    std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
     if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    DEBUG_LOG(msg);
+    DEBUG_LOG(msg); */
 
     _status = WRITING_RESPONSE;
 }
@@ -484,7 +484,9 @@ void ResponseManager::write_response()
 {
     size_t max = _WRITE_BUFFER_SIZE;
     size_t write_qty = std::min<size_t>(max, _buffer.size());
-    DEBUG_LOG("TO WRITE: "  << _buffer.get_start() << " first "  << write_qty << " chars " << std::endl);
+
+    // DEBUG_LOG("TO WRITE: "  << _buffer.get_start() << " first "  << write_qty << " chars " << std::endl);
+
     ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {
@@ -605,6 +607,11 @@ void ResponseManager::set_error(const std::string & description, Status status)
     _error.set(description, status);
     // if (_error_action == GENERATING_LOCATION_ERROR_PAGE)
         _status = ERROR;
+}
+
+void ResponseManager::set_redirecting_location(const std::string& redir)
+{
+    _redirecting_location = redir;
 }
 
 bool ResponseManager::is_error()

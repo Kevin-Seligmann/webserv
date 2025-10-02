@@ -71,11 +71,12 @@ void Client::prepareRequest()
 	setStatus(IDLE, "Idle");
 }
 
-void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
+void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action, const std::string& redirect_url)
 {
 	_response_manager.new_response();
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
+	_response_manager.set_redirecting_location(redirect_url);
 	_response_manager.generate_response(action, _is_cgi);
 
 	if(_response_manager.is_error())
@@ -85,7 +86,7 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	else 
 	{
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
-		setStatus(PROCESSING_RESPONSE, "Processing Request");
+		setStatus(PROCESSING_RESPONSE, "Processing Response");
 	}
 }
 
@@ -155,7 +156,7 @@ void Client::prepareCgi(ServerConfig* server, Location* location)
 
     if (path.empty() && !server->getRoot().empty())
 	{
-        path = server->getRoot() + script_path;
+        path = normalizePath(server->getRoot(), script_path);
 	}
 	else if (path.empty())
 	{
@@ -309,17 +310,26 @@ void Client::handleRequestError()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
+	if (_error.status() == MOVED_PERMANENTLY)
+	{
+		std::string redir_url = location ? location->getRedirect() : "";
+		return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE, redir_url);
+	}
+
 	if (_error_retry_count == MAX_ERROR_RETRIES + 1 || ::status::status_type(_error.status()) == STYPE_EMPTY_ERROR_RESPONSE)
+	{
 		return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
+	}
 	else if (_error_retry_count > MAX_ERROR_RETRIES + 1)
+	{
 		throw std::runtime_error("Too many internal redirects, can't resolve the request successfuly. Client " + wss::i_to_dec(_socket));
+	}
 
 	std::string err_page = "";
 	if (location)
 		err_page = location->getErrorPage(_error.status());
 	if (err_page.empty())
 		err_page = server_config->getErrorPage(_error.status());
-
 	if (err_page.empty())
 		return prepareResponse(server_config, location, ResponseManager::GENERATING_DEFAULT_ERROR_PAGE);
 
@@ -333,10 +343,6 @@ void Client::handleRequestError()
 // Util, getters, setters, etc
 bool Client::isCgiRequest(Location* location)
 {
-/* 	ServerConfig* server_config = NULL;
-	Location* location = NULL;
-	get_config(&server_config, &location); */
-
 	if (!location || location->getCgiExtension().empty())
 	{
 		_is_cgi = false;
@@ -386,56 +392,97 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	}
 
 	// alias manejado en Location::getFilesystemLocation()
-	// HERE
+
 	// index files manejado para GET/HEAD con request OK
 	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK)
 		// && _request.get_path().at(_request.get_path().size() - 1) == '/')
 	{
-		std::vector<std::string> try_index;
+		std::vector<std::string> try_indexes;
 
-		// Get index files o fallback 
+		// Get index files de location o server o fallback 
 		if (*ptr_location && !(*ptr_location)->getIndex().empty())
 		{
-			try_index = (*ptr_location)->getIndex();
+			try_indexes = (*ptr_location)->getIndex();
 		}
 		else if (!(*ptr_server_config)->index_files.empty())
 		{
-			try_index = (*ptr_server_config)->getIndexFiles();
+			try_indexes = (*ptr_server_config)->getIndexFiles();
 		}
 		else {
-			try_index.push_back("index.html");
+			try_indexes.push_back("index.html");
+		}
+// _redirecting_location
+		// hay que buscar index file?
+		bool search_for_index = false;
+		std::string request_path = _request.get_path();
+		
+		if (!request_path.empty() && request_path[request_path.length() - 1] == '/')
+		// buscar index porque es directorio
+		{
+			search_for_index = true;
+		}
+		else if (*ptr_location && (*ptr_location)->getMatchType() == Location::EXACT)
+		// porque es exact location
+		{
+			std::string full_path;
+			if (*ptr_location)
+			{
+				full_path = (*ptr_location)->getFilesystemLocation(request_path);
+			}
+			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
+			{
+				full_path = normalizePath((*ptr_server_config)->getRoot(), request_path);
+			}
+			struct stat statbuf;
+			if (stat(full_path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode))
+			{
+				search_for_index = true;
+				request_path += "/";
+			}
 		}
 
-
-
-		for (size_t i = 0; i < try_index.size(); ++i) {
-
-			if (try_index[i].empty())
-				continue;
-	
-			std::string new_request_path = _request.get_path() + try_index[i];
-
-			// Get root path
-			if (ptr_location)
-				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
-			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
-				full_path = (*ptr_server_config)->getRoot() + new_request_path;
-    		else if (full_path.empty())
-				CODE_ERR("No root path found");
-	
-			if (access(full_path.c_str(), F_OK) == 0) {
-
-				Logger::getInstance() << "Index found: " + new_request_path << std::endl;
-				
-				// Guardar index encontrado
-				_request.uri.path = new_request_path;
-				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
-/*				Para un location con configuración para el archivo index en sí 
-				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
-				if (new_loc) {
+		// buscar index
+		if (search_for_index)
+		{
+			for (size_t i = 0; i < try_indexes.size(); ++i)
+			{
+				if (try_indexes[i].empty())
+				{
+					continue;
 				}
-*/
-				break;
+				
+				std::string new_request_path = request_path + try_indexes[i];
+
+				// Get root path
+				std::string full_path;
+				if (*ptr_location)
+				{
+					full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
+				}
+				if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
+				{
+					full_path = normalizePath((*ptr_server_config)->getRoot(), new_request_path);
+				}
+				else if (full_path.empty())
+				{
+					CODE_ERR("No root path found");
+				}
+
+				if (access(full_path.c_str(), F_OK) == 0)
+				{	
+					DEBUG_LOG("Index found: " << new_request_path);
+					
+					// Actualizar el request
+					_request.uri.path = new_request_path;
+
+					// rematch location para el nuevo path de request
+					Location* temp_location = (*ptr_server_config)->findLocation(_request.get_path());
+					if (temp_location)
+					{
+						*ptr_location = temp_location;
+					}
+					break;
+				}
 			}
 		}
 	}

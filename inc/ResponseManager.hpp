@@ -39,6 +39,7 @@ public:
     bool response_done();
     void new_response();
     void set_error_action(RM_error_action action);
+    void set_redirecting_location(const std::string &redir);
     bool is_error();
     const ServerConfig* getServerForResponse() { return _server; }
 

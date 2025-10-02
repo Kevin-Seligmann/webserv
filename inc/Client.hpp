@@ -67,12 +67,12 @@ private:
     void handleRequestDone();
     void handleRequestError();
 
-    void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action);
+    void prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action, const std::string& redirect_url = "");
     void prepareRequest();
     void prepareCgi(ServerConfig* server, Location* location);
 
     bool isCgiRequest(Location* location);
-    // Intento razonable de saber que el click viene de un directorio
+    // Intento de saber que el click viene de un directorio
     bool probablyAutoindex() const;
 
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
