@@ -66,6 +66,7 @@ void Client::prepareRequest()
 	_error_retry_count = 0;
 	updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
 	_request_manager.new_request();
+	_response_manager.new_response(false);
 	_cgi.reset();
 	// no resetear _previous_directory_path, tiene que persistir entre requests consecutivos
 	setStatus(IDLE, "Idle");
@@ -73,7 +74,8 @@ void Client::prepareRequest()
 
 void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
 {
-	_response_manager.new_response();
+	bool preserve = (_error_retry_count > 0 && _error.status() == MOVED_PERMANENTLY);
+	_response_manager.new_response(preserve);
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
 	_response_manager.generate_response(action, _is_cgi);
@@ -412,7 +414,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			if (try_index[i].empty())
 				continue;
 	
-			std::string new_request_path = _request.get_path() + try_index[i];
+			std::string new_request_path = normalizePath(_request.get_path(), try_index[i]);
 
 			DEBUG_LOG(">>> Valor de new_request_path : " + new_request_path);
 
@@ -440,7 +442,11 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 				
 				// Guardar index encontrado
 				_request.uri.path = new_request_path;
-				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
+
+				if (!ptr_location || (*ptr_location)->getMatchType() != Location::EXACT)
+				{
+					*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
+				}
 				break;
 			}
 		}

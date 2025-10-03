@@ -80,7 +80,7 @@ std::vector<std::string> tokenize(const std::string& content)
 				current.clear();
 			}
 		}
-		else if (c == '{' || c == '}' || c == ';')
+		else if (c == '{' || c == '}' || c == ';' || c == '=')
 		{
 			if (!current.empty())
 			{

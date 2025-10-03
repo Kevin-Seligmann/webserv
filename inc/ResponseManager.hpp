@@ -37,7 +37,7 @@ public:
     void generate_response(RM_error_action action, bool is_cgi, bool from_autoindex = false);
     void process();
     bool response_done();
-    void new_response();
+    void new_response(bool preserve_redirect = false);
     void set_error_action(RM_error_action action);
     bool is_error();
     const ServerConfig* getServerForResponse() { return _server; }

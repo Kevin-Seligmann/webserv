@@ -25,10 +25,7 @@ void ResponseManager::set_virtual_server(ServerConfig const * config){_server = 
 
 void ResponseManager::set_error_action(RM_error_action action){_error_action = action;}
 
-void ResponseManager::set_location(Location const * location)
-{
-    _location = location;
-}
+void ResponseManager::set_location(Location const * location) { _location = location;}
 
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
@@ -104,10 +101,14 @@ bool ResponseManager::validate_method()
     return false;
 }
 
-void ResponseManager::new_response()
+void ResponseManager::new_response(bool preserve_redirect)
 {
     _buffer.clear();
     _status = WAITING_REQUEST;
+    if (!preserve_redirect || _error.status() != MOVED_PERMANENTLY)
+    {
+        _redirecting_location.clear();
+    }
 }
 
 void ResponseManager::generate_get_response(bool from_autoindex)

@@ -18,7 +18,7 @@ public:
 
     static const int TIMEOUT_SECONDS = 30000;
     static const int CLOSING_GRACE_PERIOD = 1;
-    static const int KEEP_ALIVE_TIMEOUT = 5;
+    static const int KEEP_ALIVE_TIMEOUT = 1; // TODO setearlo
 
     Client(VirtualServersManager & vsm, int client_fd);
 
