@@ -299,8 +299,6 @@ void Client::handleRequestDone()
 	{
 		prepareCgi(server_config, location); // AUTOINDEX .PY BEHAVIOUR ORDER
 	}
-	else if (isCgiRequest())
-		prepareCgi();
 	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
@@ -648,7 +646,7 @@ void Client::process_stream(int fd, int mode)
 		if (should_close)
 		{
 			setStatus(CLOSING, "Closing");
-			shutdown(_socket, SHUT_RD);
+//			shutdown(_socket, SHUT_RD);
 			// updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
 		}
 		else 
