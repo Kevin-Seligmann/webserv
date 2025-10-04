@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/10/04 15:51:32 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/10/04 16:12:46 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,7 +277,11 @@ void CGI::buildEnv( HTTPRequest& req, const VirtualServersManager& server, std::
 	}
 	else
 	{
-//		_env.setEnvValue("SERVER_NAME", server->server_names[0]); // TODO check if you have to use getter
+		if (!sconf->server_names.empty())
+			_env.setEnvValue("SERVER_NAME", sconf->server_names[0]);
+		else
+			_env.setEnvValue("SERVER_NAME", "_");;
+
 	}
 
 	if (req.body.content.size() > 0)

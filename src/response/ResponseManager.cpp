@@ -26,10 +26,7 @@ void ResponseManager::set_virtual_server(ServerConfig const * config){_server = 
 
 void ResponseManager::set_error_action(RM_error_action action){_error_action = action;}
 
-void ResponseManager::set_location(Location const * location)
-{
-    _location = location;
-}
+void ResponseManager::set_location(Location const * location) { _location = location;}
 
 ActiveFileDescriptor ResponseManager::get_active_file_descriptor()
 {
@@ -111,14 +108,36 @@ bool ResponseManager::validate_method()
     return false;
 }
 
-void ResponseManager::new_response()
+void ResponseManager::new_response(bool preserve_redirect)
 {
     _buffer.clear();
     _status = WAITING_REQUEST;
+    if (!preserve_redirect || _error.status() != MOVED_PERMANENTLY)
+    {
+        _redirecting_location.clear();
+    }
 }
 
 void ResponseManager::generate_get_response(bool from_autoindex)
 {
+    DEBUG_LOG("generate get response : location : " << (_location ? "EXIST" : "NULL"));
+    if (_location)
+    {
+        DEBUG_LOG("redirect : '" << _location->getRedirect() << "'");
+        DEBUG_LOG("matchtype : '" << _location->getMatchType() << "'");
+        DEBUG_LOG("root : '" << _location->getRoot() << "'");
+    }
+
+    if (_location && !_location->getRedirect().empty()) 
+    {
+        _error.set("Redirect configured", MOVED_PERMANENTLY);
+//      _redirecting_location = _location->getRedirect();
+//      centralizada en generate_default_status_response
+        generate_default_status_response();
+        return;
+
+    }
+
     std::string final_path = get_host_path();
 
     Logger::getInstance() << wss::ui_to_dec( _sys_buffer->_fd)
@@ -423,6 +442,13 @@ void ResponseManager::read_directory()
 
 void ResponseManager::generate_default_status_response()
 {
+    if (_error.status() == MOVED_PERMANENTLY && _redirecting_location.empty())
+    {
+        if (_location && !_location->getRedirect().empty())
+        {
+            _redirecting_location = _location->getRedirect();
+        }
+    }
     Logger::getInstance() << "Generating status for client " + wss::ui_to_dec( _sys_buffer->_fd) << std::endl;
 
     _buffer.put_protocol("HTTP/1.1");
@@ -470,7 +496,8 @@ void ResponseManager::write_response()
 {
     size_t max = _WRITE_BUFFER_SIZE;
     size_t write_qty = std::min<size_t>(max, _buffer.size());
-    DEBUG_LOG("TO WRITE: "  << _buffer.get_start() << " first "  << write_qty << " chars " << std::endl);
+
+//    DEBUG_LOG("TO WRITE: "  << _buffer.get_start() << " first "  << write_qty << " chars " << std::endl);
     ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {

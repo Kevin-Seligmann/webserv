@@ -89,23 +89,74 @@ std::vector<std::string> loadCgiExtensions(const std::string& filename) {
 
 void printLocationConfig(const Location& loc)
 {
-	std::cout << YELLOW << "    Autoindex: " << RESET << autoindexToString(loc.getAutoindex()) << std::endl;
+	// Match Type
+	std::cout << YELLOW << "    Match Type: " << RESET;
+	if (loc.getMatchType() == Location::EXACT)
+		std::cout << "EXACT (=)" << std::endl;
+	else if (loc.getMatchType() == Location::PREFIX)
+		std::cout << "PREFIX" << std::endl;
+	else
+		std::cout << "UNSET" << std::endl;
 
-	std::cout << YELLOW << "    Root: " << RESET << loc.getRoot() << std::endl;
-	std::cout << YELLOW << "    Alias: " << RESET << loc.getAlias() << std::endl;
-	std::vector<std::string> methods = loc.getMethods();
-	std::cout << YELLOW << "    Allowed Methods:" << RESET << std::endl;
+	// Path
+	std::cout << YELLOW << "    Path: " << RESET << loc.getPath() << std::endl;
+
+	// Root
+	if (!loc.getRoot().empty())
+		std::cout << YELLOW << "    Root: " << RESET << loc.getRoot() << std::endl;
 	
-    for (size_t i = 0; i < methods.size(); ++i)
+	// Alias
+	if (!loc.getAlias().empty())
+		std::cout << YELLOW << "    Alias: " << RESET << loc.getAlias() << std::endl;
+
+	// Index
+	if (!loc.getIndex().empty())
 	{
-        std::cout << "      - " << methods[i] << std::endl;
+		std::cout << YELLOW << "    Index: " << RESET;
+		for (size_t i = 0; i < loc.getIndex().size(); ++i)
+		{
+			std::cout << loc.getIndex()[i];
+			if (i + 1 < loc.getIndex().size())
+				std::cout << ", ";
+		}
+		std::cout << std::endl;
 	}
 
-	std::cout << YELLOW << "    Max Body Size: " << RESET << loc.getMaxBodySize() << std::endl;
+	// Methods
+	std::vector<std::string> methods = loc.getMethods();
+	if (!methods.empty())
+	{
+		std::cout << YELLOW << "    Allowed Methods: " << RESET;
+		for (size_t i = 0; i < methods.size(); ++i)
+		{
+			std::cout << methods[i];
+			if (i + 1 < methods.size())
+				std::cout << ", ";
+		}
+		std::cout << std::endl;
+	}
 
-	// TODO: Implement when Location class has proper getters
-//	(void)loc; // Suppress unused parameter warning
-//	std::cout << "    Location configuration (not implemented yet)" << std::endl;
+	// Autoindex
+	std::cout << YELLOW << "    Autoindex: " << RESET << autoindexToString(loc.getAutoindex()) << std::endl;
+
+	// Redirect
+	if (!loc.getRedirect().empty())
+		std::cout << YELLOW << "    Redirect: " << RESET << loc.getRedirect() << std::endl;
+
+	// CGI Extension
+	if (!loc.getCgiExtension().empty())
+		std::cout << YELLOW << "    CGI Extension: " << RESET << loc.getCgiExtension() << std::endl;
+
+	// Allow Upload
+	if (loc.getAllowUpload())
+		std::cout << YELLOW << "    Allow Upload: " << RESET << "true" << std::endl;
+
+	// Max Body Size
+	if (loc.getMaxBodySize() > 0)
+		std::cout << YELLOW << "    Max Body Size: " << RESET << loc.getMaxBodySize() << " bytes" << std::endl;
+
+	// Error Pages (si existen)
+	// Nota: Location no expone getErrorPages() públicamente, skip por ahora
 }
 
 void printServerConfig(const ParsedServer& config)
@@ -274,6 +325,7 @@ std::string normalizePath(const std::string& base, const std::string& path) {
 	return result;
 }
 
+/*
 std::string normalizeWebPath(const std::string& root, const std::string& request_path) {
 	if (root.length() > 2 && root.substr(0, 2) == "./")
 	{
@@ -288,3 +340,4 @@ std::string normalizeWebPath(const std::string& root, const std::string& request
 	}
 	return normalizePath(root, request_path);
 }
+*/

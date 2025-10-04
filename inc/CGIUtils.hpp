@@ -21,17 +21,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <vector>
-
-#include "Connection.hpp"
 #include "HTTPMethod.hpp"
 
 namespace CGIUtils
 {
-	std::string methodToString(HTTPMethod method);
+/*	std::string methodToString(HTTPMethod method);
 	std::string socketToPort(int socket_fd);
 	std::string intToString(int value);
 	std::string getExtension(const std::string& path);
 	char** reqToEnvp(const std::map<std::string, std::string>& src);
 	char** reqToArgs(const std::map<std::string, std::string>& src, const std::map<std::string, std::string>& map); 
 	void freeEnvp(char** envp);
+*/
 }
