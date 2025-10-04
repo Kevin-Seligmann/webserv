@@ -15,7 +15,7 @@ HTTPError.o Status.o RequestManager.o SysBuffer.o SysBufferFactory.o \
 SysFileBuffer.o SysNetBuffer.o MediaType.o HTTPRequest.o ResponseManager.o \
 File.o HTTPResponseBuffer.o VirtualServersManager.o Wspoll.o \
 Parsed.o Listen.o Utils.o Location.o ServerValidator.o \
-Client.o DebugView.o ConfigInheritance.o ServerConfig.o \
+Client.o ConfigInheritance.o ServerConfig.o \
 CGIError_check.o CGIArg.o CGI.o CGIEnv.o CGIInterpreter.o CGIResponse.o \
 StreamRequest.o StreamBuffer.o 
 

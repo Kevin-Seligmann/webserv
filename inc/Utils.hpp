@@ -31,7 +31,6 @@
 # include <unistd.h>
 # include <vector>
 
-// Forward declarations para evitar dependencias circulares
 class Location;
 struct ParsedServer;
 # include "StringUtil.hpp"
@@ -44,28 +43,21 @@ enum ParsingMessageType {
     ASTERIKS_HOST
 };
 
-/* Check input file function */
 int checkFile(const char* argv);
 
-/* Download extencions for CGI*/
 std::vector<std::string> loadCgiExtensions(const std::string& filename);
 
-/* Function for getting real localhost */
 std::string getLoopbackAddress();
 
-/* Functions for printing */
 void printLocationConfig(const Location& loc);
 void printServerConfig(const ParsedServer& config);
 void printParsingMessage(ParsingMessageType type);
 
-/* Convert into a logs entry */
 void OKlogsEntry(const std::string& title, const std::string& str);
 void ERRORlogsEntry(const std::string& title, const std::string& str);
 
-// String to size_t
 size_t str_to_sizet(const std::string& str, size_t max_value);
 
 std::string normalizePath(const std::string& base, const std::string& path);
-//std::string normalizeWebPath(const std::string& root, const std::string& request_path);
 
 #endif

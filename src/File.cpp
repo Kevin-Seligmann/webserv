@@ -42,8 +42,6 @@ time_t File::last_modified() const
 
 File::descriptor_status File::get_status() const
 {
-    // if (filetype == NONE)
-    //     CODE_ERR(std::string("Unexpectedly asking status of an invalid or unintiialized state"));
     return status;
 }
 
@@ -130,7 +128,6 @@ void File::handle_error()
         case EPERM:
         case EROFS:
         case EFAULT:
-        // case EEXIST: status = EXISTS; return ;
         case EACCES: status = NOPERM; return ;
         case EINVAL: status = BADFILENAME; return ;
         default: status = ERROR; return ;

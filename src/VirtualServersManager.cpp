@@ -1,8 +1,8 @@
 #include "VirtualServersManager.hpp"
-#include <cstring>  // memset
-#include <unistd.h>  // close
-#include <arpa/inet.h>  // inet_pton
-#include <errno.h>  // inet_pton
+#include <cstring>  
+#include <unistd.h>  
+#include <arpa/inet.h> 
+#include <errno.h> 
 
 // ================ SIGNALS  MANAGEMENT ================
 static void make_socket_nonblocking(int fd) {
@@ -37,18 +37,6 @@ void VirtualServersManager::setupSignals() {
 	// Set behaviour for process interrupetd by handler
 	sa_shutdown.sa_flags = SA_RESTART;
 
-/*
-	// SIGCHLD manage signlas launched at child termination, avoid zombie processes
-	struct sigaction sa_child;
-	sa_child.sa_handler = sigchild_handler;
-	// Set signals to block during execution of handler
-	sigemptyset(&sa_child.sa_mask);
-	// Block other signals during handler execution (reaping)
-	sigaddset(&sa_child.sa_mask, SIGINT);
-	sigaddset(&sa_child.sa_mask, SIGTERM);
-	// Set behaviour for process interrupted by handler
-	sa_child.sa_flags = SA_RESTART | SA_NOCLDSTOP;
-*/
 
 	// Apply config to signals
 	
@@ -69,14 +57,6 @@ void VirtualServersManager::setupSignals() {
 	{
 		throw std::runtime_error("Failed to install SIGTERM handler");
 	}
-
-	/*
-	// SIGCHLD
-	if (sigaction(SIGCHLD, &sa_child, NULL ) == -1) 
-	{
-		throw std::runtime_error("Failed to install SIGCHLD handler");
-	}
-	*/	
 }
 
 void VirtualServersManager::signal_handler(int sig) {
@@ -91,12 +71,7 @@ void VirtualServersManager::sigchild_handler(int sig) {
 	pid_t pid;
 	int status;
 
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		// Nothing here
-		// Waitpid removes de process from the porocess table
-		// It only iterates to clean every child finished
-		// If need I can implement a self pipe trick to add actions in the run loop
-	}
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {}
 }
 
 // ================ CONSTRUCTORS & DESTRUCTOR ================
@@ -179,7 +154,6 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 
 	int opt = 1;
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	// TODO ifdef por portabilidad... es necesario realmente? porque se usara principalmente aqui en 42
 	#ifdef SO_REUSEPORT
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 	#endif
@@ -259,8 +233,6 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			Client* client = searchClient(socket_fd);
 			if (!client)
 			{
-				// unhookFileDescriptor(ActiveFileDescriptor(socket_fd, 0));
-				// CODE_ERR("A file descriptor that doesn't belong to any client has been found: " + wss::i_to_dec(socket_fd));
 				Logger::getInstance() << "A file descriptor without client has been found: " << socket_fd << std::endl; 
 				_wspoll.del(socket_fd);
 				return ;
@@ -293,8 +265,12 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	Listen* listen = NULL;
 	for (std::map<Listen, int>::iterator it = _listen_sockets.begin();
 		it != _listen_sockets.end(); ++it) {
+			
+			std::cout << " LISTEN " << it->first.host << std::endl;
+
 			if (it->second == listen_fd) {
 				listen = const_cast<Listen*>(&it->first);
+				std::cout << " LISTEN FOUND " << it->first.host << std::endl;
 				break;
 			}
 	}

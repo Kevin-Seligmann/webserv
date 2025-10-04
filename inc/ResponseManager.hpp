@@ -33,7 +33,6 @@ public:
 
     void set_virtual_server(ServerConfig const * config);
     void set_location(Location const * location);
-    // void generate_response(CGIResponse & response);
 
     void generate_response(RM_error_action action, bool is_cgi, bool from_autoindex = false);
     void process();
@@ -79,13 +78,9 @@ private:
     bool validate_method();
     void set_error(const std::string & description, Status status);
     void generate_file_status_response();
-    // std::string generate_default_error_html();
 
     std::string const get_host_path();
     std::vector<HTTPMethod> get_allowed_methods();
     bool allow_upload();
     bool is_autoindex();
-    
-    // How does upload_dir work
-    // Return ?
 };

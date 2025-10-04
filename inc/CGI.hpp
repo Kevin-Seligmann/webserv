@@ -46,7 +46,7 @@ class CGI
 {
 	private:
 		CGIEnv								_env;
-		std::string *					 _req_body; // Make pointer to save memory
+		std::string *					 	_req_body;
 		int 								_req_pipe[2];
 		int 								_cgi_pipe[2];
 		pid_t 								_pid;

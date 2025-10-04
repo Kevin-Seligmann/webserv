@@ -10,7 +10,7 @@
 class RequestValidator 
 {
 public:
-    RequestValidator(HTTPRequest & request, HTTPError & error); // And config
+    RequestValidator(HTTPRequest & request, HTTPError & error); 
 
     void validate_method(HTTPMethod const & method);
     void validate_uri(URI const & uri);

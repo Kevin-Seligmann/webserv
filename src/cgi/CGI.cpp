@@ -140,7 +140,7 @@ std::map<std::string, std::string> CGI::pathToBlocks(const HTTPRequest& req) con
 	}
 	
 	bool isTestScript = req.get_path().find(".bla") != std::string::npos;
-	// TODO: Confirmar
+
 	if (isTestScript)
 	{
 		cgi["PATH_INFO"] = req.get_path();
@@ -170,11 +170,6 @@ SERVER_PORT: 8080 - Puerto del servidor
 SERVER_NAME: localhost/servername - Nombre del servidor (Server name o dominio)
 SERVER_SOFTWARE: webserv - Estático
 
-# Client
-REMOTE_ADDR: 127.0.0.1 - Dirección IP del cliente
-REMOTE_HOST: localhost - Nombre del cliente
-REMOTE_PORT: 60000 - Puerto de la solicitud
-
 # Paths
 SCRIPT_FILENAME: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física hacia el documento
 PATH_TRANSLATED: /etc/var/www/YoupiBanane/Youpi.php  - Ruta física del documento
@@ -189,7 +184,7 @@ PATH_INFO_CUSTOM: /directory/youpi.php/path - CUSTOM: URI COMPLETA
 std::string CGI::systemPathToCgi(const std::string &system_path)
 {
 	if (system_path.empty())
-	return system_path;
+		return system_path;
 	
 	std::vector<std::string> parts;
 	std::string current;
@@ -287,8 +282,7 @@ void CGI::buildEnv( HTTPRequest& req, const VirtualServersManager& server, std::
 	if (req.body.content.size() > 0)
 	{
 		_env.setEnvValue("CONTENT_LENGTH", wss::i_to_dec(req.body.content.size() ));
-		//		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
-		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.getString());
+		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
 	}
 	
 	// CLIENT
@@ -319,14 +313,13 @@ void CGI::buildEnv( HTTPRequest& req, const VirtualServersManager& server, std::
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
 	
-	//	std::string cgi_path = systemPathToCgi(system_path);
+		std::string cgi_path = systemPathToCgi(system_path);
 	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
 	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
 	_env.setEnvValue("REQUEST_URI", req.get_path());
 	_env.setEnvValue("DOCUMENT_ROOT", sconf->getRoot());
 	_env.setEnvValue("SCRIPT_NAME", res["SCRIPT_NAME"]);
 	
-	// TODO: Mirar extensión
 	_env.setEnvValue("PATH_INFO", res["PATH_INFO"]);
 	
 	(void) server;
@@ -581,7 +574,6 @@ void CGI::runCGIStreamed(int fd)
 			{
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
-				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished request write streaming " << std::endl;
 				close(_req_pipe[1]);
 				_req_pipe[1] = -1;
 				
@@ -602,7 +594,6 @@ void CGI::runCGIStreamed(int fd)
 			if (readed == 0)
 			{
 				parseStreamHeaders();
-				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
 				close(_cgi_pipe[0]);
@@ -616,14 +607,12 @@ void CGI::runCGIStreamed(int fd)
 			_stream_request.cgi_response_body_size += readed;
 			if (readed == 0)
 			{
-				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
 				close(_cgi_pipe[0]);
 				_cgi_pipe[0] = -1;
 			}
 		}
-		// Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
 	}
 	else 
 	{
@@ -782,7 +771,6 @@ void CGI::sendResponse()
 			_stream_request.get_response_buffer().write_fd(), 
 			_parsed_header_stream_buffer.c_str() + _stream_request.cgi_response_body_size_consumed, 
 			_parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed, 0);
-			// Logger::getInstance() << "Sending response: " << sent << " space: " << _parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed << " errno: "  << strerror(errno) << " " << errno << " fd: " << _stream_request.get_response_buffer().write_fd() << "\n";
 			if (sent > 0)
 			_stream_request.cgi_response_body_size_consumed += sent; 
 			if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed && _headers_parsed)
@@ -791,14 +779,8 @@ void CGI::sendResponse()
 		}
 		if (_header_stream_buffer_sent && _headers_parsed && _stream_request.cgi_read_finished && _stream_request.cgi_response_body_size_consumed >= _stream_request.cgi_response_body_size)
 		{
-			// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi write streaming " << std::endl;
 			_stream_request.cgi_write_finished = true;
 		}
-		// Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
-		// Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< " CGI WR FINISH " << _stream_request.cgi_write_finished << "\n";
-		// Logger::getInstance() << "Request body size consumed: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
-		// Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
-		// << " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << " R.B.Size appended " << _stream_request.request_body_size_appended << "\n";
 	}
 	
 	void CGI::parseStreamHeaders()

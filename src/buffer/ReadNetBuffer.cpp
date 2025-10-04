@@ -8,8 +8,7 @@ const size_t ReadNetBuffer::CRITICAL_SIZE = 500000;
 
 ReadNetBuffer::ReadNetBuffer()
 {
-    _buffer = new uint8_t[START_BUFFER_SIZE]; // TODO agregue () ara inicializarlo limpio
-    // std::memset(_buffer, 0, START_BUFFER_SIZE);
+    _buffer = new uint8_t[START_BUFFER_SIZE];
     _start = _buffer;
     _tail = _buffer;
     _end = _buffer + START_BUFFER_SIZE;
@@ -31,7 +30,6 @@ void ReadNetBuffer::reserve(ssize_t n)
     size_t size = this->size();
 
     uint8_t * new_buffer = new uint8_t[n];
-    // std::memset(_buffer, 0, n);
     std::memcpy(new_buffer, _start, size);
     delete [] _buffer;
     _buffer = new_buffer;
@@ -54,7 +52,6 @@ void ReadNetBuffer::shrink()
     size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
-    // std::memset(_buffer, 0, new_capacity);
     memcpy(new_buffer, _start, size);
     delete [] _buffer;
 
@@ -92,7 +89,6 @@ void ReadNetBuffer::expand(size_t min_size)
     size_t size = this->size();
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
-    // std::memset(_buffer, 0, new_capacity);
     std::memcpy(new_buffer, _start, size);
     delete [] _buffer;
 
@@ -106,7 +102,6 @@ void ReadNetBuffer::clear()
 {
     delete [] _buffer;
     _buffer = new uint8_t[START_BUFFER_SIZE];
-    // std::memset(_buffer, 0, START_BUFFER_SIZE);
     _start = _buffer;
     _tail = _buffer;
     _end = _buffer + START_BUFFER_SIZE;

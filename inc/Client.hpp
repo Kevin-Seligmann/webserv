@@ -19,7 +19,7 @@ public:
 
     static const int TIMEOUT_SECONDS = 30000;
     static const int CLOSING_GRACE_PERIOD = 1;
-    static const int KEEP_ALIVE_TIMEOUT = 1; // TODO setearlo
+    static const int KEEP_ALIVE_TIMEOUT = 1;
 
     Client(VirtualServersManager & vsm, int client_fd);
 
@@ -57,13 +57,12 @@ private:
     RequestManager          _request_manager;
     ResponseManager         _response_manager;
     int                     _socket;
-    id_t                    _error_retry_count;
+    int                     _error_retry_count;
     std::vector<ActiveFileDescriptor> _active_fds;
     time_t                  _last_activity;
     bool                    _is_cgi;
     std::string             _previous_directory_path; // Almacena ruta del último directorio
     size_t                  _max_size;
-    // int             error_retry_count;
 
 
     void handle_cgi_request(int fd);
@@ -78,8 +77,7 @@ private:
     void prepareCgi(ServerConfig* server, Location* location);
 
     bool isCgiRequest(Location* location);
-    // Intento razonable de saber que el click viene de un directorio
-    bool probablyAutoindex() const;
+    bool autoindexTest() const;
 
     void updateActiveFileDescriptor(ActiveFileDescriptor newfd);
     void updateActiveFileDescriptor(int fd, int mode);

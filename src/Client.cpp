@@ -1,8 +1,7 @@
 #include "Client.hpp"
 #include "VirtualServersManager.hpp"
 
-// Constructors, destructors
-Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance of overloaded function Client::Client matches the specified type
+Client::Client(VirtualServersManager & vsm, int client_fd)
 : _vsm(vsm)
 , _status(IDLE)
 , _error()
@@ -91,7 +90,7 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	}
 }
 
-bool Client::probablyAutoindex() const
+bool Client::autoindexTest() const
 {
 	/*
 		Sin _previousdirectory_path es false
@@ -99,7 +98,7 @@ bool Client::probablyAutoindex() const
 		Si solo hay 1 nivel de profundidad de diferencia es muy posible
 	*/
 
-	if (_previous_directory_path.empty())
+  	if (_previous_directory_path.empty())
 	{
 		return false;
 	}
@@ -168,7 +167,7 @@ void Client::prepareCgi(ServerConfig* server, Location* location)
 
 	_cgi.init(_request, _vsm, path, server, location);
 
-	if (_cgi.error())
+	if (_error.status() != OK)
 	{
 		_error.set("Error processing CGI", INTERNAL_SERVER_ERROR, true);
 		handleRequestError();
@@ -219,7 +218,7 @@ void Client::handle_processing_response()
 					  << ": Posible autoindex directory: "
 					   << _previous_directory_path);
 		}
-		else if (_error.status() == OK && !probablyAutoindex())
+		else if (_error.status() == OK && !autoindexTest())
 		{
 			_previous_directory_path = "";
 		}
@@ -227,7 +226,6 @@ void Client::handle_processing_response()
 		if (_request_manager.close())
 		{
 		 	setStatus(CLOSING, "Closing");
-//		 	updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
 		}
 		else 
 		{
@@ -239,16 +237,6 @@ void Client::handle_processing_response()
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
 	}
 }
-
-/*
-	prepareCgi()
-	{
-		cgi.init();
-		updateActiveFileDescriptor(cgi.get_active_file_descriptor());
-		status = processing_CGI
-	}
-*/
-
 
 void Client::handle_cgi_request(int fd) 
 {	
@@ -295,9 +283,9 @@ void Client::handleRequestDone()
 	}
 	else if (_stream_request.streaming_active && _error.status() == OK)
 		prepareRequestStreaming();
-	else if (!probablyAutoindex() && isCgiRequest(location))
+	else if (!autoindexTest() && isCgiRequest(location))
 	{
-		prepareCgi(server_config, location); // AUTOINDEX .PY BEHAVIOUR ORDER
+		prepareCgi(server_config, location);
 	}
 	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
@@ -337,10 +325,6 @@ void Client::handleRequestError()
 // Util, getters, setters, etc
 bool Client::isCgiRequest(Location* location)
 {
-/* 	ServerConfig* server_config = NULL;
-	Location* location = NULL;
-	get_config(&server_config, &location); */
-
 	if (!location || location->getCgiExtension().empty())
 	{
 		_is_cgi = false;
@@ -355,7 +339,6 @@ bool Client::isCgiRequest(Location* location)
         for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
              ext != it->extensions.end(); ++ext)
         {
-			// hay que buscar .py o .php en cualquier uicacion del path no solo al final
             size_t pos = path.find(*ext);
 			if (pos != std::string::npos)
 			{
@@ -385,17 +368,13 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	// redirect manejado
 	if (*ptr_location && !(*ptr_location)->getRedirect().empty())
 	{
-		_error.set("Redirect configured", MOVED_PERMANENTLY);
-		// asignar _redirecting_location
+		_error.set("Redirect", MOVED_PERMANENTLY);
 		return;
 	}
 
-	// alias manejado en Location::getFilesystemLocation()
-
 	// index files manejado para GET/HEAD con request OK
 	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK)
-		// && _request.get_path().at(_request.get_path().size() - 1) == '/')
-	{
+ 	{
 		std::vector<std::string> try_index;
 
 		// Get index files o fallback 
@@ -425,13 +404,10 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			if (ptr_location)
 			{
 				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
-				// DEBUG_LOG(">>> Valor de full_path con location : " + full_path);
 			}
 			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
 			{
 				full_path = (*ptr_server_config)->getRoot() + new_request_path;
-				// DEBUG_LOG(">>> Valor de full_path con server : " + full_path);
-
 			}
     		else if (full_path.empty())
 			{
@@ -472,8 +448,6 @@ bool Client::idle() const
 }
 
 
-
-// FD Management
 int Client::ownsFd(int fd) const
 {
 	for (std::vector<ActiveFileDescriptor>::const_iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
@@ -517,9 +491,6 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 
 void Client::updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> newfds)
 {
-    // for (std::vector<ActiveFileDescriptor>::const_iterator old_it = newfds.begin(); old_it != newfds.end(); old_it ++)
-	// 	Logger::getInstance() << "Putting fd: " << old_it->fd << " Pollin: " << (old_it->mode & POLLIN) << " pollout " << (old_it->mode & POLLOUT) << std::endl;
-
     for (std::vector<ActiveFileDescriptor>::const_iterator old_it = _active_fds.begin(); old_it != _active_fds.end(); old_it ++)
     {
         bool still_needed = false;
@@ -590,7 +561,6 @@ void Client::prepareRequestStreaming()
 
 void Client::process_stream(int fd, int mode)
 {
-	// std::cout << " REMAINING BUFFER: " << _request_manager.get_buffer_remaining_size() << std::endl;
 	if (fd == _socket)
 	{
 		if (mode & POLLIN && !_stream_request.request_read_finished)
@@ -638,7 +608,6 @@ void Client::process_stream(int fd, int mode)
 		updateStreamingFileDescriptors();
 	}
 
-	// 
 	bool should_close = _cgi.getCGIResponse().close || _request_manager.close();
 	// Only after both are complete. Reading request must finish in order to empty buffer and continue with the connection.
 	if (_stream_request.cgi_write_finished && (_stream_request.request_read_finished || should_close))
@@ -646,8 +615,6 @@ void Client::process_stream(int fd, int mode)
 		if (should_close)
 		{
 			setStatus(CLOSING, "Closing");
-//			shutdown(_socket, SHUT_RD);
-			// updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
 		}
 		else 
 		{

@@ -123,8 +123,8 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 
 	_bodyStream << bodyStr;
 
-	if (_status.empty()) { _status = "200 OK"; } // TODO no confiable debe ser dinamico
-	if (_contentType.empty()) { _contentType = "text/plain"; }
+	if (_status.empty()) { _status = "500 INTERNAL SERVER ERROR"; }
+	if (_contentType.empty()) { _contentType = "application/octet-stream"; }
 }
 
 
@@ -135,8 +135,6 @@ void CGIResponse::buildResponse()
 	close = false;
 
 	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
-
-	// response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
 
 	if (!_location.empty())
 		response << "Location: " << _location << "\r\n";
@@ -167,8 +165,6 @@ void CGIResponse::buildStreamedResponse()
 	std::ostringstream response;
 
 	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
-
-	// response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
 
 	if (!_location.empty())
 		response << "Location: " << _location << "\r\n";

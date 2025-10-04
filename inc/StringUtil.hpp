@@ -31,7 +31,7 @@ namespace wss
     std::string::iterator skip_uri_token(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_http_token(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_protocol_token(std::string::iterator begin, std::string::iterator end);
-    std::string::iterator skip_absolute_path(std::string::iterator begin, std::string::iterator end); // Any / and segments
+    std::string::iterator skip_absolute_path(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_host_token(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_port_token(std::string::iterator begin, std::string::iterator end);
     std::string::iterator skip_path_rootless(std::string::iterator begin, std::string::iterator end);

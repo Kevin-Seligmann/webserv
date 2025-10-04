@@ -463,9 +463,6 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 				int temp_port;
 				std::stringstream ss(tokens[i]);
 				ss >> temp_port;
-
-				// TODO validate range of port value
-
 				listen_tokens.push_back(tokens[i++]);
 			}
 
@@ -480,7 +477,6 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 
 			Listen ld = parse_listen(listen_tokens);
 			server.listens.push_back(ld);
-			// ++i; // Este ++i es extra y causa el salto de tokens
 		}
 		else if (key == "server_name")
 		{

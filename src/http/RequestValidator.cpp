@@ -136,11 +136,3 @@ void RequestValidator::validate_extensions(std::string const & filename, std::ve
     if (it == extensions.end() && !extensions.empty())
         _error.set("Mismatch between Content-Type and extension", BAD_REQUEST, true);
 }
-
-
-void RequestValidator::validate_body(HTTPBody const & body)
-{
-    (void)body; // Suppress unused parameter warning 
-    // TODO queremos hacer algo con esto?
-}
-
