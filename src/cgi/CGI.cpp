@@ -721,17 +721,17 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();
 		
-		// if (access(argv[1], F_OK) != 0)
-		// {
-		// 	write(STDOUT_FILENO, "__CGI_ERROR_404__", 17);
-		// 	_exit(1);
-		// }
+		if (access(argv[1], F_OK) != 0)
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_404__", 17);
+			_exit(1);
+		}
 		
-		// if (access(argv[1], X_OK) != 0) 
-		// {
-		// 	write(STDOUT_FILENO, "__CGI_ERROR_403__", 17);
-		// 	_exit(1);
-		// }
+		if (access(argv[1], X_OK) != 0) 
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_403__", 17);
+			_exit(1);
+		}
 		
 		execve(argv[0], argv, envp);
 		
