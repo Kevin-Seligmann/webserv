@@ -399,6 +399,8 @@ void RequestParser::parse_expect_field(std::string & value)
     parse_list(value.begin(), value.end(), &RequestParser::parse_expect_element);
 }
 
+    ssize_t RequestParser::size(){return _buffer.size();};
+
 /*
     parameters      = *( OWS ";" OWS [ parameter ] )
     parameter       = parameter-name "=" parameter-value

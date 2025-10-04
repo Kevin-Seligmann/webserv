@@ -57,7 +57,7 @@ public:
     bool test_trailer_line();
     bool test_header_line();
     bool test_chunk_newline();
-
+    ssize_t size();
     void process_headers();
 
     ssize_t extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size);

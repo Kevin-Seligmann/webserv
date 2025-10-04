@@ -23,6 +23,7 @@ public:
     bool close() const;
     void new_request();
     HTTPError & gerError();
+    ssize_t get_buffer_remaining_size(){return _request_parser.size();};
 
 private:
     enum processing_type {STANDARD, STREAM};
@@ -41,7 +42,6 @@ private:
 
     size_t chunk_size;
     size_t chunk_read;
-    size_t read_buffer_space;
 
     void process_stream();
     void set_streaming(bool has_read);
