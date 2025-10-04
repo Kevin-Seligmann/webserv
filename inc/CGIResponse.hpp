@@ -46,6 +46,7 @@ class CGIResponse
 
 		void parseFromCGIOutput(const std::string& cgiOutput);
 		void buildResponse();
+		void buildStreamedResponse();
 		void buildInternalErrorResponse();
 
 		void setContentType(const std::string& type);
@@ -53,6 +54,7 @@ class CGIResponse
 		void setLocation(const std::string& loc);
 		void setHeader(const std::string& header, const std::string& value);
 		void reset();
+		bool								close;
 
 };
 

@@ -27,7 +27,7 @@ bool HTTPRequestBuffer::get_crlf_line(uint8_t * & _begin, uint8_t * & _end)
             }
             _last_read_size = ptr - itbegin();       
             _offset = 0;
-            consume_bytes(ptr - start + 1);
+            unsafe_consume_bytes(ptr - start + 1);
             return true;
         }
     };
@@ -46,7 +46,7 @@ bool HTTPRequestBuffer::get_crlf_chunk(ssize_t chunk_size, std::string::iterator
 
     _begin = begin();
     _end = begin() + chunk_size + 2;
-    consume_bytes(chunk_size + 2);
+    unsafe_consume_bytes(chunk_size + 2);
     _last_read_size = chunk_size + 2;
     return true;
 }
@@ -62,7 +62,7 @@ bool HTTPRequestBuffer::get_chunk(ssize_t chunk_size, uint8_t * & _begin, uint8_
     }
     _begin = itbegin();
     _end = itbegin() + chunk_size;
-    consume_bytes(chunk_size);
+    unsafe_consume_bytes(chunk_size);
     _last_read_size = chunk_size;
     return true;
 }
@@ -88,7 +88,7 @@ bool HTTPRequestBuffer::get_crlf_line(std::string::iterator & _begin, std::strin
             }
             _last_read_size = ptr - begin();       
             _offset = 0;
-            consume_bytes(ptr - start + 1);
+            unsafe_consume_bytes(ptr - start + 1);
             return true;
         }
     };
@@ -106,7 +106,7 @@ bool HTTPRequestBuffer::get_chunk(ssize_t chunk_size, std::string::iterator & _b
     }
     _begin = begin();
     _end = begin() + chunk_size;
-    consume_bytes(chunk_size);
+    unsafe_consume_bytes(chunk_size);
     _last_read_size = chunk_size;
     return true;
 }

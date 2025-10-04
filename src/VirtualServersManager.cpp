@@ -248,7 +248,9 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			if (!client)
 			{
 				// unhookFileDescriptor(ActiveFileDescriptor(socket_fd, 0));
-				CODE_ERR("A file descriptor that doesn't belong to any client has been found: " + wss::i_to_dec(socket_fd));
+				// CODE_ERR("A file descriptor that doesn't belong to any client has been found: " + wss::i_to_dec(socket_fd));
+				_wspoll.del(socket_fd);
+				return ;
 			}
 
 			if (event.events & POLLERR)
@@ -263,10 +265,11 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			}
 			else 
 			{
-				client->process(socket_fd);
+				client->process(socket_fd, event.events);
 			}
 
 		} catch (const std::runtime_error& e) {
+			Logger::getInstance() << "Exception processing client data: " << e.what() << std::endl;
 			DEBUG_LOG("Exception processing client data: " << e.what());
 			disconnectClient(socket_fd);
 		}
@@ -478,7 +481,8 @@ void VirtualServersManager::gracefulShutdown() {
 			if (_wspoll[i].events) {
 				try {
 					handleEvent(_wspoll[i]);
-				} catch (...) { } // ignorar errores
+				} catch (...) { 
+				}
 			}
 
 		}
