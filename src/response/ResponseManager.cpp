@@ -402,7 +402,7 @@ void ResponseManager::write_response()
     }
     else if (written_bytes == 0)
     {
-        Logger::getInstance() << "TOTAL OTPUT SEND AS RESPONSE  " << total_writen_response_size << " client " << _stream_request.get_request_buffer().read_fd() << std::endl;
+        // Logger::getInstance() << "TOTAL OTPUT SEND AS RESPONSE  " << total_writen_response_size << " client " << _stream_request.get_request_buffer().read_fd() << std::endl;
         total_writen_response_size = 0;
         _buffer.clear();
         _file.close();

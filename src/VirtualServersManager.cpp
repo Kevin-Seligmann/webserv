@@ -5,6 +5,13 @@
 #include <errno.h>  // inet_pton
 
 // ================ SIGNALS  MANAGEMENT ================
+static void make_socket_nonblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) flags = 0;
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        throw std::runtime_error("Failed to set O_NONBLOCK");
+    }
+}
 
 volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
 
@@ -168,6 +175,7 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 	if (socket_fd < 0) {
 		throw std::runtime_error("Faile to creat socket");
 	}
+	make_socket_nonblocking(socket_fd);
 
 	int opt = 1;
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -249,6 +257,7 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 			{
 				// unhookFileDescriptor(ActiveFileDescriptor(socket_fd, 0));
 				// CODE_ERR("A file descriptor that doesn't belong to any client has been found: " + wss::i_to_dec(socket_fd));
+				Logger::getInstance() << "A file descriptor without client has been found: " << socket_fd << std::endl; 
 				_wspoll.del(socket_fd);
 				return ;
 			}
@@ -298,6 +307,7 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	if (client_fd < 0) {
 		return;
 	}
+	make_socket_nonblocking(client_fd);
 
 	if (_wspoll.is_full())
 	{
@@ -307,7 +317,7 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 
 	_client_to_listen[client_fd] = *listen;
 	
-	_clients[client_fd] = new Client(*this, client_fd); // TODO crear constructor si aplica
+	_clients[client_fd] = new Client(*this, client_fd);
 }
 
 // ================ POLL FD MANAGEMENT ================
@@ -369,6 +379,7 @@ void VirtualServersManager::run() {
 	try {
 		setupSignals();
 		s_shutdown_requested = 0;
+		_loop_counter = 0;
 		setPolling();
 	} catch (const std::exception& e) {
 		Logger::getInstance().error("Setup falied: " + std::string(e.what()));
@@ -389,19 +400,33 @@ void VirtualServersManager::run() {
 				throw std::runtime_error("Fatal error: Poll failed");
 		}
 
+		_loop_counter ++;
+		if (_loop_counter % 1000000 == 0)
+			{
+				Logger::getInstance() << "Running ... " << std::endl;
+				_loop_counter = 0;
+			}
+					
+		int active_event = 0;
 		for (int i = 0; i < _wspoll.size(); ++i) {
 			if (_wspoll[i].events)
 			{
-				try {
+				try
+				{
+					active_event ++;
 					handleEvent(_wspoll[i]);
-					} 
-				catch (const std::exception& e) {
+
+				} 
+				catch (const std::exception& e)
+				{
 					Logger::getInstance().error("Critial error handling event: " + std::string(e.what()) + " The server must close. ");
 					throw std::exception();
 				}
 			}
-
 		}
+		if (_loop_counter == 0)
+			Logger::getInstance() << "Active events: " << active_event <<std::endl;
+
 		checkTimeouts();
 		killZombies();
 	}
@@ -477,6 +502,7 @@ void VirtualServersManager::gracefulShutdown() {
 
 		_wspoll.wait();
 
+	
 		for (int i = 0; i < _wspoll.size(); ++i) {
 			if (_wspoll[i].events) {
 				try {

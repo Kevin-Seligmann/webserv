@@ -736,9 +736,11 @@ std::string const  RequestParser::get_remainder() const
     return std::string(_buffer.cbegin(), _buffer.cend());
 }
 
-ssize_t RequestParser::extract_buffer_chunk(uint8_t * dst)
+ssize_t RequestParser::extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size)
 {    
-    ssize_t extracted = std::min((ssize_t) _chunk_length, _buffer.size());
+    ssize_t extracted = std::min(_buffer.size(), buffer_size);
+    if (extracted != _buffer.size())
+        CODE_ERR("OK");
     memcpy(dst, _buffer.itbegin(), extracted);
     _buffer.unsafe_consume_bytes(extracted);
     return extracted;

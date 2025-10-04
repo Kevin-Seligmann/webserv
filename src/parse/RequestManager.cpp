@@ -8,6 +8,7 @@ _request_parser(_request, _error, _element_parser),
 _sys_buffer(SysBufferFactory::get_buffer(type, fd)),
 _stream_request(stream_request)
 {
+    _processing_type = STANDARD;
 }
 
 RequestManager::~RequestManager(){delete _sys_buffer;};
@@ -128,11 +129,11 @@ HTTPError & RequestManager::gerError(){return _error;}
 void RequestManager::set_streaming(bool has_read)
 {
     chunk_size = _request_parser.get_chunk_length();
-    chunk_read = _request_parser.extract_buffer_chunk(_read_buffer);
+    chunk_read = _request_parser.extract_buffer_chunk(_read_buffer, _READ_BUFFER_SIZE);
     _stream_request.get_request_buffer().set_external_buffer(_read_buffer, _READ_BUFFER_SIZE, chunk_read);
     _stream_request.set_request_read_fd(_sys_buffer->_fd);
     _stream_request.set_response_write_fd(_sys_buffer->_fd);
-    _stream_request.request_body_size += chunk_size;
+    _stream_request.request_body_size += chunk_read;
     _processing_type = STREAM;
     if (chunk_read >= chunk_size)
         unset_streaming(has_read);

@@ -60,7 +60,7 @@ public:
 
     void process_headers();
 
-    ssize_t extract_buffer_chunk(uint8_t * dst);
+    ssize_t extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size);
     size_t get_chunk_length();
     
     // Debug

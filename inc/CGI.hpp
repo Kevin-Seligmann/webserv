@@ -89,7 +89,7 @@ class CGI
 		CGIStatus getStatus() const;
 		void setStatus(CGIStatus s);
 
-		bool done() const {return _cgi_status == CGI_FINISHED;};
+		bool done() const {return _cgi_status == CGI_FINISHED ||( _req_pipe[1] == -1 && _cgi_pipe[0] == -1) ;};
 		bool finished_reading(){return _read_finished;};
 		bool finished_writing(){return _write_finished;};
 		bool error() const {return _cgi_status == CGI_ERROR;};

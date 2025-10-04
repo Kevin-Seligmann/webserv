@@ -120,8 +120,8 @@ void ReadNetBuffer::consume_bytes(ssize_t bytes)
 void ReadNetBuffer::unsafe_consume_bytes(ssize_t bytes)
 {
     _start += bytes;
-    if (static_cast<size_t>(size()) >= SHRINK_BUFFER_SIZE)
-        shrink();
+    // if (static_cast<size_t>(size()) >= SHRINK_BUFFER_SIZE)
+    //     shrink();
 }
 
 uint8_t * ReadNetBuffer::get_start(){return _start;}

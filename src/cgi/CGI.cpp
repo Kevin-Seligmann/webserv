@@ -416,8 +416,9 @@ void CGI::runCGI(int fd)
 			_wr_bytes_sent += written;
 			if (_wr_bytes_sent >= _wr_body_size)
 			{
-				_write_finished = true;
 				close(_req_pipe[1]);
+				_req_pipe[1] = -1;
+				_write_finished = true;
 			}
 		}
 	}
@@ -425,11 +426,11 @@ void CGI::runCGI(int fd)
 	{
 		ssize_t readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
 		if (readed > 0)
-		{
 			_cgi_output.append(_rd_buffer, readed);
-		}
 		else if (readed == 0)
 		{
+			close(_cgi_pipe[0]);
+			_cgi_pipe[0] = -1;
 			_read_finished = true;
 		}
 	}
@@ -440,9 +441,6 @@ void CGI::runCGI(int fd)
 
 	if (_read_finished && _write_finished)
 	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
-
 		_cgi_response.parseFromCGIOutput(_cgi_output);
 		_cgi_response.buildResponse();
 		setStatus(CGI_FINISHED, "CGI FINISHED");
@@ -468,15 +466,10 @@ std::vector<ActiveFileDescriptor> CGI::getActiveFileDescriptors() const
 {
 	std::vector<ActiveFileDescriptor> fds;
 
-	if (_cgi_status == CGI_RUNNING)
-	{
-		if (!_read_finished)
-			fds.push_back(ActiveFileDescriptor(_cgi_pipe[0], POLLIN));
-		if (!_write_finished)
-			fds.push_back(ActiveFileDescriptor(_req_pipe[1], POLLOUT));
-	}
-	else
-		CODE_ERR("Trying to get active FDs from an invalid status");
+	if (!_read_finished && _cgi_pipe[0] != -1)
+		fds.push_back(ActiveFileDescriptor(_cgi_pipe[0], POLLIN));
+	if (!_write_finished && _req_pipe[1] != -1)
+		fds.push_back(ActiveFileDescriptor(_req_pipe[1], POLLOUT));
 	return fds;
 }
 
@@ -515,7 +508,10 @@ void CGI::runCGIStreamed(int fd)
 			{
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
+				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished request write streaming " << std::endl;
 				close(_req_pipe[1]);
+				_req_pipe[1] = -1;
+
 			}
 		}
 	}
@@ -530,19 +526,31 @@ void CGI::runCGIStreamed(int fd)
 				_header_stream_buffer += std::string(_rd_buffer, readed);
 				parseStreamHeaders();
 			}
+			if (readed == 0)
+			{
+				parseStreamHeaders();
+				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
+				_read_finished = true;
+				_stream_request.cgi_read_finished = true;
+				close(_cgi_pipe[0]);
+				_cgi_pipe[0] = -1;
+			}
 		} 
-		else if (_header_stream_buffer_sent)
+		else if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed)
 		{
 			readed = _stream_request.get_response_buffer().read();
 			if (readed > 0)
 				_stream_request.cgi_response_body_size += readed;
 			if (readed == 0)
 			{
+				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
+				close(_cgi_pipe[0]);
+				_cgi_pipe[0] = -1;
 			}
 		}
-		// Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << std::endl;
+		// Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
 	}
 	else 
 	{
@@ -551,8 +559,6 @@ void CGI::runCGIStreamed(int fd)
 
 	if (_read_finished && _write_finished)
 	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
 		setStatus(CGI_FINISHED, "CGI FINISHED");
 	}
 }
@@ -643,7 +649,7 @@ void CGI::sendResponse()
 			_stream_request.get_response_buffer().write_fd(), 
 			_parsed_header_stream_buffer.c_str() + _stream_request.cgi_response_body_size_consumed, 
 			_parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed, 0);
-		// Logger::getInstance() << "Sending response: " << sent << " space: " << _parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed << " errno: "  << strerror(errno) << " " << errno << " fd: " << _stream_request.get_response_buffer().write_fd() << std::endl;
+		// Logger::getInstance() << "Sending response: " << sent << " space: " << _parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed << " errno: "  << strerror(errno) << " " << errno << " fd: " << _stream_request.get_response_buffer().write_fd() << "\n";
 		if (sent > 0)
 			_stream_request.cgi_response_body_size_consumed += sent; 
 		if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed && _headers_parsed)
@@ -651,10 +657,15 @@ void CGI::sendResponse()
 
 	}
 	if (_header_stream_buffer_sent && _headers_parsed && _stream_request.cgi_read_finished && _stream_request.cgi_response_body_size_consumed >= _stream_request.cgi_response_body_size)
+	{
+		// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi write streaming " << std::endl;
 		_stream_request.cgi_write_finished = true;
-	// Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << std::endl;
-	// Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished << std::endl;
-
+	}
+	// Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
+	// Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< "\n";
+	// Logger::getInstance() << "SENT TO CGI: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
+	// Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
+	// << " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << "\n";
 }
 
 void CGI::parseStreamHeaders()

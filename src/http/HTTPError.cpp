@@ -2,7 +2,7 @@
 
 HTTPError::HTTPError(std::string const & motive, Status status) :_motive(motive), _status(status){}
 
-HTTPError::HTTPError(){_status = OK;}
+HTTPError::HTTPError(){_status = OK; close = false;}
 
 Status HTTPError::status() const {return _status;}
 

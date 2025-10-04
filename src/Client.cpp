@@ -24,7 +24,6 @@ Client::~Client()
 {
 	for (std::vector<ActiveFileDescriptor>::iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
 		_vsm.unhookFileDescriptor(*it);
-	_active_fds.clear();
 	close(_socket);
 } 
 
@@ -44,7 +43,7 @@ void Client::process(int fd, int mode)
 			break ;
 		}
 	}
-	if (!found)
+	if (!found || _status == CLOSING)
 		return ;
 
 
@@ -150,7 +149,8 @@ void Client::handle_processing_response()
 		if (_request_manager.close())
 		{
 			setStatus(CLOSING, "Closing");
-			updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
+			shutdown(_socket, SHUT_RD);
+			// updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
 		}
 		else 
 		{
@@ -492,7 +492,10 @@ void Client::process_stream(int fd, int mode)
 				return ;
 			}
 			if (_request_manager.request_done())
+			{
 				_stream_request.request_read_finished = true;
+				Logger::getInstance() << "Client " << _socket << " finished request read streaming " << std::endl;
+			}
 		}
 		if (mode & POLLOUT && !_stream_request.cgi_write_finished)
 		{
@@ -526,7 +529,8 @@ void Client::process_stream(int fd, int mode)
 		if (should_close)
 		{
 			setStatus(CLOSING, "Closing");
-			updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
+			shutdown(_socket, SHUT_RD);
+			// updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
 		}
 		else 
 		{
@@ -547,12 +551,9 @@ void Client::updateStreamingFileDescriptors()
 	if (socket_flag != 0)
 		fds.push_back(ActiveFileDescriptor(_socket, socket_flag | POLLRDHUP));
 
-	if (!_cgi.done())
-	{
-		std::vector<ActiveFileDescriptor> cgi_fds = _cgi.getActiveFileDescriptors();
-		for (std::vector<ActiveFileDescriptor>::const_iterator it = cgi_fds.begin(); it != cgi_fds.end(); it ++)
-			fds.push_back(ActiveFileDescriptor(it->fd, it->mode));
-	}
+	std::vector<ActiveFileDescriptor> cgi_fds = _cgi.getActiveFileDescriptors();
+	for (std::vector<ActiveFileDescriptor>::const_iterator it = cgi_fds.begin(); it != cgi_fds.end(); it ++)
+		fds.push_back(ActiveFileDescriptor(it->fd, it->mode));
 
 	updateActiveFileDescriptors(fds);
 }

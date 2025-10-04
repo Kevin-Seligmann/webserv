@@ -25,7 +25,6 @@ public:
 
     void set_write_end(int fd);
     void set_read_end(int fd);
-    void set_external_buffer();
     void reset();
     size_t size() const;
 
@@ -39,6 +38,10 @@ public:
 
     int write_fd() {return _write_fd;};
     int read_fd() {return _read_fd;};
+
+    ssize_t external_size(){return _external_size;};
+    ssize_t external_capacity(){return _external_capacity;};
+    ssize_t capacity(){return STREAM_BUFFER_SIZE;};
 
 private:
     uint8_t _buffer[STREAM_BUFFER_SIZE];

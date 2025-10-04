@@ -17,8 +17,8 @@ class Client
 {
 public:
 
-    static const int TIMEOUT_SECONDS = 30000;
-    static const int CLOSING_GRACE_PERIOD = 1;
+    static const int TIMEOUT_SECONDS = 30;
+    static const int CLOSING_GRACE_PERIOD = 5;
     static const int KEEP_ALIVE_TIMEOUT = 5;
 
     Client(VirtualServersManager & vsm, int client_fd);

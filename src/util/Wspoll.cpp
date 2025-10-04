@@ -30,6 +30,8 @@ int Wspoll::size(){return _size;}
 
 void Wspoll::add(int fd, int mode)
 {
+    if (fd == -1)
+        return ;
     if (_adding_queue_size + _size >= POLLING_SIZE)
         throw std::runtime_error("Wspoll failed: No space left on addition" + wss::i_to_dec(_adding_queue_size) + " + " +  wss::i_to_dec(_size)  + "/" + wss::i_to_dec(POLLING_SIZE));
     if (WSPOLL_DEBUG)
@@ -40,6 +42,8 @@ void Wspoll::add(int fd, int mode)
 
 void Wspoll::mod(int fd, int mode)
 {
+    if (fd == -1)
+        return ;
     for (int i = 0; i < _size; i++)
     {
         if (_fds[i].fd == fd)
@@ -55,6 +59,8 @@ void Wspoll::mod(int fd, int mode)
 
 void Wspoll::del(int fd)
 {
+    if (fd == -1)
+        return ;
     for (int i = 0; i < _size; i++)
     {
         if (_fds[i].fd == fd)
@@ -140,6 +146,10 @@ int Wspoll::wait()
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll waiting requested." << std::endl;
     update_fds();
+    // for (int i = 0; i < _size; i++)
+    // {
+    //     std::cout << " fd "  << _fds[i].fd << " events " << _fds[i].events  << " revents " << _fds[i].revents  << "\n"; 
+    // }
     return poll(_fds, _size, TIMEOUT);
 }
 
