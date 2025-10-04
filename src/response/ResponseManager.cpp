@@ -54,7 +54,7 @@ void ResponseManager::generate_response(RM_error_action action, bool is_cgi)
     Logger::getInstance() << "Generating response for client " + wss::i_to_dec((ssize_t) _sys_buffer->_fd) << std::endl;
 
     _error_action = action;
-    if (is_cgi || _stream_request.streaming_active)
+    if ((is_cgi || _stream_request.streaming_active) && _error.status() == OK)
     {
         generate_cgi_response();
         return ;

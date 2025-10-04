@@ -74,7 +74,7 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	_response_manager.new_response();
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
-	_response_manager.generate_response(action, _is_cgi);
+	_response_manager.generate_response(action, _is_cgi && _error.status() == OK);
 
 	if(_response_manager.is_error())
 	{
@@ -214,11 +214,13 @@ void Client::handleRequestDone()
 		return ;
     }
 
+	if (_error.status() != OK)
+		_is_cgi = false;
 	if (!server_config)
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
-	else if (_stream_request.streaming_active)
+	else if (_stream_request.streaming_active && _error.status() == OK)
 		prepareRequestStreaming();
-	else if (isCgiRequest())
+	else if (isCgiRequest() && _error.status() == OK)
 		prepareCgi();
 	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
@@ -226,6 +228,7 @@ void Client::handleRequestDone()
 
 void Client::handleRequestError() 
 {
+	_is_cgi = false;
 	Logger::getInstance() << "Handling request error. Retry count " << _error_retry_count << std::endl;
 	_error_retry_count ++;
 
