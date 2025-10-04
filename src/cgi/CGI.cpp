@@ -21,6 +21,7 @@ CGI::CGI(StreamRequest & stream_request) : _env(), _stream_request(stream_reques
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
+total_request_read = 0;
 }
 
 
@@ -240,7 +241,7 @@ std::string CGI::systemPathToCgi(const std::string &system_path)
 	return system_path;
 }
 
-void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
+void CGI::buildEnv( HTTPRequest& req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
 	for (std::map<std::string, std::string >::const_iterator it = req.headers.fields.begin(); it != req.headers.fields.end(); it ++)
 	{
@@ -332,7 +333,7 @@ CGIEnv& CGI::getEnv()
     return (_env);
 }
 
-void CGI::init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
+void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
 	buildEnv(req, server, system_path, sconf, loc);
 
@@ -487,6 +488,7 @@ void CGI::reset()
 	_header_stream_buffer_sent = false;
 	_header_stream_buffer = "";
 	_parsed_header_stream_buffer = "";
+total_request_read = 0;
 }
 
 
@@ -500,15 +502,20 @@ void CGI::runCGIStreamed(int fd)
 {
 	if (fd == _req_pipe[1])
 	{
-		ssize_t written = _stream_request.get_request_buffer().write_external();
+
+    ssize_t written = write(_req_pipe[1], _req_body->data(), _req_body->size());	
 		if (written >= 0)
 		{
+			_req_body->erase(0, written);
+
+			total_request_read += written;
 			_stream_request.request_body_size_consumed += written;
+
 			if (_stream_request.request_read_finished && _stream_request.request_body_size_consumed >= _stream_request.request_body_size)
 			{
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
-				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished request write streaming " << std::endl;
+				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished request write streaming " << std::endl;
 				close(_req_pipe[1]);
 				_req_pipe[1] = -1;
 
@@ -529,7 +536,7 @@ void CGI::runCGIStreamed(int fd)
 			if (readed == 0)
 			{
 				parseStreamHeaders();
-				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
+				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
 				close(_cgi_pipe[0]);
@@ -543,14 +550,14 @@ void CGI::runCGIStreamed(int fd)
 				_stream_request.cgi_response_body_size += readed;
 			if (readed == 0)
 			{
-				Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
+				// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi reading streaming " << std::endl;
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
 				close(_cgi_pipe[0]);
 				_cgi_pipe[0] = -1;
 			}
 		}
-		Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
+		// Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
 	}
 	else 
 	{
@@ -563,7 +570,7 @@ void CGI::runCGIStreamed(int fd)
 	}
 }
 
-void CGI::initStreamed(const HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
+void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, std::string const & system_path, ServerConfig * sconf, Location * loc)
 {
 	buildEnv(req, server, system_path, sconf, loc);
 
@@ -575,7 +582,6 @@ void CGI::initStreamed(const HTTPRequest &req, const VirtualServersManager& serv
 		_cgi_response.buildInternalErrorResponse();
 		return ;
 	}
-
 
 	_pid = fork();
 	
@@ -649,7 +655,7 @@ void CGI::sendResponse()
 			_stream_request.get_response_buffer().write_fd(), 
 			_parsed_header_stream_buffer.c_str() + _stream_request.cgi_response_body_size_consumed, 
 			_parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed, 0);
-		Logger::getInstance() << "Sending response: " << sent << " space: " << _parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed << " errno: "  << strerror(errno) << " " << errno << " fd: " << _stream_request.get_response_buffer().write_fd() << "\n";
+		// Logger::getInstance() << "Sending response: " << sent << " space: " << _parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed << " errno: "  << strerror(errno) << " " << errno << " fd: " << _stream_request.get_response_buffer().write_fd() << "\n";
 		if (sent > 0)
 			_stream_request.cgi_response_body_size_consumed += sent; 
 		if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed && _headers_parsed)
@@ -658,14 +664,14 @@ void CGI::sendResponse()
 	}
 	if (_header_stream_buffer_sent && _headers_parsed && _stream_request.cgi_read_finished && _stream_request.cgi_response_body_size_consumed >= _stream_request.cgi_response_body_size)
 	{
-		Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi write streaming " << std::endl;
+		// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi write streaming " << std::endl;
 		_stream_request.cgi_write_finished = true;
 	}
-	Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
-	Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< " CGI WR FINISH " << _stream_request.cgi_write_finished << "\n";
-	Logger::getInstance() << "Request body size consumed: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
-	Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
-	<< " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << " R.B.Size appended " << _stream_request.request_body_size_appended << "\n";
+	// Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
+	// Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< " CGI WR FINISH " << _stream_request.cgi_write_finished << "\n";
+	// Logger::getInstance() << "Request body size consumed: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
+	// Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
+	// << " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << " R.B.Size appended " << _stream_request.request_body_size_appended << "\n";
 }
 
 void CGI::parseStreamHeaders()

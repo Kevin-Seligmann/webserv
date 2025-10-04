@@ -477,7 +477,7 @@ void Client::prepareRequestStreaming()
 
 void Client::process_stream(int fd, int mode)
 {
-	std::cout << " REMAINING BUFFER: " << _request_manager.get_buffer_remaining_size() << std::endl;
+	// std::cout << " REMAINING BUFFER: " << _request_manager.get_buffer_remaining_size() << std::endl;
 	if (fd == _socket)
 	{
 		if (mode & POLLIN && !_stream_request.request_read_finished)

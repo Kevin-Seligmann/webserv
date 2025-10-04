@@ -45,7 +45,7 @@ class CGI
 {
 	private:
 		CGIEnv								_env;
-		std::string const *					 _req_body; // Make pointer to save memory
+		std::string *					 _req_body; // Make pointer to save memory
 		int 								_req_pipe[2];
 		int 								_cgi_pipe[2];
 		pid_t 								_pid;
@@ -69,7 +69,8 @@ class CGI
 		bool 								_header_stream_buffer_sent;
 		std::string							_header_stream_buffer;
 		std::string							_parsed_header_stream_buffer;
-
+		ssize_t total_request_read;
+		
 		std::string methodToString(HTTPMethod method) const;
 		std::map<std::string, std::string> pathToBlocks(const HTTPRequest& req) const;
 		std::string systemPathToCgi(const std::string &system_path);
@@ -79,7 +80,7 @@ class CGI
 		CGI(StreamRequest & stream_request);
 		~CGI();
 
-		void buildEnv(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
+		void buildEnv( HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
 		CGIEnv& getEnv();
 		void runCGI(int fd);
 		void runCGIStreamed(int fd);
@@ -94,8 +95,8 @@ class CGI
 		bool finished_writing(){return _write_finished;};
 		bool error() const {return _cgi_status == CGI_ERROR;};
 
-		void init(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
-		void initStreamed(const HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
+		void init (HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
+		void initStreamed( HTTPRequest &req, const VirtualServersManager& server, std::string const & path, ServerConfig * sconf, Location * loc);
 
 		void reset();
 		void setStatus(CGIStatus status, std::string const & txt);

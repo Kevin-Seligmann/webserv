@@ -18,11 +18,8 @@ void RequestManager::process()
     bool parse = true;
     bool has_read = false;
 
-    if (_processing_type == STREAM)
-    {
-        process_stream();
+    if (_request.body.content.size() > 50000 && _stream_request.streaming_active)
         return ;
-    }
     while (_error.status() == OK && !request_done())
     {
         switch (_request_parser.get_status())
@@ -60,22 +57,12 @@ void RequestManager::process()
                 {
                     _request_parser.parse_chunked_size();
                     chunk_size = _request_parser.get_chunk_length();
-                    if (chunk_size > 0 && _stream_request.streaming_active)
-                    {
-                        set_streaming(has_read);
-                        return ;
-                    }
                 }
                 break ;
             case RequestParser::PRS_CHUNKED_BODY:
-                if (_stream_request.streaming_active)
-                    parse = _request_parser.test_chunk_newline();
-                else
-                {
-                    parse = _request_parser.test_chunk_body();
-                    if (parse)
-                        _request_parser.parse_chunked_body();
-                }
+                parse = _request_parser.test_chunk_body();
+                if (parse)
+                    _request_parser.parse_chunked_body();
                 break ;   
             case RequestParser::PRS_TRAILER_LINE: parse = _request_parser.test_trailer_line(); break ;
             case RequestParser::PRS_DONE: 
