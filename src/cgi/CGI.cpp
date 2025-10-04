@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/10/04 16:19:11 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/10/04 16:30:51 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -712,18 +712,36 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 		
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 		dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
-		_exit(127);
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_500__", 17);
+			_exit(1);
+		}
+		
 		
 		close(_req_pipe[0]);
 		close(_cgi_pipe[1]);
 		
 		CGIArg	arg(_env);
 		
-		
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();
+		
+		if (access(argv[1], F_OK) != 0)
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_404__", 17);
+			_exit(1);
+		}
+		
+		if (access(argv[1], X_OK) != 0) 
+		{
+			write(STDOUT_FILENO, "__CGI_ERROR_403__", 17);
+			_exit(1);
+		}
+		
 		execve(argv[0], argv, envp);
-		_exit(127);
+		
+		write(STDOUT_FILENO, "__CGI_ERROR_500__", 17);
+		_exit(1);
 	}
 	else 
 	{
