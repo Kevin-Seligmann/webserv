@@ -36,7 +36,7 @@ class CGIResponse
 		size_t 								_sentBytes;
 
 	public:
-
+		CGIResponse(){close = false;}
 		std::string getContentType() const;
 		std::string getStatus() const;
 		std::string getLocation() const;
