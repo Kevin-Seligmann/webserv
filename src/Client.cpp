@@ -249,8 +249,9 @@ void Client::handle_cgi_request(int fd)
 	}
 	else if (_cgi.error())
 	{
-		_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR, true);
-		handleRequestError();
+		prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+//		_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR, true);
+//		handleRequestError();
 	}
 	else 
 	{

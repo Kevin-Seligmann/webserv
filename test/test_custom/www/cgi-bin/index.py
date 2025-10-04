@@ -19,6 +19,13 @@ print("""<!DOCTYPE html>
         <li><a href="env.py">Environment Variables</a></li>
         <li><a href="upload.py">Upload Test</a></li>
         <li><a href="cookie.py">Cookie Test</a></li>
+	</ul>
+	<p>Different types of GCI errores</p>
+	<ul>
+		<li><a href="cgi_empty.py">CGI returns empty response - Error 502</a></li>
+		<li><a href="cgi_no_content_type.py">CGI response doesn't contain header Content-Type - Error 502</a></li>
+		<li><a href="cgi_trash.py">CGI doesn't return headers - Error 502</a></li>
+		<li><a href="hello.py">CGI can't execute script (doesn't have permission - Error 403</a></li>
     </ul>
 </body>
 </html>""")
