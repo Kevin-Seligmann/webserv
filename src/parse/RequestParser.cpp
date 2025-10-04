@@ -738,8 +738,8 @@ std::string const  RequestParser::get_remainder() const
 
 ssize_t RequestParser::extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size)
 {    
-    ssize_t extracted = std::min(_buffer.size(), buffer_size);
-    if (extracted != _buffer.size())
+    ssize_t extracted = _chunk_length;
+    if (extracted > buffer_size)
         CODE_ERR("OK");
     memcpy(dst, _buffer.itbegin(), extracted);
     _buffer.unsafe_consume_bytes(extracted);
