@@ -631,20 +631,15 @@ void CGI::runCGIStreamed(int fd)
 	}
 	
 	if (_read_finished && _write_finished)
-	{
-		setStatus(CGI_FINISHED, "CGI FINISHED");
-		
-		int error_check = cgiErrorCheck(_cgi_output);
-		
+	{		
+		int error_check = cgiErrorCheck(_header_stream_buffer);
+
 		switch (error_check) {
 			
 			case 200:
 			{
-				_cgi_response.parseFromCGIOutput(_cgi_output);
-				_cgi_response.buildResponse();
 				setStatus(CGI_FINISHED, "CGI FINISHED");
 				break;
-				
 			}
 			case 403:
 			{
