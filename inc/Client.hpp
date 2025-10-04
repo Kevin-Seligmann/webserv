@@ -9,6 +9,7 @@
 #include "ResponseManager.hpp"
 #include "CGI.hpp"
 #include "CGIInterpreter.hpp"
+#include "StreamRequest.hpp"
 
 class VirtualServersManager;
 
@@ -18,7 +19,7 @@ public:
 
     static const int TIMEOUT_SECONDS = 30000;
     static const int CLOSING_GRACE_PERIOD = 1;
-    static const int KEEP_ALIVE_TIMEOUT = 5;
+    static const int KEEP_ALIVE_TIMEOUT = 1; // TODO setearlo
 
     Client(VirtualServersManager & vsm, int client_fd);
 
@@ -26,7 +27,7 @@ public:
 
     time_t getLastActivity() const { return _last_activity; }
 
-    void process(int fd);
+    void process(int fd, int mode);
 
     int getSocket() const { return _socket; }
     int ownsFd(int fd) const;
@@ -40,11 +41,13 @@ private:
         PROCESSING_REQUEST,
         PROCESSING_RESPONSE,
         PROCESSING_CGI,
+        STREAMING,
         CLOSING
     };
 
     static const int MAX_ERROR_RETRIES = 1;
 
+    StreamRequest           _stream_request;
     VirtualServersManager & _vsm;
     Status                  _status;
     HTTPError	            _error;
@@ -59,6 +62,9 @@ private:
     time_t                  _last_activity;
     bool                    _is_cgi;
     std::string             _previous_directory_path; // Almacena ruta del último directorio
+    size_t                  _max_size;
+    // int             error_retry_count;
+
 
     void handle_cgi_request(int fd);
     void handle_processing_request();
@@ -81,4 +87,8 @@ private:
 
 	void get_config(ServerConfig ** server, Location ** location);
     void setStatus(Status status, std::string const & txt);
+
+    void prepareRequestStreaming();
+    void process_stream(int fd, int mode);
+    void updateStreamingFileDescriptors();
 };

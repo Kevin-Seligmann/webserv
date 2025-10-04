@@ -7,10 +7,10 @@ Client::Client(VirtualServersManager & vsm, int client_fd) // TODO no instance o
 , _status(IDLE)
 , _error()
 , _request()
-, _cgi()
+, _cgi(_stream_request)
 , _element_parser(_error)
-, _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
-, _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd)
+, _request_manager(_request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd, _stream_request)
+, _response_manager(_cgi, _request, _error, SysBufferFactory::SYSBUFF_SOCKET, client_fd, _stream_request)
 , _socket(client_fd)
 , _error_retry_count(0)
 , _last_activity(time(NULL))
@@ -25,12 +25,11 @@ Client::~Client()
 {
 	for (std::vector<ActiveFileDescriptor>::iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
 		_vsm.unhookFileDescriptor(*it);
-	_active_fds.clear();
 	close(_socket);
 } 
 
 // Entry point
-void Client::process(int fd)
+void Client::process(int fd, int mode)
 {
 	/*
 		Sometimes a file descriptor can lag in the poll even if we are not interested anymore.
@@ -45,7 +44,7 @@ void Client::process(int fd)
 			break ;
 		}
 	}
-	if (!found)
+	if (!found || _status == CLOSING)
 		return ;
 
 
@@ -56,6 +55,7 @@ void Client::process(int fd)
 		case Client::PROCESSING_REQUEST: handle_processing_request(); break ;
 		case Client::PROCESSING_RESPONSE: handle_processing_response(); break ;
 		case Client::PROCESSING_CGI: handle_cgi_request(fd); break;
+		case Client::STREAMING: process_stream(fd, mode); break ;
 		case Client::CLOSING: CODE_ERR("Using CLOSE status"); break;
 	}
 }
@@ -66,6 +66,7 @@ void Client::prepareRequest()
 	_error_retry_count = 0;
 	updateActiveFileDescriptor(_socket, POLLIN | POLLRDHUP);
 	_request_manager.new_request();
+	_response_manager.new_response(false);
 	_cgi.reset();
 	// no resetear _previous_directory_path, tiene que persistir entre requests consecutivos
 	setStatus(IDLE, "Idle");
@@ -73,10 +74,11 @@ void Client::prepareRequest()
 
 void Client::prepareResponse(ServerConfig * server, Location * location, ResponseManager::RM_error_action action)
 {
-	_response_manager.new_response();
+	bool preserve = (_error_retry_count > 0 && _error.status() == MOVED_PERMANENTLY);
+	_response_manager.new_response(preserve);
 	_response_manager.set_location(location);
 	_response_manager.set_virtual_server(server);
-	_response_manager.generate_response(action, _is_cgi);
+	_response_manager.generate_response(action, _is_cgi && _error.status() == OK);
 
 	if(_response_manager.is_error())
 	{
@@ -168,7 +170,7 @@ void Client::prepareCgi(ServerConfig* server, Location* location)
 
 	if (_cgi.error())
 	{
-		_error.set("Error processing CGI", INTERNAL_SERVER_ERROR);
+		_error.set("Error processing CGI", INTERNAL_SERVER_ERROR, true);
 		handleRequestError();
 	}
 	else 
@@ -181,15 +183,20 @@ void Client::prepareCgi(ServerConfig* server, Location* location)
 void Client::handle_processing_request()
 {
 	_request_manager.process();
-
-	if (_request_manager.request_done() && _error.status() == OK)
+	if (_stream_request.streaming_active)
 	{
-		Logger::getInstance() <<  "Request processed: " << _error.to_string() + _error.msg() << " Body size: " << _request.body.content.size() << std::endl;
+		Logger::getInstance() <<  "Streaming Request started: " << _error.to_string() + _error.msg() << std::endl;
+		handleRequestDone();
+	}
+	else if (_request_manager.request_done() && _error.status() == OK)
+	{
+		DEBUG_LOG("\n\n");
+		DEBUG_LOG("Request processed: " << _error.to_string() + _error.msg() << " Body size: " << _request.body.content.size());
 		handleRequestDone();
 	}
 	else if (_error.status() != OK)
 	{
-		Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
+		DEBUG_LOG("Request processed with error: " << (_error.to_string() + _error.msg()));
 		handleRequestError();
 	}
 }
@@ -216,17 +223,16 @@ void Client::handle_processing_response()
 		{
 			_previous_directory_path = "";
 		}
-		// TODO: Closing
-		// if (_request_manager.close())
-		// {
-		// 	setStatus(CLOSING, "Closing");
-		// 	updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
-		// }
-		// else 
-		// {
-		//	prepareRequest();
-		// }
-		prepareRequest();
+	
+		if (_request_manager.close())
+		{
+		 	setStatus(CLOSING, "Closing");
+//		 	updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
+		}
+		else 
+		{
+			prepareRequest();
+		}
 	}
 	else 
 	{
@@ -255,7 +261,7 @@ void Client::handle_cgi_request(int fd)
 	}
 	else if (_cgi.error())
 	{
-		_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR);
+		_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR, true);
 		handleRequestError();
 	}
 	else 
@@ -270,15 +276,15 @@ void Client::handleRequestDone()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
-	size_t max_size = 0;
+	_max_size = 0;
 	if (location && location->getMaxBodySize() > 0)
-		max_size = location->getMaxBodySize();
+		_max_size = location->getMaxBodySize();
 	else
-		max_size = server_config->getClientMaxBodySize();
+		_max_size = server_config->getClientMaxBodySize();
 
-	if (max_size < _request.body.content.length())
+	if (_max_size < _request.body.content.length())
     {
-        _error.set("Body size too large: " + wss::i_to_dec(max_size) + " \\ " + wss::i_to_dec(_request.body.content.length()), CONTENT_TOO_LARGE);
+        _error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ " + wss::i_to_dec(_request.body.content.length()), CONTENT_TOO_LARGE);
 		handleRequestError();
 		return ;
     }
@@ -287,18 +293,19 @@ void Client::handleRequestDone()
 	{
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
+	else if (_stream_request.streaming_active && _error.status() == OK)
+		prepareRequestStreaming();
 	else if (!probablyAutoindex() && isCgiRequest(location))
 	{
-		prepareCgi(server_config, location);
+		prepareCgi(server_config, location); // AUTOINDEX .PY BEHAVIOUR ORDER
 	}
-	else
-	{
+	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
-	} 
 }
 
 void Client::handleRequestError() 
 {
+	_is_cgi = false;
 	Logger::getInstance() << "Handling request error. Retry count " << _error_retry_count << std::endl;
 	_error_retry_count ++;
 
@@ -375,19 +382,30 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 	// Location
 	*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 	
-	// Procesar index files solo para GET con request OK
-	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK &&
-		_request.get_path().at(_request.get_path().size() - 1) == '/')
+	// redirect manejado
+	if (*ptr_location && !(*ptr_location)->getRedirect().empty())
 	{
-		std::string full_path;
+		_error.set("Redirect configured", MOVED_PERMANENTLY);
+		// asignar _redirecting_location
+		return;
+	}
+
+	// alias manejado en Location::getFilesystemLocation()
+
+	// index files manejado para GET/HEAD con request OK
+	if ((_request.method == GET || _request.method == HEAD) && _error.status() == OK)
+		// && _request.get_path().at(_request.get_path().size() - 1) == '/')
+	{
 		std::vector<std::string> try_index;
 
-		// Get indexes vector
-		if (*ptr_location && !(*ptr_location)->getIndex().empty()) {
+		// Get index files o fallback 
+		if (*ptr_location && !(*ptr_location)->getIndex().empty())
+		{
 			try_index = (*ptr_location)->getIndex();
 		}
-		else if (!(*ptr_server_config)->index_files.empty()) {
-			try_index = (*ptr_server_config)->index_files; 
+		else if (!(*ptr_server_config)->index_files.empty())
+		{
+			try_index = (*ptr_server_config)->getIndexFiles();
 		}
 		else {
 			try_index.push_back("index.html");
@@ -398,28 +416,39 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 			if (try_index[i].empty())
 				continue;
 	
-			std::string new_request_path = _request.get_path() + try_index[i];
+			std::string new_request_path = normalizePath(_request.get_path(), try_index[i]);
 
+			DEBUG_LOG(">>> Valor de new_request_path : " + new_request_path);
+
+			std::string full_path;
 			// Get root path
 			if (ptr_location)
+			{
 				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
+				// DEBUG_LOG(">>> Valor de full_path con location : " + full_path);
+			}
 			if (full_path.empty() && !(*ptr_server_config)->getRoot().empty())
+			{
 				full_path = (*ptr_server_config)->getRoot() + new_request_path;
-    		else if (full_path.empty())
-				CODE_ERR("No root path found");
-	
-			if (access(full_path.c_str(), F_OK) == 0) {
+				// DEBUG_LOG(">>> Valor de full_path con server : " + full_path);
 
-				Logger::getInstance() << "Index found: " + new_request_path << std::endl;
+			}
+    		else if (full_path.empty())
+			{
+				CODE_ERR("No root path found");
+			}
+	
+			if (access(full_path.c_str(), F_OK) == 0)
+			{
+				Logger::getInstance() << ">>> Index found: " + new_request_path << std::endl;
 				
 				// Guardar index encontrado
 				_request.uri.path = new_request_path;
-				*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
-/*				Para un location con configuración para el archivo index en sí 
-				Location* new_loc = (*ptr_server_config)->findLocation(_request.get_path());
-				if (new_loc) {
+
+				if (!ptr_location || (*ptr_location)->getMatchType() != Location::EXACT)
+				{
+					*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 				}
-*/
 				break;
 			}
 		}
@@ -448,8 +477,10 @@ bool Client::idle() const
 int Client::ownsFd(int fd) const
 {
 	for (std::vector<ActiveFileDescriptor>::const_iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
+	{
 		if (it->fd == fd)
 			return true;
+	}
 	return false;
 }
 
@@ -486,6 +517,9 @@ void Client::updateActiveFileDescriptor(ActiveFileDescriptor newfd)
 
 void Client::updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> newfds)
 {
+    // for (std::vector<ActiveFileDescriptor>::const_iterator old_it = newfds.begin(); old_it != newfds.end(); old_it ++)
+	// 	Logger::getInstance() << "Putting fd: " << old_it->fd << " Pollin: " << (old_it->mode & POLLIN) << " pollout " << (old_it->mode & POLLOUT) << std::endl;
+
     for (std::vector<ActiveFileDescriptor>::const_iterator old_it = _active_fds.begin(); old_it != _active_fds.end(); old_it ++)
     {
         bool still_needed = false;
@@ -518,4 +552,125 @@ void Client::updateActiveFileDescriptors(std::vector<ActiveFileDescriptor> newfd
             _vsm.hookFileDescriptor(*new_it);
     }
     _active_fds = newfds;
+}
+
+void Client::prepareRequestStreaming()
+{
+	if (!wss::isCgiRequest(_request.get_path()))
+	{
+		_error.set("Internal redirect from streaming to non streaming request", INTERNAL_SERVER_ERROR, true);
+		handleRequestError();
+		return ;
+	}
+	setStatus(STREAMING, "Streaming");
+
+	ServerConfig * _server_config = NULL;
+	Location * _location = NULL;
+	get_config(&_server_config, &_location);
+	std::string path = "";
+    if (_location)
+        path = _location->getFilesystemLocation(_request.get_path());
+    if (path.empty() && !_server_config->getRoot().empty())
+        path = _server_config->getRoot() + _request.get_path();
+	else if (path.empty())
+		CODE_ERR("No root path found for " + _request.get_path() + " Server: " + _server_config->getRoot());
+
+	_cgi.initStreamed(_request, _vsm, path, _server_config, _location);
+	if (_cgi.error())
+	{
+		_error.set("Error processing CGI", INTERNAL_SERVER_ERROR, true);
+		handleRequestError();
+		return ;
+	}
+	else 
+	{
+		updateStreamingFileDescriptors();
+	}
+}
+
+void Client::process_stream(int fd, int mode)
+{
+	// std::cout << " REMAINING BUFFER: " << _request_manager.get_buffer_remaining_size() << std::endl;
+	if (fd == _socket)
+	{
+		if (mode & POLLIN && !_stream_request.request_read_finished)
+		{
+			_request_manager.process();
+			if (_error.status() != OK)
+			{
+				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
+				handleRequestError();
+				return ;
+			}
+			if (_max_size < _stream_request.request_body_size)
+			{
+				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ " + wss::i_to_dec(_stream_request.request_body_size), CONTENT_TOO_LARGE, true);
+				handleRequestError();
+				return ;
+			}
+			if (_request_manager.request_done())
+			{
+				_stream_request.request_read_finished = true;
+				Logger::getInstance() << "Client " << _socket << " finished request read streaming " << std::endl;
+			}
+		}
+		if (mode & POLLOUT && !_stream_request.cgi_write_finished)
+		{
+			_cgi.sendResponse();
+			if (_error.status() != OK)
+			{
+				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
+				handleRequestError();
+				return ;
+			}
+		}
+		updateStreamingFileDescriptors();
+	}
+	else if (!_cgi.done() && (fd == _cgi.write_fd() || fd == _cgi.read_fd()))
+	{
+		_cgi.runCGIStreamed(fd);
+		if (_cgi.error())
+		{
+			_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR, true);
+			handleRequestError();
+			return ;
+		}
+		updateStreamingFileDescriptors();
+	}
+
+	// 
+	bool should_close = _cgi.getCGIResponse().close || _request_manager.close();
+	// Only after both are complete. Reading request must finish in order to empty buffer and continue with the connection.
+	if (_stream_request.cgi_write_finished && (_stream_request.request_read_finished || should_close))
+	{
+		if (should_close)
+		{
+			setStatus(CLOSING, "Closing");
+//			shutdown(_socket, SHUT_RD);
+			// updateActiveFileDescriptors(std::vector<ActiveFileDescriptor>());
+		}
+		else 
+		{
+			prepareRequest();
+		}
+	}
+}
+
+void Client::updateStreamingFileDescriptors()
+{
+	std::vector<ActiveFileDescriptor> fds;
+
+	int socket_flag = 0;
+	if (_stream_request.streaming_active && !_request_manager.request_done())
+		socket_flag |= POLLIN;
+	if (!_stream_request.cgi_write_finished)
+		socket_flag |= POLLOUT;
+	if (socket_flag != 0)
+		fds.push_back(ActiveFileDescriptor(_socket, socket_flag | POLLRDHUP));
+
+	std::vector<ActiveFileDescriptor> cgi_fds = _cgi.getActiveFileDescriptors();
+	for (std::vector<ActiveFileDescriptor>::const_iterator it = cgi_fds.begin(); it != cgi_fds.end(); it ++)
+		fds.push_back(ActiveFileDescriptor(it->fd, it->mode));
+
+	updateActiveFileDescriptors(fds);
 }

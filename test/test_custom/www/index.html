@@ -63,16 +63,36 @@
 </head>
 <body>
     <h1>Welcome to Webserv</h1>
-    <nav>
-        <ul>
-            <li><a href="/static/">Static Files (Autoindex)</a></li>
-            <li><a href="/uploads_dest/">Upload Area</a></li>
-            <li><a href="/cgi-bin/">CGI Python Tests</a></li>
-            <li><a href="/php/">PHP CGI Tests</a></li>
-            <li><a href="/docs">Documentation</a></li>
-        </ul>
-    </nav>
     
+    <section>
+        <h2>Test Features</h2>
+        <nav>
+            <ul>
+                <li><a href="/static/">Static Files (Autoindex)</a></li>
+                <li><a href="/uploads_dest/">Upload Area</a></li>
+                <li><a href="/cgi-bin/">CGI Python Tests</a></li>
+                <li><a href="/php/">PHP CGI Tests</a></li>
+                <li><a href="/docs">Documentation</a></li>
+            </ul>
+        </nav>
+
+        <nav>
+            <ul>
+                <li><a href="/exact">Exact match</a></li>
+                <li><a href="/exact-redir">Exact redirect</a></li>
+                <li><a href="/old-page">Old page (redir)</a></li>
+                <li><a href="/another-old-page">Another old page (redir)</a></li>
+            </ul>
+        </nav>
+
+        <nav>
+            <ul>
+                <li><a href="http://localhost:8080">Goto: 'localhost:8080'</a></li>
+                <li><a href="http://localhost:8081">Goto: 'localhost:8081'</a></li>
+                <li><a href="http://dump-ubuntu-barcelona:8080">Goto: 'dump-ubuntu-barcelona:8080'</a></li>
+            </ul>
+        </nav>
+    </section>
     <section>
         <h2>Test Forms</h2>
         

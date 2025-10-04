@@ -46,6 +46,6 @@ namespace wss
 
     std::string const guarantee_absolute_path(std::string const & src);
     void normalize_any_path(std::string & str);
-
+    bool isCgiRequest(std::string const & path);
 }
 

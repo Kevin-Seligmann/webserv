@@ -36,7 +36,7 @@ class CGIResponse
 		size_t 								_sentBytes;
 
 	public:
-
+		CGIResponse(){close = false;}
 		std::string getContentType() const;
 		std::string getStatus() const;
 		std::string getLocation() const;
@@ -46,6 +46,7 @@ class CGIResponse
 
 		void parseFromCGIOutput(const std::string& cgiOutput);
 		void buildResponse();
+		void buildStreamedResponse();
 		void buildInternalErrorResponse();
 		void buildNotFoundErrorResponse();
 		void buildForbiddenErrorResponse();
@@ -56,6 +57,7 @@ class CGIResponse
 		void setLocation(const std::string& loc);
 		void setHeader(const std::string& header, const std::string& value);
 		void reset();
+		bool								close;
 
 };
 

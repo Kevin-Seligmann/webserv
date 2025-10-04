@@ -26,7 +26,7 @@ struct ServerConfig {
 
     bool matchesServerName(const std::string& hostname) const;
     Location* findLocation(const std::string& path) const;
-    Location* resolveRequest(const std::string& request_path, std::string& final_path) const;
+//    Location* resolveRequest(const std::string& request_path, std::string& final_path) const;
     
     bool isMethodAllowed(const std::string& method) const;
     bool isDefaultServer() const;

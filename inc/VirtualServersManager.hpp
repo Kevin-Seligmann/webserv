@@ -37,7 +37,8 @@ private:
 	std::map<int, Client*>                          _clients;
 
 	Wspoll                                          _wspoll;
- 
+    int                                             _loop_counter;
+
 	// Manejo de señales
 	static volatile sig_atomic_t					s_shutdown_requested;
 

@@ -18,7 +18,7 @@ void ElementParser::parse_method(std::string::iterator & begin, std::string::ite
 	while (begin != end)
 	{
 		if (!parse::is_alpha(*begin))
-			return _error.set("Method, unexpected character", BAD_REQUEST);
+			return _error.set("Method, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 }
@@ -30,7 +30,7 @@ void ElementParser::parse_protocol(std::string::iterator & begin, std::string::i
 	while (begin != end)
 	{
 		if (!parse::is_protocol_char(*begin))
-			return _error.set("Protocol, unexpected character", BAD_REQUEST);
+			return _error.set("Protocol, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 }
@@ -41,7 +41,7 @@ void ElementParser::parse_path(std::string::iterator & begin, std::string::itera
 	while (begin != end)
 	{
 		if (*begin != '/' && !parse::is_pchar(*begin))
-			return _error.set("Path, unexpected character", BAD_REQUEST);
+			return _error.set("Path, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 	normalize_path(path);
@@ -58,7 +58,7 @@ void ElementParser::parse_query(std::string::iterator & begin, std::string::iter
 			Logger::getInstance() << "Non-alpha character found at position " 
 								  << std::distance(begin, end) << ": " 
 								  << (int)*begin << std::endl;
-			return _error.set("Query, unexpected character", BAD_REQUEST);
+			return _error.set("Query, unexpected character", BAD_REQUEST, true);
 		}
 		begin ++;
 	}
@@ -72,7 +72,7 @@ void ElementParser::parse_field_value(std::string::iterator & begin, std::string
 	while (begin != end)
 	{
 		if (!parse::is_field_value_char(*begin))
-			return _error.set("field value, unexpected character", BAD_REQUEST);
+			return _error.set("field value, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 	parse::sanitize_header_value(value.begin(), value.end());
@@ -85,7 +85,7 @@ void ElementParser::parse_field_token(std::string::iterator & begin, std::string
 	while (begin != end)
 	{
 		if (!parse::is_token_char(*begin))
-			return _error.set("field token, unexpected character", BAD_REQUEST);
+			return _error.set("field token, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 	wss::to_lower(name);
@@ -98,7 +98,7 @@ void ElementParser::parse_fragment(std::string::iterator & begin, std::string::i
 	while (begin != end)
 	{
 		if (!parse::is_fragment_char(*begin))
-			return _error.set("URL, unexpected character", BAD_REQUEST);
+			return _error.set("URL, unexpected character", BAD_REQUEST, true);
 		begin++;
 	}
 }
@@ -108,13 +108,13 @@ void ElementParser::parse_host(std::string::iterator & begin, std::string::itera
 	host = std::string(begin, end);
 	if (*begin == '[')
 	{
-		return _error.set("Host, the only IP protocol supported is IPv4", BAD_REQUEST);
+		return _error.set("Host, the only IP protocol supported is IPv4", BAD_REQUEST, true);
 		begin ++;
 	}
 	while (begin != end)
 	{
 		if (!parse::is_host_char(*begin))
-			return _error.set("Host, unexpected character", BAD_REQUEST);
+			return _error.set("Host, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 	percentage_decode(host);
@@ -128,10 +128,10 @@ void ElementParser::parse_port(std::string::iterator & begin, std::string::itera
 	while (begin != end)
 	{
 		if (!parse::is_digit(*begin))
-			return _error.set("Port, unexpected character", BAD_REQUEST);
+			return _error.set("Port, unexpected character", BAD_REQUEST, true);
 		port = port * 10 + *begin - '0';
 		if (port > 65535)
-			return _error.set("Port, too big (max: 65535 for TCP)", BAD_REQUEST);
+			return _error.set("Port, too big (max: 65535 for TCP)", BAD_REQUEST, true);
 		begin ++;
 	}
 }
@@ -142,10 +142,10 @@ void ElementParser::parse_content_length_field(std::string::iterator & begin, st
 	while (begin != end)
 	{
 		if (!parse::is_digit(*begin))
-			return _error.set("Header Content-Length, unexpected character", BAD_REQUEST);
+			return _error.set("Header Content-Length, unexpected character", BAD_REQUEST, true);
 		length = length * 10 + *begin - '0';
 		if (static_cast<size_t>(length) >= RequestParser::MAX_CONTENT_LENGTH)
-			return _error.set("Header Content-Length, too large", CONTENT_TOO_LARGE);
+			return _error.set("Header Content-Length, too large", CONTENT_TOO_LARGE, true);
 		begin ++;
 	}
 }
@@ -161,14 +161,14 @@ void ElementParser::parse_dquote_string(std::string::iterator & begin, std::stri
 		if (*begin == '\\')
 		{
 			if (begin + 1 == end || !parse::is_quoted_pair_char(*(begin + 1)))
-				return _error.set("quoted string, unexpected character", BAD_REQUEST);
+				return _error.set("quoted string, unexpected character", BAD_REQUEST, true);
 			str.push_back(*(begin + 1));
 			begin += 2;
 		}
 		else 
 		{
 			if (!parse::is_qdtext_char(*begin))
-				return _error.set("quoted string, unexpected character", BAD_REQUEST);
+				return _error.set("quoted string, unexpected character", BAD_REQUEST, true);
 			str.push_back(*begin);
 			begin ++;
 		}
@@ -186,7 +186,7 @@ void ElementParser::parse_comma_separated_values(std::string::iterator & begin, 
 		head = wss::skip_until(begin, end, ",; ");
 		parse_field_token(begin, head, csf.name);
 		if (csf.name.empty())
-			return _error.set("Comma separated field, empty field name", BAD_REQUEST);
+			return _error.set("Comma separated field, empty field name", BAD_REQUEST, true);
 		
 		// Parse params
 		begin = wss::skip_ascii_whitespace(head, end);
@@ -200,14 +200,14 @@ void ElementParser::parse_comma_separated_values(std::string::iterator & begin, 
 			parse_field_token(begin, head, param_name);
 
 			if (param_name.empty())
-				return _error.set("comma separated field, empty parameter name", BAD_REQUEST);
+				return _error.set("comma separated field, empty parameter name", BAD_REQUEST, true);
 	 
 			// Parse value (Skip to value)
 			begin = wss::skip_ascii_whitespace(head, end);
 			if (begin != end && *begin != '=')
-				return _error.set("Comma separated parameter, unexpected character", BAD_REQUEST);
+				return _error.set("Comma separated parameter, unexpected character", BAD_REQUEST, true);
 			if (begin == end || begin + 1 == end)
-				return _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+				return _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST, true);
 
 			begin = wss::skip_ascii_whitespace(begin + 1, end);
 
@@ -216,7 +216,7 @@ void ElementParser::parse_comma_separated_values(std::string::iterator & begin, 
 			{
 				head = wss::skip_until_dquoted_string_end(begin + 1, end);
 				if (head == end)
-					return _error.set("Comma separated parameter, closing dquote missing", BAD_REQUEST);
+					return _error.set("Comma separated parameter, closing dquote missing", BAD_REQUEST, true);
 				parse_dquote_string(begin, head, param_value);
 
 				head ++; // Skip the last '"'
@@ -227,7 +227,7 @@ void ElementParser::parse_comma_separated_values(std::string::iterator & begin, 
 				parse_field_token(begin, head, param_value);
 			}
 			if (param_value.empty())
-				return _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+				return _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST, true);
 
 			// Put value and push begin iterator
 			csf.parameters.push_back(std::pair<std::string, std::string>(param_name, param_value));
@@ -243,7 +243,7 @@ void ElementParser::parse_comma_separated_values(std::string::iterator & begin, 
 			continue ;
 		}
 		else if (begin != end)
-			return _error.set("Comma separated field, unexpected character", BAD_REQUEST);
+			return _error.set("Comma separated field, unexpected character", BAD_REQUEST, true);
 		break ;
 	} 
 }
@@ -254,7 +254,7 @@ void ElementParser::parse_schema(std::string::iterator & begin, std::string::ite
 	while (begin != end)
 	{
 		if (!parse::is_alpha(*begin))
-			return _error.set("Schema, unexpected character", BAD_REQUEST);
+			return _error.set("Schema, unexpected character", BAD_REQUEST, true);
 		begin ++;
 	}
 	wss::to_lower(schema);
@@ -263,7 +263,7 @@ void ElementParser::parse_schema(std::string::iterator & begin, std::string::ite
 void ElementParser::replace_percentage(std::string::iterator & it, std::string & str)
 {
 	if (it + 2 >= str.end() || !parse::is_hexa_char(*(it + 1)) || !parse::is_hexa_char(*(it + 2)))
-		return _error.set("Percentage encoding, unexpected character", BAD_REQUEST);
+		return _error.set("Percentage encoding, unexpected character", BAD_REQUEST, true);
 	*it = parse::hex_to_byte(*(it + 1)) * 16 + parse::hex_to_byte(*(it + 2));
 	it = str.erase(it + 1, it + 3);
 }

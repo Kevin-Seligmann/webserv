@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/30 17:58:37 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/10/04 11:46:15 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ std::vector<std::string> tokenize(const std::string& content)
 				current.clear();
 			}
 		}
-		else if (c == '{' || c == '}' || c == ';')
+		else if (c == '{' || c == '}' || c == ';' || c == '=')
 		{
 			if (!current.empty())
 			{

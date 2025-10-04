@@ -2,13 +2,14 @@
 #include "ReadNetBuffer.hpp"
 #include <cassert>
 
-const size_t ReadNetBuffer::START_BUFFER_SIZE = 4096;
-const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 32768;
+const size_t ReadNetBuffer::START_BUFFER_SIZE = 2000;
+const size_t ReadNetBuffer::SHRINK_BUFFER_SIZE = 50001;
 const size_t ReadNetBuffer::CRITICAL_SIZE = 500000;
 
 ReadNetBuffer::ReadNetBuffer()
 {
-    _buffer = new uint8_t[START_BUFFER_SIZE];
+    _buffer = new uint8_t[START_BUFFER_SIZE]; // TODO agregue () ara inicializarlo limpio
+    std::memset(_buffer, 0, START_BUFFER_SIZE);
     _start = _buffer;
     _tail = _buffer;
     _end = _buffer + START_BUFFER_SIZE;
@@ -30,6 +31,7 @@ void ReadNetBuffer::reserve(ssize_t n)
     size_t size = this->size();
 
     uint8_t * new_buffer = new uint8_t[n];
+    std::memset(_buffer, 0, n);
     std::memcpy(new_buffer, _start, size);
     delete [] _buffer;
     _buffer = new_buffer;
@@ -52,6 +54,7 @@ void ReadNetBuffer::shrink()
     size_t new_capacity = std::max<size_t>(START_BUFFER_SIZE, size);
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
+    std::memset(_buffer, 0, new_capacity);
     memcpy(new_buffer, _start, size);
     delete [] _buffer;
 
@@ -82,14 +85,14 @@ void ReadNetBuffer::expand(size_t min_size)
 {
     size_t new_capacity;
     if (min_size >= CRITICAL_SIZE)
-        new_capacity = min_size;
+        new_capacity = min_size + 1;
     else
-        
-        new_capacity = std::max<size_t>(std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE), min_size);;
+        new_capacity = std::max<size_t>(std::max<size_t>(capacity() * 1.7, START_BUFFER_SIZE), min_size);
 
     size_t size = this->size();
 
     uint8_t * new_buffer = new uint8_t[new_capacity];
+    std::memset(_buffer, 0, new_capacity);
     std::memcpy(new_buffer, _start, size);
     delete [] _buffer;
 
@@ -103,13 +106,16 @@ void ReadNetBuffer::clear()
 {
     delete [] _buffer;
     _buffer = new uint8_t[START_BUFFER_SIZE];
+    std::memset(_buffer, 0, START_BUFFER_SIZE);
     _start = _buffer;
     _tail = _buffer;
     _end = _buffer + START_BUFFER_SIZE;
 }
+#include "iostream"
 
 void ReadNetBuffer::consume_bytes(ssize_t bytes)
 {
+    std::cout << "Cons. " << bytes << std::endl;
     _start += bytes;
 }
 
@@ -119,8 +125,8 @@ void ReadNetBuffer::consume_bytes(ssize_t bytes)
 void ReadNetBuffer::unsafe_consume_bytes(ssize_t bytes)
 {
     _start += bytes;
-    if (static_cast<size_t>(size()) >= SHRINK_BUFFER_SIZE)
-        shrink();
+    // if (static_cast<size_t>(size()) >= SHRINK_BUFFER_SIZE)
+    //     shrink();
 }
 
 uint8_t * ReadNetBuffer::get_start(){return _start;}

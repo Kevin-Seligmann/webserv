@@ -15,6 +15,7 @@
 #include "File.hpp"
 #include "ActiveFileDescriptor.hpp"
 #include "CGI.hpp"
+#include "StreamRequest.hpp"
 
 class ResponseManager
 {
@@ -27,7 +28,7 @@ public:
         GENERATING_DEFAULT_ERROR_PAGE, GENERATING_LOCATION_ERROR_PAGE
     };
 
-    ResponseManager(CGI &, HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd);
+    ResponseManager(CGI &, HTTPRequest &, HTTPError &, SysBufferFactory::sys_buffer_type type, int fd,StreamRequest & stream_request);
     ~ResponseManager();
 
     void set_virtual_server(ServerConfig const * config);
@@ -37,7 +38,7 @@ public:
     void generate_response(RM_error_action action, bool is_cgi, bool from_autoindex = false);
     void process();
     bool response_done();
-    void new_response();
+    void new_response(bool preserve_redirect = false);
     void set_error_action(RM_error_action action);
     bool is_error();
     const ServerConfig* getServerForResponse() { return _server; }
@@ -61,6 +62,8 @@ private:
     RM_error_action _error_action;
     std::string _redirecting_location;
     CGI & _cgi;
+    StreamRequest & _stream_request;
+    size_t total_writen_response_size;
 
     void generate_default_status_response();
     void generate_get_response(bool from_autoindex = false);

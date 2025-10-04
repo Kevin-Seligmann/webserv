@@ -56,9 +56,13 @@ public:
     bool test_body();
     bool test_trailer_line();
     bool test_header_line();
-    
+    bool test_chunk_newline();
+    ssize_t size();
     void process_headers();
 
+    ssize_t extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size);
+    size_t get_chunk_length();
+    
     // Debug
     void dump_remainder() const;
     std::string const get_remainder() const;
