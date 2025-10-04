@@ -1,12 +1,13 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
-#include "Enums.hpp"
-#include "StringUtil.hpp"
-#include "HTTPRequest.hpp"
+
 #include <string>
 #include <vector>
 #include <map>
+#include "Enums.hpp"
+#include "StringUtil.hpp"
+#include "HTTPRequest.hpp"
 
 // TODO: La clase Location no está terminada - falta implementar:
 // - Validación completa de configuración

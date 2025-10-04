@@ -7,7 +7,7 @@ void RequestValidator::put_error(std::string const & text, Status status)
         Logger::getInstance().warning("Found more than one error, will be logged and ignored. " + status::status_to_text(status) + " " + text + ". Actual: " + _error.to_string());
         return ;
     }
-    _error.set(text, status);
+    _error.set(text, status, true);
 }
 
 HTTPError const * RequestValidator::error(){return &_error;}
@@ -39,7 +39,7 @@ void RequestValidator::validate_first_line(HTTPRequest const & request)
 void RequestValidator::validate_uri(URI const & uri)
 {
     if (uri.schema != "" && uri.schema != "http")
-        _error.set("Protocol not implemented: " + uri.schema, NOT_IMPLEMENTED);
+        _error.set("Protocol not implemented: " + uri.schema, NOT_IMPLEMENTED, true);
 }
 
 
@@ -134,7 +134,7 @@ void RequestValidator::validate_extensions(std::string const & filename, std::ve
         if (validate_extension(filename, *it))
             break ;
     if (it == extensions.end() && !extensions.empty())
-        _error.set("Mismatch between Content-Type and extension", BAD_REQUEST);
+        _error.set("Mismatch between Content-Type and extension", BAD_REQUEST, true);
 }
 
 

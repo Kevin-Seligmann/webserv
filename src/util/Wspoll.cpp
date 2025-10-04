@@ -30,6 +30,8 @@ int Wspoll::size(){return _size;}
 
 void Wspoll::add(int fd, int mode)
 {
+    if (fd == -1)
+        return ;
     if (_adding_queue_size + _size >= POLLING_SIZE)
         throw std::runtime_error("Wspoll failed: No space left on addition" + wss::i_to_dec(_adding_queue_size) + " + " +  wss::i_to_dec(_size)  + "/" + wss::i_to_dec(POLLING_SIZE));
     if (WSPOLL_DEBUG)
@@ -40,6 +42,16 @@ void Wspoll::add(int fd, int mode)
 
 void Wspoll::mod(int fd, int mode)
 {
+    if (fd == -1)
+        return ;
+    for (int i = 0; i < _size; i++)
+    {
+        if (_fds[i].fd == fd)
+        {
+            _fds[i].events = WSPOLL_MARK_MOD;
+            break ;
+        }
+    }
     _requests.push_back(Wspoll_request(WSPOLL_MOD, fd, mode));
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll modification requested " + wss::i_to_dec(fd) + " " + wss::i_to_dec(mode) << std::endl;
@@ -47,6 +59,16 @@ void Wspoll::mod(int fd, int mode)
 
 void Wspoll::del(int fd)
 {
+    if (fd == -1)
+        return ;
+    for (int i = 0; i < _size; i++)
+    {
+        if (_fds[i].fd == fd)
+        {
+            _fds[i].events = WSPOLL_MARK_DELETION;
+            break ;
+        }
+    }
     _adding_queue_size --;
     _requests.push_front(Wspoll_request(WSPOLL_DEL, fd));
     if (WSPOLL_DEBUG)
@@ -56,7 +78,7 @@ void Wspoll::del(int fd)
 void Wspoll::real_add(int fd, int mode)
 {
     if (_size >= POLLING_SIZE)
-        throw std::runtime_error("Wspoll failed: No space left on actual addition: " + wss::i_to_dec(_size) + "/" + wss::i_to_dec(POLLING_SIZE));
+        throw std::runtime_error("File descriptors exceed server capacity: " + wss::i_to_dec(_size) + "/" + wss::i_to_dec(POLLING_SIZE));
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll addition " + wss::i_to_dec(fd) + " " + wss::i_to_dec(mode) << std::endl;
     _fds[_size].events = mode;
@@ -124,6 +146,10 @@ int Wspoll::wait()
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll waiting requested." << std::endl;
     update_fds();
+    // for (int i = 0; i < _size; i++)
+    // {
+    //     std::cout << " fd "  << _fds[i].fd << " events " << _fds[i].events  << " revents " << _fds[i].revents  << "\n"; 
+    // }
     return poll(_fds, _size, TIMEOUT);
 }
 
@@ -139,7 +165,10 @@ Wspoll_event const & Wspoll::operator[](int index)
         Logger::getInstance() << "Wspoll accesed element on index " << index << ". Fd: " << _fds[index].fd << std::endl;
 
     event.fd = _fds[index].fd;
-    event.events = _fds[index].revents;
+    if (_fds[index].events == WSPOLL_MARK_DELETION || _fds[index].events == WSPOLL_MARK_MOD)
+        event.events = 0;
+    else
+        event.events = _fds[index].revents;
     return event;
 }
 

@@ -1,5 +1,6 @@
 #include "StringUtil.hpp"
 #include "ElementParser.hpp"
+#include "CGI.hpp"
 
 void wss::to_upper(std::string & s)
 {
@@ -315,4 +316,23 @@ void wss::normalize_any_path(std::string & str)
 	if (out.empty())
 		out = "/";
 	str = out;
+}
+
+
+bool wss::isCgiRequest(std::string const & path)
+{
+    for (t_cgi_conf::const_iterator it = CGIInterpreter::ACCEPTED_EXT.begin();
+         it != CGIInterpreter::ACCEPTED_EXT.end(); ++it)
+    {
+        for (std::vector<std::string>::const_iterator ext = it->extensions.begin();
+             ext != it->extensions.end(); ++ext)
+        {
+            if (path.size() >= ext->size() &&
+                path.compare(path.size() - ext->size(), ext->size(), *ext) == 0)
+            {
+                return (true);
+            }
+        }
+    }
+    return (false);
 }

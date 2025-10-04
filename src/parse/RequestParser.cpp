@@ -53,7 +53,7 @@ bool RequestParser::test_first_line()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::FIRST_LINE_MAX_LENGTH)
     {
-        _error.set("Request first line length is too long", BAD_REQUEST);
+        _error.set("Request first line length is too long", BAD_REQUEST, true);
         return false;
     }
     if (!_processing)
@@ -62,7 +62,7 @@ bool RequestParser::test_first_line()
     {
         _empty_skip_count ++;
         if (_empty_skip_count > 1)
-            _error.set("Only one empty line is allowed before request", BAD_REQUEST);
+            _error.set("Only one empty line is allowed before request", BAD_REQUEST, true);
         return false;
      }
     return true;
@@ -73,7 +73,7 @@ bool RequestParser::test_chunk_size()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::CHUNKED_SIZE_LINE_MAX_LENGTH)
     {
-        _error.set("Chunk size line too long", BAD_REQUEST);
+        _error.set("Chunk size line too long", BAD_REQUEST, true);
         return false;
     }
     return _processing;
@@ -84,9 +84,24 @@ bool RequestParser::test_chunk_body()
     _processing = _buffer.get_crlf_chunk(_chunk_length, _begin, _end);
     if (_processing && (*(_end - 1) != '\n' || *(_end - 2) != '\r'))
     {
-        _error.set("Expected new line at the end of chunked request", BAD_REQUEST);
+        _error.set("Expected new line at the end of chunked request", BAD_REQUEST, true);
         return false;
     }
+    return _processing;
+}
+
+bool RequestParser::test_chunk_newline()
+{
+    _processing = _buffer.get_crlf_chunk(0, _begin, _end);
+    if (_processing && (*(_end - 1) != '\n' || *(_end - 2) != '\r'))
+    {
+        std::ostringstream oss;
+        oss << "Expected new line at the end of chunked request" ;
+        _error.set(oss.str(), BAD_REQUEST, true);
+        return false;
+    }
+    if (_processing)
+        _status = PRS_CHUNKED_SIZE;
     return _processing;
 }
 
@@ -105,7 +120,7 @@ bool RequestParser::test_trailer_line()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::HEADER_LINE_MAX_LENGTH || _trailer_field_count >= RequestParser::MAX_TRAILER_FIELDS)
     {
-        _error.set("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        _error.set("Request trailer field", REQUEST_HEADER_FIELDS_TOO_LARGE, true);
         return false;
     }
     if (!_processing)
@@ -124,7 +139,7 @@ bool RequestParser::test_header_line()
     _processing = _buffer.get_crlf_line(_begin, _end);
     if (static_cast<size_t>(_buffer.previous_read_size()) >= RequestParser::HEADER_LINE_MAX_LENGTH || _header_field_count >= RequestParser::MAX_HEADER_FIELDS)
     {
-        _error.set("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE);
+        _error.set("Request headers", REQUEST_HEADER_FIELDS_TOO_LARGE, true);
         return false;
     }
     if (!_processing)
@@ -175,7 +190,7 @@ void RequestParser::parse_protocol()
         Logger::getInstance().warning("protocol, extra whitespace after uri");
     _begin = wss::skip_whitespace(_begin, _end);
     if (_begin == _end)
-        return _error.set("protocol not found", BAD_REQUEST);
+        return _error.set("protocol not found", BAD_REQUEST, true);
     _end = wss::skip_until(_begin, _end, " ");
 
     // Parse
@@ -186,7 +201,7 @@ void RequestParser::parse_protocol()
         Logger::getInstance().warning("request line, extra whitespace after protocol");
 
     if (wss::skip_whitespace(_end, _end) != _end)
-        _error.set("Extra content after protocol", BAD_REQUEST);
+        _error.set("Extra content after protocol", BAD_REQUEST, true);
 } 
 
 void RequestParser::parse_header_line()
@@ -201,13 +216,13 @@ void RequestParser::parse_header_line()
     // Parse name
     token_end = wss::skip_until(token_start, _end, ":");
     if (token_end == _end)
-        return _error.set("Token ':' not found on field", BAD_REQUEST);
+        return _error.set("Token ':' not found on field", BAD_REQUEST, true);
     if (token_end == token_start)
-        return _error.set("Field name is empty", BAD_REQUEST);
+        return _error.set("Field name is empty", BAD_REQUEST, true);
     _element_parser.parse_field_token(_begin, token_end, name);
     
     if (name == "*" || name == "close")
-        return _error.set("Header field name " + name + " is reserved", BAD_REQUEST);
+        return _error.set("Header field name " + name + " is reserved", BAD_REQUEST, true);
     // Parse value
     token_start = wss::skip_ascii_whitespace(token_end + 1, _end);
     if (token_start != _end)
@@ -234,7 +249,7 @@ void RequestParser::parse_chunked_size()
     // Delimit hex token
     token_end = wss::skip_hexa_token(token_start, _end);
     if (token_start == token_end)
-        return _error.set("The chunk size line must have at least one hex digit", BAD_REQUEST);
+        return _error.set("The chunk size line must have at least one hex digit", BAD_REQUEST, true);
 
     // Get hexa value
     _chunk_length = parse::s_to_hex(token_start, token_end, RequestParser::MAX_CHUNK_SIZE);
@@ -243,14 +258,13 @@ void RequestParser::parse_chunked_size()
     else
         _status = PRS_CHUNKED_BODY;
     if (_chunk_length  >= RequestParser::MAX_CHUNK_SIZE)
-        return _error.set("Chunk size too big", BAD_REQUEST);
+        return _error.set("Chunk size too big", BAD_REQUEST, true);
     if (_request.body.content.size() + _chunk_length >= RequestParser::MAX_CONTENT_LENGTH)
-        return _error.set("Chunked body too big", BAD_REQUEST);
+        return _error.set("Chunked body too big", BAD_REQUEST, true);
 }
 
 void RequestParser::parse_chunked_body()
 {
-    _request.body.content.reserve(_request.body.content.size() + std::distance(_begin, _end));
     _request.body.content += std::string(_begin, _end - 2);
     _status = PRS_CHUNKED_SIZE;
 }
@@ -264,12 +278,12 @@ void RequestParser::parse_uri()
         Logger::getInstance().warning("Extra white space after request URI (Client #)");
     token_start = wss::skip_whitespace(token_start, _end);
     if (token_start == _end)
-        return _error.set("URI not found", BAD_REQUEST);
+        return _error.set("URI not found", BAD_REQUEST, true);
 
     // Check URI length
     std::string::iterator uri_limit = wss::skip_until(token_start, token_end, " ");
     if (static_cast<size_t>(std::distance(token_start, uri_limit)) >= RequestParser::URI_MAX_LENGTH)
-        return _error.set("Request uri", URI_TOO_LONG);
+        return _error.set("Request uri", URI_TOO_LONG, true);
 
     // Parse
     if (token_start != _end && *token_start == '/')
@@ -302,14 +316,14 @@ void RequestParser::get_hier_part(std::string::iterator & token_start, std::stri
     // Find and skip userinfo if present
     token_end = wss::skip_until(token_start, _end, "@");
     if (token_end != _end && *token_end == '@')
-        return _error.set("authority, userinfo '@' is deprecated", BAD_REQUEST);
+        return _error.set("authority, userinfo '@' is deprecated", BAD_REQUEST, true);
     if (token_start == _end)
-        return _error.set("Host not found on URI", BAD_REQUEST);
+        return _error.set("Host not found on URI", BAD_REQUEST, true);
 
     // Find host (Until path or end)
     token_end = wss::skip_until(token_start, _end, " :?#/");
     if (token_end == token_start)
-        return _error.set("Host not found on URI", BAD_REQUEST);
+        return _error.set("Host not found on URI", BAD_REQUEST, true);
     else
         _element_parser.parse_host(token_start, token_end, _request.uri.host);
     token_start = token_end;
@@ -362,10 +376,10 @@ void RequestParser::parse_content_length_field(std::string & value)
             token_end = it->name.end();
 
             if (!it->parameters.empty())
-                return _error.set("Content-Length values can't have parameters", BAD_REQUEST);
+                return _error.set("Content-Length values can't have parameters", BAD_REQUEST, true);
             _element_parser.parse_content_length_field(token_start, token_end, _request.headers.content_length);
             if (prev_value != -1 && prev_value != _request.headers.content_length)
-                return _error.set("Content-Length has incoherent, different values: " + value, BAD_REQUEST);
+                return _error.set("Content-Length has incoherent, different values: " + value, BAD_REQUEST, true);
         }
     }
 }
@@ -384,6 +398,8 @@ void RequestParser::parse_expect_field(std::string & value)
 {
     parse_list(value.begin(), value.end(), &RequestParser::parse_expect_element);
 }
+
+    ssize_t RequestParser::size(){return _buffer.size();};
 
 /*
     parameters      = *( OWS ";" OWS [ parameter ] )
@@ -405,25 +421,25 @@ void RequestParser::parse_parameters(std::string::iterator begin, std::string::i
         // 2
         head = wss::skip_ascii_whitespace(begin, end);
         if (head == end || *head != ';')
-            return _error.set("Parameters, expected ; separator", BAD_REQUEST);
+            return _error.set("Parameters, expected ; separator", BAD_REQUEST, true);
         head = wss::skip_ascii_whitespace(head + 1, end);
 
         // 3
         name_start = head;
         name_end = wss::skip_http_token(name_start, end);
         if (name_end == name_start || name_end == end || *name_end != '=')
-            return _error.set("Parameters, name must be non empty and precede a '='", BAD_REQUEST);
+            return _error.set("Parameters, name must be non empty and precede a '='", BAD_REQUEST, true);
         
         // 4
         head = name_end + 1;
         if (head == end)
-            return _error.set("Parameters, value not found", BAD_REQUEST);
+            return _error.set("Parameters, value not found", BAD_REQUEST, true);
         if (head != end && *head == '"')
         {
             std::string val;
             std::string::iterator dquote_end = wss::skip_until_dquoted_string_end(head + 1, end);
             if (dquote_end == end || *dquote_end != '"')
-                return _error.set("Parameters, closing dquote missing", BAD_REQUEST);
+                return _error.set("Parameters, closing dquote missing", BAD_REQUEST, true);
             _element_parser.parse_dquote_string(head, dquote_end, val); // Head and end points to ", updates head to last " 
             parameters.push_back(std::make_pair(std::string(name_start, name_end), val));
             head = dquote_end + 1;
@@ -448,7 +464,7 @@ void RequestParser::parse_content_type_field(std::string & value)
     _request.headers.content_type.type = std::string(value.begin(), head);
 
     if (head == value.end() || *head != '/')
-        return _error.set("Media-type, expected subtype separator '/'", BAD_REQUEST);
+        return _error.set("Media-type, expected subtype separator '/'", BAD_REQUEST, true);
     head ++;
 
     std::string::iterator begin = head;
@@ -460,7 +476,7 @@ void RequestParser::parse_content_type_field(std::string & value)
     wss::to_lower(_request.headers.content_type.subtype);
 
     if (_request.headers.content_type.type == "" || _request.headers.content_type.subtype == "")
-        return _error.set("Media-Type, empty type or subtype", BAD_REQUEST);
+        return _error.set("Media-Type, empty type or subtype", BAD_REQUEST, true);
     
     parse_parameters(head, value.end(), _request.headers.content_type.parameters);
 }
@@ -481,9 +497,9 @@ void RequestParser::parse_cookie_field(std::string & value)
         while (name_end != value.end() && parse::is_token_char(*name_end))
             name_end ++;
         if (name_start == name_end)
-            return _error.set("Cookie name, empty", BAD_REQUEST);
+            return _error.set("Cookie name, empty", BAD_REQUEST, true);
         if (name_end == value.end() || *name_end != '=')
-            return _error.set("Cookie name, '=' not found/unexpected character", BAD_REQUEST);
+            return _error.set("Cookie name, '=' not found/unexpected character", BAD_REQUEST, true);
        
         // Parse value
         value_start = name_end + 1;
@@ -499,7 +515,7 @@ void RequestParser::parse_cookie_field(std::string & value)
         while (head != value.end() && parse::is_cookie_char(*head))
             head ++;
         if (dquote && (head == value.end() || *head != '"'))
-            return _error.set("Cookie value, unclosed quote/unexpected character", BAD_REQUEST);
+            return _error.set("Cookie value, unclosed quote/unexpected character", BAD_REQUEST, true);
         value_end = head;
         _request.headers.put_cookie(name_start, name_end, value_start, value_end);
         if (dquote)
@@ -509,10 +525,10 @@ void RequestParser::parse_cookie_field(std::string & value)
         if (head == value.end())
             return ;
         if (*head != ';')
-            return _error.set("Cookie, unexpected character", BAD_REQUEST);
+            return _error.set("Cookie, unexpected character", BAD_REQUEST, true);
         head ++;
         if (head == value.end() || *head != ' ')
-            return _error.set("Cookie, unexpected character", BAD_REQUEST);
+            return _error.set("Cookie, unexpected character", BAD_REQUEST, true);
         head ++;
     }
 }
@@ -612,7 +628,7 @@ void RequestParser::parse_list (
         
         head = wss::skip_whitespace(head, token_end);
         if (head == token_end || *head != ',')
-            return _error.set("Parsing list, unexpected character", BAD_REQUEST);
+            return _error.set("Parsing list, unexpected character", BAD_REQUEST, true);
         head ++;
         head = wss::skip_whitespace(head, token_end);
         token_start = head;
@@ -629,7 +645,7 @@ std::string::iterator RequestParser::parse_transfer_encoding_element(std::string
     _element_parser.parse_field_token(begin, head, csf.name);
     if (csf.name.empty())
     {
-        _error.set("Transfer encoding field, empty field name", BAD_REQUEST);
+        _error.set("Transfer encoding field, empty field name", BAD_REQUEST, true);
         return end;
     }
     
@@ -645,7 +661,7 @@ std::string::iterator RequestParser::parse_transfer_encoding_element(std::string
         _element_parser.parse_field_token(begin, head, param_name);
         if (param_name.empty())
         {
-            _error.set("comma separated field, empty parameter name", BAD_REQUEST);
+            _error.set("comma separated field, empty parameter name", BAD_REQUEST, true);
             return end;
         }
     
@@ -653,12 +669,12 @@ std::string::iterator RequestParser::parse_transfer_encoding_element(std::string
         begin = wss::skip_ascii_whitespace(head, end);
         if (begin != end && *begin != '=')
         {
-            _error.set("Comma separated parameter, unexpected character", BAD_REQUEST);
+            _error.set("Comma separated parameter, unexpected character", BAD_REQUEST, true);
             return end;
         }
         if (begin == end || begin + 1 == end)
         {
-            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST, true);
             return end;
         }
         begin = wss::skip_ascii_whitespace(begin + 1, end);
@@ -669,7 +685,7 @@ std::string::iterator RequestParser::parse_transfer_encoding_element(std::string
             head = wss::skip_until_dquoted_string_end(begin + 1, end);
             if (head == end)
             {
-                _error.set("Comma separated parameter, closing dquote missing", BAD_REQUEST);
+                _error.set("Comma separated parameter, closing dquote missing", BAD_REQUEST, true);
                 return end;
             }
             _element_parser.parse_dquote_string(begin, head, param_value);
@@ -683,7 +699,7 @@ std::string::iterator RequestParser::parse_transfer_encoding_element(std::string
         }
         if (param_value.empty())
         {
-            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST);
+            _error.set("Comma separated parameter, empty parameter value", BAD_REQUEST, true);
             return end;
         }
 
@@ -720,4 +736,17 @@ std::string::iterator RequestParser::parse_expect_element(std::string::iterator 
 std::string const  RequestParser::get_remainder() const
 {
     return std::string(_buffer.cbegin(), _buffer.cend());
+}
+
+ssize_t RequestParser::extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size)
+{    
+    ssize_t extracted = std::min(_buffer.size(), buffer_size);
+    memcpy(dst, _buffer.itbegin(), extracted);
+    _buffer.unsafe_consume_bytes(extracted);
+    return extracted;
+}
+
+size_t RequestParser::get_chunk_length()
+{
+    return _chunk_length;
 }

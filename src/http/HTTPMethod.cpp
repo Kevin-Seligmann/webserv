@@ -9,7 +9,6 @@ std::ostream & operator<<(std::ostream & os, HTTPMethod method)
         case GET: os << "GET"; break;
         case POST: os << "POST"; break;
         case DELETE: os << "DELETE"; break;
-        case PUT: os << "PUT"; break;
         default: os << "Method uninitialized"; break;
     }
     return os;
@@ -26,9 +25,6 @@ HTTPMethod method::str_to_method(std::string const & str)
     else if (wss::casecmp(str, "DELETE")) {
         return DELETE;
     }
-    else if (wss::casecmp(str, "PUT")) {
-        return PUT;
-    }
     else if (wss::casecmp(str, "HEAD")) {
         return HEAD;
     }
@@ -44,7 +40,6 @@ std::string const method::method_to_str(HTTPMethod const & m)
         case GET: return "GET";
         case POST: return "POST";
         case DELETE: return "DELETE";
-        case PUT: return  "PUT";
         case HEAD: return  "HEAD";
         default: CODE_ERR("Trying to transform an unknown method to string");
     }

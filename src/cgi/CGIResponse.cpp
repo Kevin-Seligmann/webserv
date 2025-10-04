@@ -132,6 +132,8 @@ void CGIResponse::buildResponse()
 {
 	std::ostringstream response;
 
+	close = false;
+
 	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
 
 	// response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
@@ -152,6 +154,47 @@ void CGIResponse::buildResponse()
 
 	response << "Content-Length: " << body.size() << "\r\n";
 	
+	response << "\r\n";
+	response << body;
+
+    _responseBuffer = response.str();
+
+	_sentBytes = 0;
+}
+
+void CGIResponse::buildStreamedResponse()
+{
+	std::ostringstream response;
+
+	response << "HTTP/1.1 " << (_status.empty() ? "200 OK" : _status) << "\r\n";
+
+	// response << "Content-Type: " << (_contentType.empty() ? "text/plain" : _contentType) << "\r\n";
+
+	if (!_location.empty())
+		response << "Location: " << _location << "\r\n";
+
+	for (std::map<std::string,std::string>::const_iterator it = _cgiResponseHeaders.begin();
+		 it != _cgiResponseHeaders.end(); ++it)
+	{
+		response << it->first << ": " << it->second << "\r\n";
+	}
+
+	std::string body = _bodyStream.str();
+
+	_bodyStream.str("");
+	_bodyStream.clear();
+
+	if (!getCGIResponseHeader("Content-Length").empty())
+	{
+		response << "Content-Length: " << getCGIResponseHeader("Content-Length") << "\r\n";
+		close = false;
+	}
+	else 
+	{
+		response << "Connection: close" << "\r\n";
+		close = true;
+	}
+
 	response << "\r\n";
 	response << body;
 

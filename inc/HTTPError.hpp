@@ -15,8 +15,10 @@ public:
     Status status() const;
     std::string const & msg() const;
 
-    void set(std::string const & motive, Status _status);
+    void set(std::string const & motive, Status _status, bool do_close = false);
     std::string const to_string() const;
+
+    bool close;
 
 private:
     std::string _motive;

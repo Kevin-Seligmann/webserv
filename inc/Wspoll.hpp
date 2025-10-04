@@ -35,6 +35,12 @@ private:
         WSPOLL_ADD, WSPOLL_DEL, WSPOLL_MOD
     };
 
+    enum Wspoll_mark 
+    {
+        WSPOLL_MARK_DELETION = -1,
+        WSPOLL_MARK_MOD = -2,
+    };
+
     struct Wspoll_request
     {
         Wspoll_request(Wspoll_request_type type, int fd, int mode);
@@ -44,7 +50,7 @@ private:
         int mode;
     };
 
-    const static int POLLING_SIZE = 500;
+    const static int POLLING_SIZE = 5000;
     const static int TIMEOUT = 1000;
     const static int WSPOLL_DEBUG = 0;
 

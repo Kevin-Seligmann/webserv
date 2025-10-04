@@ -1,10 +1,11 @@
 #include "ResponseManager.hpp"
 
-ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd)
-:_request(request), _error(error),_status(WAITING_REQUEST), _cgi(cgi)
+ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & error, SysBufferFactory::sys_buffer_type type, int fd, StreamRequest & stream_request)
+:_request(request), _error(error),_status(WAITING_REQUEST), _cgi(cgi),_stream_request(stream_request)
 {
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
-
+    _stream_request.set_response_write_fd(fd);
+    total_writen_response_size = 0;
     // TO_DELETE
     // TESTING LOCATION CONFIG.
     // lc->setPath("/def/");
@@ -54,11 +55,17 @@ void ResponseManager::generate_response(RM_error_action action, bool is_cgi, boo
 
     _error_action = action;
 
-    if (is_cgi && !from_autoindex)
+     if ((is_cgi || _stream_request.streaming_active) && _error.status() == OK)
     {
         generate_cgi_response();
         return ;
     }
+    
+    if (is_cgi && !from_autoindex)
+    {
+        generate_cgi_response();
+        return ;
+    } 
 
     switch (::status::status_type(_error.status()))
     {
@@ -200,10 +207,6 @@ void ResponseManager::generate_post_response()
         case File::NONE: set_error("Rare file type", FORBIDDEN); return ;
     }
 
-    if (_file.creation_status == File::NEW)
-        _error.set("File created", CREATED);
-    if (_file.creation_status == File::NEW)
-        _error.set("File created", CREATED);
     _wr_file_it = _request.body.content.begin();
     _status = WRITING_FILE;
 };
@@ -471,10 +474,13 @@ void ResponseManager::write_response()
     ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {
+        total_writen_response_size += written_bytes;
         _buffer.unsafe_consume_bytes(written_bytes);
     }
     else if (written_bytes == 0)
     {
+        // Logger::getInstance() << "TOTAL OTPUT SEND AS RESPONSE  " << total_writen_response_size << " client " << _stream_request.get_request_buffer().read_fd() << std::endl;
+        total_writen_response_size = 0;
         _buffer.clear();
         _file.close();
         _status = IDLE;
@@ -490,7 +496,7 @@ void ResponseManager::write_response()
     }
 }
 
-bool ResponseManager::response_done(){return _buffer.size() == 0 && _status == WRITING_RESPONSE;}
+bool ResponseManager::response_done(){return _buffer.size() == 0 && _status == IDLE;}
 
 
 std::string const ResponseManager::get_host_path()
