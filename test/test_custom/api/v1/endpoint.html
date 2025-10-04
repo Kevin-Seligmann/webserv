@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <h1 id="file"></h1>
+
+  <script>
+    // Путь из URL
+    var path = window.location.pathname;
+
+    // Имя файла
+    var fileName = path.split('/').pop();
+
+    // Директория — всё до последнего "/"
+    var dir = path.substring(0, path.lastIndexOf('/'));
+    if (dir === '') dir = '/'; // если файл в корне
+
+    // Выводим
+    document.getElementById('file').textContent = `Hello from ${fileName}`;
+    document.title = `Hello from ${fileName}`;
+  </script>
+</body>
+</html>
+
