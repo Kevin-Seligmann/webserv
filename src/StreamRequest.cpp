@@ -18,4 +18,5 @@ void StreamRequest::reset(){
     cgi_read_finished = false;
     cgi_write_finished = false;
     streaming_active = false;
+    request_body_size_appended = 0;
 }

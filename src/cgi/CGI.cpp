@@ -550,7 +550,7 @@ void CGI::runCGIStreamed(int fd)
 				_cgi_pipe[0] = -1;
 			}
 		}
-		// Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
+		Logger::getInstance() << "READDED: " << readed << " Bsize: " << _stream_request.cgi_response_body_size << " Buffer sent: " << _header_stream_buffer_sent << "\n";
 	}
 	else 
 	{
@@ -661,11 +661,11 @@ void CGI::sendResponse()
 		// Logger::getInstance() << "Client " << _stream_request.get_request_buffer().read_fd() << " finished cgi write streaming " << std::endl;
 		_stream_request.cgi_write_finished = true;
 	}
-	// Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
-	// Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< "\n";
-	// Logger::getInstance() << "SENT TO CGI: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
-	// Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
-	// << " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << "\n";
+	Logger::getInstance() << "Sending response: Total: " << _stream_request.cgi_response_body_size_consumed << "/" << _stream_request.cgi_response_body_size << "\n";
+	Logger::getInstance() << "HDR SENT: " << _header_stream_buffer_sent << " HDR PARSED " << _headers_parsed << " CGI RD FINISH " << _stream_request.cgi_read_finished<< "\n";
+	Logger::getInstance() << "s: " << _stream_request.request_body_size_consumed << " OUT OF " << _stream_request.request_body_size << " FINISHED; " << _stream_request.request_read_finished << _stream_request.request_write_finished << std::endl;
+	Logger::getInstance() << " extsize " << _stream_request.get_request_buffer().external_size() << " extcap " << _stream_request.get_request_buffer().external_capacity()
+	<< " sizze " << _stream_request.get_response_buffer().size() << " cap " << _stream_request.get_response_buffer().capacity() << " R.B.Size appended" << _stream_request.request_body_size_appended << "\n";
 }
 
 void CGI::parseStreamHeaders()

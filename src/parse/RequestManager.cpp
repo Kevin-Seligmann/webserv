@@ -133,7 +133,8 @@ void RequestManager::set_streaming(bool has_read)
     _stream_request.get_request_buffer().set_external_buffer(_read_buffer, _READ_BUFFER_SIZE, chunk_read);
     _stream_request.set_request_read_fd(_sys_buffer->_fd);
     _stream_request.set_response_write_fd(_sys_buffer->_fd);
-    _stream_request.request_body_size += chunk_read;
+    _stream_request.request_body_size += chunk_size;
+    _stream_request.request_body_size_appended += chunk_read;
     _processing_type = STREAM;
     if (chunk_read >= chunk_size)
         unset_streaming(has_read);
@@ -151,7 +152,10 @@ void RequestManager::process_stream()
     size_t remaining_chunk_size = chunk_size - chunk_read;
     ssize_t read = _stream_request.get_request_buffer().recv_external(remaining_chunk_size);
     if (read > 0)
+    {
+        _stream_request.request_body_size_appended += read;
         chunk_read += read;
+    }
     if (chunk_read >= chunk_size)
         unset_streaming(true);
 }

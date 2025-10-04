@@ -21,6 +21,7 @@ public:
     size_t cgi_response_body_size;
     size_t request_body_size_consumed;
     size_t cgi_response_body_size_consumed;
+    size_t request_body_size_appended;
     bool request_read_finished;
     bool request_write_finished;
     bool cgi_read_finished;
