@@ -87,7 +87,7 @@ void Client::prepareResponse(ServerConfig * server, Location * location, Respons
 	else 
 	{
 		updateActiveFileDescriptor(_response_manager.get_active_file_descriptor());
-		setStatus(PROCESSING_RESPONSE, "Processing Request");
+		setStatus(PROCESSING_RESPONSE, "Processing response");
 	}
 }
 

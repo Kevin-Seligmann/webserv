@@ -482,6 +482,7 @@ void ResponseManager::generate_default_status_response()
 
 void ResponseManager::process()
 {
+    std::cout << "STATUS " << _status << std::endl;
     switch (_status)
     {
         case READING_FILE: read_file(); break; 
