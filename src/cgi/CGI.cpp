@@ -631,56 +631,8 @@ void CGI::runCGIStreamed(int fd)
 	}
 	
 	if (_read_finished && _write_finished)
-	{
+	{		
 		setStatus(CGI_FINISHED, "CGI FINISHED");
-		
-		int error_check = cgiErrorCheck(_cgi_output);
-		
-		switch (error_check) {
-			
-			case 200:
-			{
-				_cgi_response.parseFromCGIOutput(_cgi_output);
-				_cgi_response.buildResponse();
-				setStatus(CGI_FINISHED, "CGI FINISHED");
-				break;
-				
-			}
-			case 403:
-			{
-				_cgi_response.buildForbiddenErrorResponse();
-				setStatus(CGI_ERROR, "CGI Script permission denied");
-				break;
-			}	
-			
-			case 404: 
-			{
-				_cgi_response.buildNotFoundErrorResponse();
-				setStatus(CGI_ERROR, "CGI Script not found");
-				break;
-			}
-			
-			case 500:
-			{
-				_cgi_response.buildInternalErrorResponse();
-				setStatus(CGI_ERROR, "CGI Execve failed");
-				break;
-			}
-			
-			case 502:
-			{
-				_cgi_response.buildBadGatewayResponse();
-				setStatus(CGI_ERROR, "CGI Bad Gateway");
-				break;
-			}
-			
-			default:
-			{
-				_cgi_response.buildInternalErrorResponse();
-				setStatus(CGI_ERROR, "CGI Execve failed");
-				break;
-			}
-		}
 	}
 }
 
@@ -725,18 +677,6 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 		
 		char** argv = arg.getArgs();
 		char** envp = _env.getEnvp();
-		
-		if (access(argv[1], F_OK) != 0)
-		{
-			write(STDOUT_FILENO, "__CGI_ERROR_404__", 17);
-			_exit(1);
-		}
-		
-		if (access(argv[1], X_OK) != 0) 
-		{
-			write(STDOUT_FILENO, "__CGI_ERROR_403__", 17);
-			_exit(1);
-		}
 		
 		execve(argv[0], argv, envp);
 		
