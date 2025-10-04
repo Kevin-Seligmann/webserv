@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 15:21:11 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/10/02 13:09:00 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/04 11:36:30 by irozhkov         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,7 +257,7 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	}
 
 	// META/REQUEST
-	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1"); // default
+	_env.setEnvValue("GATEWAY_INTERFACE", "CGI/1.1");
 	_env.setEnvValue("REDIRECT_STATUS", "200");
 	
 	_env.setEnvValue("REQUEST_METHOD", methodToString(req.method));
@@ -278,19 +278,19 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	}
 	else
 	{
-//		_env.setEnvValue("SERVER_NAME", server->server_names[0]); // TODO check if you have to use getter
+		_env.setEnvValue("SERVER_NAME", sconf->server_names[0]);
 	}
 
 	if (req.body.content.size() > 0)
 	{
 		_env.setEnvValue("CONTENT_LENGTH", wss::i_to_dec(req.body.content.size() ));
-//		_env.setEnvValue("CONTENT_TYPE", req.headers.getContentType());
 		_env.setEnvValue("CONTENT_TYPE", req.headers.content_type.getString());
 	}
 
 	// CLIENT
 
 	// SERVER
+
 	if (req.headers.port != -1)
 	{
 		std::ostringstream ss;
@@ -299,10 +299,11 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	}
 	else
 	{
-		_env.setEnvValue("SERVER_PORT", "8080"); // TODO check how to get port from location OR server config
+		_env.setEnvValue("SERVER_PORT", "8080");
 	}
+
 	_env.setEnvValue("SERVER_PROTOCOL", req.protocol);
-	_env.setEnvValue("SERVER_SOFTWARE", "webserver"); // default
+	_env.setEnvValue("SERVER_SOFTWARE", "webserver");
 
 
 	// # Paths
@@ -316,7 +317,6 @@ void CGI::buildEnv(const HTTPRequest& req, const VirtualServersManager& server, 
 	std::map<std::string, std::string> res = pathToBlocks(req);
 	// PATHS
 
-//	std::string cgi_path = systemPathToCgi(system_path);
 	_env.setEnvValue("SCRIPT_FILENAME", system_path); 
 	_env.setEnvValue("PATH_TRANSLATED", system_path); // realpath()
 	_env.setEnvValue("REQUEST_URI", req.get_path());
