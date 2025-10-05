@@ -570,7 +570,7 @@ void CGI::runCGIStreamed(int fd)
 			total_request_read += written;
 			_stream_request.request_body_size_consumed += written;
 			
-			if (_stream_request.request_read_finished && _stream_request.request_body_size_consumed >= _stream_request.request_body_size)
+			if (_stream_request.request_read_finished && _req_body->size() == 0)
 			{
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
@@ -735,17 +735,17 @@ void CGI::sendResponse()
 	}
 }
 
-	void CGI::parseStreamHeaders()
+void CGI::parseStreamHeaders()
+{
+	size_t pos = _header_stream_buffer.find("\r\n\r\n");
+	if (pos == std::string::npos)
 	{
-		size_t pos = _header_stream_buffer.find("\r\n\r\n");
-		if (pos == std::string::npos)
-		{
-			return; 
-		}
-		
-		_cgi_response.parseFromCGIOutput(_header_stream_buffer);
-		_cgi_response.buildStreamedResponse();
-		_parsed_header_stream_buffer = _cgi_response.getResponseBuffer();
-		_stream_request.cgi_response_body_size = _parsed_header_stream_buffer.size();
-		_headers_parsed = true;
+		return; 
 	}
+	
+	_cgi_response.parseFromCGIOutput(_header_stream_buffer);
+	_cgi_response.buildStreamedResponse();
+	_parsed_header_stream_buffer = _cgi_response.getResponseBuffer();
+	_stream_request.cgi_response_body_size = _parsed_header_stream_buffer.size();
+	_headers_parsed = true;
+}

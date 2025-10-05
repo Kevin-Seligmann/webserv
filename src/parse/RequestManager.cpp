@@ -18,7 +18,7 @@ void RequestManager::process()
     bool parse = true;
     bool has_read = false;
 
-    if (_request.body.content.size() > 50000 && _stream_request.streaming_active)
+    if ((_request.body.content.size() > 50000 && _stream_request.streaming_active) || (_request_parser.get_status() == RequestParser::PRS_DONE))
         return ;
     while (_error.status() == OK && !request_done())
     {

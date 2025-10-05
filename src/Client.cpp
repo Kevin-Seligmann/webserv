@@ -573,7 +573,7 @@ void Client::process_stream(int fd, int mode)
 {
 	if (fd == _socket)
 	{
-		if (mode & POLLIN && !_stream_request.request_read_finished)
+		if (mode & POLLIN)
 		{
 			_request_manager.process();
 			if (_error.status() != OK)
@@ -597,7 +597,7 @@ void Client::process_stream(int fd, int mode)
 				Logger::getInstance() << "Client " << _socket << " finished request read streaming " << std::endl;
 			}
 		}
-		if (mode & POLLOUT && !_stream_request.cgi_write_finished)
+		if (mode & POLLOUT)
 		{
 			_cgi.sendResponse();
 			if (_error.status() != OK)
@@ -616,12 +616,12 @@ void Client::process_stream(int fd, int mode)
 		{
 			prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 		}
-		updateStreamingFileDescriptors();
+		else
+			updateStreamingFileDescriptors();
 	}
 
 	bool should_close = _cgi.getCGIResponse().close || _request_manager.close();
-	// Only after both are complete. Reading request must finish in order to empty buffer and continue with the connection.
-	if (_stream_request.cgi_write_finished && (_stream_request.request_read_finished || should_close))
+	if (_stream_request.cgi_read_finished)
 	{
 		if (should_close)
 		{
