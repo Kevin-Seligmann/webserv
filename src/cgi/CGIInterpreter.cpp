@@ -48,12 +48,12 @@ void CGIInterpreter::load_interpreters()
 			// Validate that the interpreter is accessible
 			if (access(interpreter.c_str(), F_OK) != 0)
 			{
-				throw std::runtime_error("Couldn't find: " + interpreter + " Errno: " + strerror(errno));
+				throw std::runtime_error("Couldn't find: " + interpreter);
 			}
 			
 			if (access(interpreter.c_str(), X_OK) != 0)
 			{
-				throw std::runtime_error("Faild to execute: " + interpreter + " Errno: " + strerror(errno));
+				throw std::runtime_error("Faild to execute: " + interpreter);
 			}
 
 			std::vector<std::string> extensions;

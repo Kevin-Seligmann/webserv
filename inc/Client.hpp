@@ -33,7 +33,7 @@ public:
     int ownsFd(int fd) const;
     bool closing() const;
     bool idle() const;
-
+    int id(){return _id;}
 
 private:
     enum Status {

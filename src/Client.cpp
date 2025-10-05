@@ -17,8 +17,8 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 , _last_activity(time(NULL))
 , _is_cgi(false)
 , _previous_directory_path("")
-, _id(ID_COUNTER)
 , _max_size(1048576)
+, _id(ID_COUNTER)
 {
 	_vsm.hookFileDescriptor(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
 	_active_fds.push_back(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));

@@ -225,40 +225,40 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 // ================ EVENT ================
 
 void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
-	int socket_fd = event.fd;
+	int fd = event.fd;
 
-	if (event.events & POLLIN && isListenSocket(socket_fd)) 
+	if (event.events & POLLIN && isListenSocket(fd)) 
 	{
-		handleNewConnection(socket_fd);
+		handleNewConnection(fd);
 	} else {
 		try {
-			Client* client = searchClient(socket_fd);
+			Client* client = searchClient(fd);
 			if (!client)
 			{
-				Logger::getInstance() << "A file descriptor without client has been found: " << socket_fd << std::endl; 
-				_wspoll.del(socket_fd);
+				Logger::getInstance() << "A file descriptor without client has been found: " << fd << std::endl; 
+				_wspoll.del(fd);
 				return ;
 			}
 
 			if (event.events & POLLERR)
 			{
-				Logger::getInstance() << "Client " + wss::i_to_dec(client->getSocket())+ " POLLERR on socket " << socket_fd << ": "<< strerror(errno) << std::endl;
+				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ " POLLERR on socket " + wss::i_to_dec(fd) + ": " + strerror(errno));
 				disconnectClient(client->getSocket());
 			}
 			else if (event.events & POLLRDHUP && client->idle())
 			{
-				Logger::getInstance() << "Client " + wss::i_to_dec(client->getSocket())+ ": connection closed by peer " << std::endl;
+				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ ": connection closed by peer " );
 				disconnectClient(client->getSocket());
 			}
 			else 
 			{
-				client->process(socket_fd, event.events);
+				client->process(fd, event.events);
 			}
 
 		} catch (const std::runtime_error& e) {
 			Logger::getInstance() << "Exception processing client data: " << e.what() << std::endl;
 			DEBUG_LOG("Exception processing client data: " << e.what());
-			disconnectClient(socket_fd);
+			disconnectClient(fd);
 		}
 	}
 }
@@ -394,11 +394,10 @@ void VirtualServersManager::run() {
 				{
 					active_event ++;
 					handleEvent(_wspoll[i]);
-
 				} 
 				catch (const std::exception& e)
 				{
-					Logger::getInstance().error("Critial error handling event: " + std::string(e.what()) + " The server must close. ");
+					Logger::getInstance().error("Critical error handling event: " + std::string(e.what()) + " The server must close. ");
 					throw std::exception();
 				}
 			}
