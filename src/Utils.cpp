@@ -27,27 +27,27 @@ int checkFile(const char* argv)
 
     if (!infile.is_open())
     {
-        std::cerr << std::endl << RED <<
-        "ERROR: file does not exist or can not be opened." <<
-        RESET << std::endl << std::endl;
+        // std::cerr << std::endl << RED <<
+        // "ERROR: file does not exist or can not be opened." <<
+        // RESET << std::endl << std::endl;
         return (-1);
     }
 
     infile.seekg(0, std::ios_base::end);
     if (infile.tellg() == 0)
     {
-        std::cerr << std::endl << RED <<
-        "ERROR: file is empty." <<
-        RESET << std::endl << std::endl;
+        // std::cerr << std::endl << RED <<
+        // "ERROR: file is empty." <<
+        // RESET << std::endl << std::endl;
         return (-1);
     }
     infile.seekg(0, std::ios_base::beg);
 
     if (infile.fail())
     {
-        std::cerr << std::endl << RED <<
-        "ERROR: file stream error detected." <<
-        RESET << std::endl << std::endl;
+        // std::cerr << std::endl << RED <<
+        // "ERROR: file stream error detected." <<
+        // RESET << std::endl << std::endl;
         return (-1);
     }
 

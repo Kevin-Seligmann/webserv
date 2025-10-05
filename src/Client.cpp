@@ -1,6 +1,8 @@
 #include "Client.hpp"
 #include "VirtualServersManager.hpp"
 
+int Client::ID_COUNTER = 1;
+
 Client::Client(VirtualServersManager & vsm, int client_fd)
 : _vsm(vsm)
 , _status(IDLE)
@@ -15,9 +17,12 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 , _last_activity(time(NULL))
 , _is_cgi(false)
 , _previous_directory_path("")
+, _id(ID_COUNTER)
 {
 	_vsm.hookFileDescriptor(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
 	_active_fds.push_back(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
+	ID_COUNTER ++;
+	Logger::getInstance().info("Client " + wss::i_to_dec(_id) + " connected with file descriptor " + wss::i_to_dec(_socket));
 }
 
 Client::~Client() 
@@ -25,6 +30,7 @@ Client::~Client()
 	for (std::vector<ActiveFileDescriptor>::iterator it = _active_fds.begin(); it != _active_fds.end(); it ++)
 		_vsm.unhookFileDescriptor(*it);
 	close(_socket);
+	Logger::getInstance().info("Client " + wss::i_to_dec(_id) + " disconnected successfully");
 } 
 
 // Entry point

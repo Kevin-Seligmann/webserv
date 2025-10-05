@@ -48,7 +48,6 @@ void RequestManager::process()
                 if (parse)
                 {
                     _request_parser.parse_body();
-                    if (_error.status() == OK) _validator.validate_body(_request.body);
                 }
                 break ;
             case RequestParser::PRS_CHUNKED_SIZE:

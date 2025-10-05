@@ -57,10 +57,12 @@ void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 
 		if (servers_list.size() > 1)
 		{
-			std::cout << YELLOW << "WARNING: " << RESET << "Multiple servers on " << YELLOW <<
+			std::stringstream os;
+			os << "Multiple servers on " << YELLOW <<
 			key.host << ":" << key.port << RESET << ". According to the subject requirements, " <<
 			"if two or more servers are configured with the same host:port, " << YELLOW <<
-			"the first one in order is considered the primary" << RESET << "." << std::endl;
+			"the first one in order is considered the primary" << RESET;
+			Logger::getInstance().warning(os.str());
 		}
 		++it1;
 	}
@@ -70,11 +72,13 @@ void ServerValidator::validate(const std::vector<ParsedServer>& servers)
 	{
 		if (it2->second.size() > 1)
 		{
-			std::cout << YELLOW << "WARNING: " << RESET << "Server name " <<  YELLOW << 
+			std::stringstream os;
+			os << "Server name " <<  YELLOW << 
 			it2->first << RESET << " used on multiple host:port combinations. " <<
  			"According to the subject requirements, if two or more servers are " << 
 			"configured with the same host:port, " << YELLOW <<
-			"the first one in order is considered the primary" << RESET << "." << std::endl;
+			"the first one in order is considered the primary" << RESET;
+			Logger::getInstance().warning(os.str());
 		}
 		++it2;
 	}

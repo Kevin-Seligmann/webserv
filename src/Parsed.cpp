@@ -585,7 +585,7 @@ ParsedServer parseServer(const std::vector<std::string> &tokens, size_t &i)
 				server.autoindex = AINDX_SERV_OFF;
 			else {
 				server.autoindex = AINDX_DEF_OFF;
-				std::cout << "Invalid argument for 'autoindex' directive. Setting default = false." << std::endl;
+				Logger::getInstance().warning("Invalid argument for 'autoindex' directive. Setting default = false.");
 			}
 
 			if (i < tokens.size() && tokens[i] == ";") ++i;
@@ -696,11 +696,7 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string> &tokens)
 
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 
-    if (argc > 2)
-	{
-		Logger::getInstance().error("This program start with arguments ---> ./webserver [filename]\n");
-        return (1);
-    }
+	Logger::getInstance().info("Loading configuration...");
 
     try {
         std::string configFile;
@@ -709,15 +705,15 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 			if (checkFile(argv[1]) == -1)
 				return (1);
             configFile = argv[1];
-            successMessage = "Success: starting server with custom config";
+            successMessage = "Using configuration file: " + configFile;
         } else {
             configFile = "conf/default.conf";
-            successMessage = "Success: starting server with default config";
+            successMessage = "Using default configuration file: " + configFile;
         }
         
         std::ifstream file(configFile.c_str());
         if (!file.is_open()) {
-            Logger::getInstance().error("Cannot open config file: " + configFile);
+            Logger::getInstance().error("Cannot open configuration file: " + configFile);
             return (1);
         }
         
@@ -738,7 +734,7 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
 
         ServerValidator::validate(parsedConfig);
 
-        std::cout << BLUE << successMessage << RESET << std::endl;
+		Logger::getInstance().info(successMessage);
         
     } catch (const std::exception& e) {
 		Logger::getInstance().error(std::string("PARSING ERROR: ") + e.what());

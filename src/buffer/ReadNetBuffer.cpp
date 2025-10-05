@@ -110,7 +110,6 @@ void ReadNetBuffer::clear()
 
 void ReadNetBuffer::consume_bytes(ssize_t bytes)
 {
-    std::cout << "Cons. " << bytes << std::endl;
     _start += bytes;
 }
 

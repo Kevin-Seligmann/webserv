@@ -102,8 +102,8 @@ VirtualServersManager::VirtualServersManager(const ParsedServers& configs){
 			} 
 		}
 	}
-	Logger::getInstance().info("VirtualServersManager: Loaded " + wss::i_to_dec(_server_configs.size()) + " configs");
-    Logger::getInstance().info("VirtualServersManager: Created " + wss::i_to_dec(_listen_sockets.size()) + " listen ports");
+	Logger::getInstance().info("Loaded " + wss::i_to_dec(_server_configs.size()) + " virtual servers");
+    // Logger::getInstance().info("Created " + wss::i_to_dec(_listen_sockets.size()) + " listen ports");
 }
 
 VirtualServersManager::~VirtualServersManager() {
@@ -122,13 +122,13 @@ VirtualServersManager::~VirtualServersManager() {
 	}
 	_clients.clear();
 
-	Logger::getInstance().info("VirtualServersManager destroyed");
+	Logger::getInstance().info("Bye!");
 }
 
 // ================ SOCKETS / POLL =================
 
 void VirtualServersManager::setPolling() {
-    Logger::getInstance().info("Starting polling configuration (setPolling)");
+    Logger::getInstance() << "Starting polling configuration (setPolling)";
     
     Logger::getInstance() << "Creating sockets for " << _server_configs.size() << " servers" << std::endl;
     
@@ -136,13 +136,17 @@ void VirtualServersManager::setPolling() {
 		it != _listen_sockets.end(); ++it) {
 
 		it->second = createAndBindSocket(it->first);
-		Logger::getInstance() << "Server " << it->first.host << ":" << it->first.port 
+		_wspoll.add(it->second, POLLIN);
+
+		std::stringstream os;
+		os << "Server " << it->first.host << ":" << it->first.port 
 							  << " started on socket FD: " << it->second;
 
-		_wspoll.add(it->second, POLLIN);
-		Logger::getInstance().info("Socket created and added to poll");
+		Logger::getInstance().info(os.str());
+
+		Logger::getInstance() << "Socket created and added to poll";
     }
-	Logger::getInstance().info("Setup of poll complete");
+	Logger::getInstance() << "Setup of poll complete";
 }	
 
 int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
@@ -205,9 +209,7 @@ Client* VirtualServersManager::searchClient(int client_fd) {
 	return NULL;
 }
 
-void VirtualServersManager::disconnectClient(int client_fd) {
-	std::cout << "Disconnecting client FD: " << client_fd << std::endl;
-	
+void VirtualServersManager::disconnectClient(int client_fd) {	
 	_client_to_listen.erase(client_fd);
 
 	std::map<int, Client*>::iterator it = _clients.find(client_fd);
@@ -217,7 +219,7 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 		return ;
 	}
 
-	CODE_ERR("The server tried to find a client that does not exists. This is not possible. " + wss::i_to_dec(client_fd)); // Maybe it's possible
+	CODE_ERR("The server tried to find a client that does not exists. This is not possible. " + wss::i_to_dec(client_fd)); 
 }
 
 // ================ EVENT ================
@@ -266,11 +268,8 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	for (std::map<Listen, int>::iterator it = _listen_sockets.begin();
 		it != _listen_sockets.end(); ++it) {
 			
-			std::cout << " LISTEN " << it->first.host << std::endl;
-
 			if (it->second == listen_fd) {
 				listen = const_cast<Listen*>(&it->first);
-				std::cout << " LISTEN FOUND " << it->first.host << std::endl;
 				break;
 			}
 	}
@@ -354,7 +353,7 @@ ServerConfig* VirtualServersManager::findServerConfigForRequest(const HTTPReques
 // ================ MAIN LOOP ================
 
 void VirtualServersManager::run() {
-	Logger::getInstance().info("=========== Starting WEBSERVER ===========");
+	Logger::getInstance().info("Initializing virtual servers...");
 
 	try {
 		setupSignals();
@@ -366,7 +365,7 @@ void VirtualServersManager::run() {
 		return;
 	}
 
-	Logger::getInstance().info("=========== WEBSERVER Started. Listening to new requests ===========");
+	Logger::getInstance().info("=========== Webserv Started ===========");
 
 	while (!s_shutdown_requested) 
 	{
@@ -496,5 +495,5 @@ void VirtualServersManager::gracefulShutdown() {
 		checkTimeouts();
 	}
 
-	Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
+	// Logger::getInstance().info("=========== Closing EVENT LOOP ===========");
 }

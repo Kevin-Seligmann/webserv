@@ -46,6 +46,7 @@ private:
     };
 
     static const int MAX_ERROR_RETRIES = 1;
+    static int ID_COUNTER;
 
     StreamRequest           _stream_request;
     VirtualServersManager & _vsm;
@@ -63,6 +64,7 @@ private:
     bool                    _is_cgi;
     std::string             _previous_directory_path; // Almacena ruta del último directorio
     size_t                  _max_size;
+    size_t                  _id;
 
 
     void handle_cgi_request(int fd);

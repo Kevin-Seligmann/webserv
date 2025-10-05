@@ -53,6 +53,7 @@ private:
     std::ostream * _information_output;
     std::ostream * _warning_output;
     std::ostream * _error_output;
+    std::ofstream   _dump;
 
     void _output_timestamp(std::ostream * os) const;
 

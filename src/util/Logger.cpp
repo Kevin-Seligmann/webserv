@@ -15,14 +15,15 @@ Logger::Logger(LogLevel log_level)
 :_log_level(log_level),
 _information_output(&std::cout),
 _warning_output(&std::cout),
-_error_output(&std::cerr)
+_error_output(&std::cerr),
+_dump()
 {}
 
 Logger::~Logger(){}
 
 Logger & Logger::getInstance()
 {
-    static Logger instance(DEBUG); 
+    static Logger instance(INFORMATION); 
     return instance;
 }
 
@@ -92,6 +93,8 @@ void Logger::_output_timestamp(std::ostream * os) const
 
 std::ostream & Logger::operator<<(std::string const & str)
 {
+    if (_log_level != DEBUG)
+        return _dump;
     _output_timestamp(_information_output);
     *_information_output << DEBUG_PREFIX << str;
     return *_information_output;
@@ -99,6 +102,8 @@ std::ostream & Logger::operator<<(std::string const & str)
 
 std::ostream & Logger::operator<<(HTTPRequest const & header)
 {
+    if (_log_level != DEBUG)
+        return _dump;
     _output_timestamp(_information_output);
     *_information_output << DEBUG_PREFIX << header;
     return *_information_output;

@@ -123,7 +123,6 @@ void RequestValidator::validate_headers(HTTPRequest const & request, FieldSectio
 
 bool RequestValidator::validate_extension(std::string const & filename, std::string const & extension)
 {
-    std::cout<< "VALIDATE: " << filename << " " << extension << std::endl;
     return wss::casecmp(filename, filename.size() - extension.size(), extension.size(), extension);
 }
 
