@@ -6,3 +6,4 @@ obj
 *.d
 *.txt
 claude/
+test/

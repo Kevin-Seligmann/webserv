@@ -14,7 +14,7 @@ static void make_socket_nonblocking(int fd) {
     }
 	flags = 1;
 	// -> Habilitar TCP no delay Off -> algoritmo de Nagle
-	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags));
+	// setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags));
 }
 
 volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
@@ -161,9 +161,9 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 	make_socket_nonblocking(socket_fd);
 
 	int opt = 1;
-	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, (sizeof(opt) / 2));
 	// -> Reusar puertos (0.0.0.0)
-	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, (sizeof(opt) / 2));
 	// -> Aumenta buffers del Kernel BOOOM!
 	int sendbuff = 256 * 1024;
 	int recvbuff = 256 * 1024;
@@ -253,8 +253,8 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ " POLLERR on socket " + wss::i_to_dec(fd) + ": " + strerror(errno));
 				disconnectClient(client->getSocket());
 			}
-			else if (event.events & POLLRDHUP) // siempre desconectar con POLLRHHUP (ES OK?)
-//			else if (event.events & POLLRDHUP && client->idle())
+//			else if (event.events & POLLRDHUP) // -> siempre desconectar con POLLRHHUP (ES OK?)
+			else if (event.events & POLLRDHUP && client->idle())
 			{
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ ": connection closed by peer " );
 				disconnectClient(client->getSocket());

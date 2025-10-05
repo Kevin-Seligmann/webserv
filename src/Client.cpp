@@ -283,7 +283,7 @@ void Client::handleRequestDone()
 	else
 		_max_size = server_config->getClientMaxBodySize();
 
-	if (_max_size < _request.body.content.length()) // TODO editado
+	if (_max_size < _request.body.content.length())
     {
         _error.set("Body size exceeds limit: " + wss::i_to_dec(_request.body.content.length())
 					+ " bytes (max: " + wss::i_to_dec(_max_size) + ")", CONTENT_TOO_LARGE);
