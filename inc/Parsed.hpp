@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parsed.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: irozhkov <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:51:01 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/08/16 18:30:04 by irozhkov         ###   ########.fr       */
+/*   Updated: 2025/10/04 22:28:12 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,5 +77,7 @@ std::vector<ParsedServer> parseConfig(const std::vector<std::string>& tokens);
 
 // PROCESS
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig);
+
+size_t parseBodySize(const std::string& size_str);
 
 #endif // WEBSERV_PARSED_HPP

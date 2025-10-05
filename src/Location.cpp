@@ -9,7 +9,7 @@ Location::Location()
     , _redirect("")
     , _cgi_extension("")
     , _allow_upload(false)
-    , _max_body_size(0)
+    , _max_body_size(1048576)
     , _alias("")
 
 {

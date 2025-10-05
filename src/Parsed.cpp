@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/10/04 11:46:15 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/10/05 01:26:45 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Utils.hpp"
 #include "ServerValidator.hpp"
 #include "VirtualServersManager.hpp"
+#include <cerrno>
 
 // Temporary color macros to fix compilation
 #define RED        "\033[1;91m"
@@ -305,7 +306,7 @@ Location parseLocation(const std::vector<std::string> &tokens, size_t &i)
 				CODE_ERR("Missing value for 'client_max_body_size' directive");
 			}
 			std::string value = tokens[i++];
-			size_t limit = str_to_sizet(value, ULONG_MAX);
+			ssize_t limit = parseBodySize(value);
 			loc.setMaxBodySize(limit);
 
 			if (i < tokens.size() && tokens[i] == ";") ++i;
@@ -750,4 +751,106 @@ int parseProcess(int argc, char **argv, ParsedServers& parsedConfig) {
     }
     
     return (0);
+}
+
+size_t parseBodySize(const std::string& size_str) {
+    static const size_t DEFAULT_SIZE = 1048576; // 1MB default
+    static const size_t MAX_SIZE = ~(static_cast<size_t>(0)); // MAX size_t
+    
+    if (size_str.empty())
+    {
+        Logger::getInstance().warning("Empty 'client_max_body_size'. Switched to DEFAULT 1M.");
+        return DEFAULT_SIZE;
+    }
+    
+    if (size_str.find('.') != std::string::npos)
+    {
+        throw std::runtime_error("Decimal values not allowed in body size: " + size_str);
+    }
+    
+    if (size_str[0] == '-')
+    {
+        throw std::runtime_error("Body size cannot be negative");
+    }
+    
+    std::string number_part;
+    std::string unit_part;
+    size_t i;
+    
+    // EXTRACT NUMBER
+    for (i = 0; i < size_str.length() && std::isdigit(size_str[i]); ++i)
+    {
+        number_part += size_str[i];
+    }
+    
+    if (number_part.empty())
+    {
+        throw std::runtime_error("No numeric value in body size: " + size_str);
+    }
+    
+    // EXTRACT UNIT
+    while (i < size_str.length())
+    {
+        unit_part += std::toupper(size_str[i]);
+        ++i;
+    }
+    
+    // CONVERT STRING TO NUMBER
+    errno = 0;
+    char *endptr = NULL;
+    unsigned long long base_size = std::strtoull(number_part.c_str(), &endptr, 10);
+    
+    if (errno == ERANGE || base_size == ULLONG_MAX)
+    {
+        throw std::runtime_error("Invalid body size value, too large: " + size_str);
+    }
+    
+    if (*endptr != '\0')
+    {
+        throw std::runtime_error("Invalid chars in body size value: " + size_str);
+    }
+    
+	DEBUG_LOG("Max Body Size 'base_size' befor appling units: " << base_size);
+
+	if (base_size == 0)
+    {
+        Logger::getInstance().warning("Body size is 0. Using ~UNLIMITED (size_t MAX).");
+        return MAX_SIZE;
+    }
+    
+    // UNIT CONVERSION
+    if (unit_part.empty() || unit_part == "B" || unit_part == "BYTES")
+    {
+        return base_size;
+    }
+    else if (unit_part == "K" || unit_part == "KB" || unit_part == "KIB")
+    {
+        if (base_size > MAX_SIZE / 1024ULL)
+        {
+            throw std::runtime_error("Body size too large: "
+                + size_str + " (exceeds system maximum)");
+        }
+        return base_size * 1024ULL;
+    }
+    else if (unit_part == "M" || unit_part == "MB" || unit_part == "MIB")
+    {
+        if (base_size > MAX_SIZE / (1024ULL * 1024ULL))
+        {
+            throw std::runtime_error("Body size too large: "
+                + size_str + " (exceeds system maximum)");
+        }
+        return base_size * 1024ULL * 1024ULL;
+    }
+    else if (unit_part == "G" || unit_part == "GB" || unit_part == "GIB")
+    {
+        if (base_size > MAX_SIZE / (1024ULL * 1024ULL * 1024ULL))
+        {
+            throw std::runtime_error("Body size too large: "
+                + size_str + " (exceeds system maximum)");
+        }
+        return base_size * 1024ULL * 1024ULL * 1024ULL;
+    }
+    
+    throw std::runtime_error("Unknown unit in body size: '" + unit_part
+        + "'. Valid units: B, K, KB, M, MB, G, GB");
 }

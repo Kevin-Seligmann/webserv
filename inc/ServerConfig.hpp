@@ -33,7 +33,6 @@ struct ServerConfig {
 
     bool getAutoindex() const;
     AutoIndexState getAutoindex(const Location* location) const;
-    std::string getClientMaxBodySizeString() const;
     const std::vector<std::string>& getServerNames() const { return server_names; }
     const std::string& getRoot() const { return root; }
     const std::vector<std::string>& getIndexFiles() const { return index_files; }
@@ -45,7 +44,6 @@ struct ServerConfig {
     bool getAllowUpload() const { return allow_upload; }
 
 private:
-    size_t parseBodySize(const std::string& size_str) const;
     std::vector<std::string> getIndexes(const Location* loc) const;
     std::string getDocRoot(const Location* loc) const;
 };
