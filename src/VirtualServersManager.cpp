@@ -2,7 +2,8 @@
 #include <cstring>  
 #include <unistd.h>  
 #include <arpa/inet.h> 
-#include <errno.h> 
+#include <errno.h>
+#include <netinet/tcp.h>
 
 // ================ SIGNALS  MANAGEMENT ================
 static void make_socket_nonblocking(int fd) {
@@ -11,6 +12,9 @@ static void make_socket_nonblocking(int fd) {
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
         throw std::runtime_error("Failed to set O_NONBLOCK");
     }
+	flags = 1;
+	// -> Habilitar TCP no delay Off -> algoritmo de Nagle
+	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags));
 }
 
 volatile sig_atomic_t VirtualServersManager::s_shutdown_requested = 0;
@@ -158,9 +162,13 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 
 	int opt = 1;
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	// #ifdef SO_REUSEPORT
-	// setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
-	// #endif
+	// -> Reusar puertos (0.0.0.0)
+	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+	// -> Aumenta buffers del Kernel BOOOM!
+	int sendbuff = 256 * 1024;
+	int recvbuff = 256 * 1024;
+	setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
+	setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &sendbuff, sizeof(recvbuff));
 
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
@@ -178,7 +186,7 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 		throw std::runtime_error("Bind failed");
 	}
 
-	if (listen(socket_fd, 128) < 0) {
+	if (listen(socket_fd, SOMAXCONN) < 0) {
 		close (socket_fd);
 		throw std::runtime_error("Listen failed");
 	}
@@ -245,7 +253,8 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ " POLLERR on socket " + wss::i_to_dec(fd) + ": " + strerror(errno));
 				disconnectClient(client->getSocket());
 			}
-			else if (event.events & POLLRDHUP && client->idle())
+			else if (event.events & POLLRDHUP) // siempre desconectar con POLLRHHUP (ES OK?)
+//			else if (event.events & POLLRDHUP && client->idle())
 			{
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ ": connection closed by peer " );
 				disconnectClient(client->getSocket());
@@ -286,10 +295,15 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	if (client_fd < 0) {
 		return;
 	}
-	make_socket_nonblocking(client_fd);
 
+
+	make_socket_nonblocking(client_fd);
+	// -> cerrar con notificacion
 	if (_wspoll.is_full())
-	{
+	{    const char* response = "HTTP/1.1 503 Service Unavailable\r\n"
+                          "Connection: close\r\n"
+                          "Content-Length: 0\r\n\r\n";
+		send(client_fd, response, strlen(response), MSG_NOSIGNAL);
 		close(client_fd);
 		return ;
 	}

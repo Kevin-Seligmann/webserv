@@ -278,7 +278,7 @@ void Client::handleRequestDone()
 	}
 	
 	// Conseguir el _max_size de location > server > fallback por constructor = 1M
-	if (location && location->getMaxBodySize() >= 0)
+	if (location) // && location->getMaxBodySize() >= 0) // -> 
 		_max_size = location->getMaxBodySize();
 	else
 		_max_size = server_config->getClientMaxBodySize();
