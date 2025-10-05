@@ -23,7 +23,7 @@ Logger::~Logger(){}
 
 Logger & Logger::getInstance()
 {
-    static Logger instance(DEBUG); 
+    static Logger instance(INFORMATION); 
     return instance;
 }
 
