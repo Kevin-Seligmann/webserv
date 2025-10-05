@@ -6,7 +6,7 @@
 /*   By: mvisca-g <mvisca-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:58:20 by irozhkov          #+#    #+#             */
-/*   Updated: 2025/09/22 17:28:25 by mvisca-g         ###   ########.fr       */
+/*   Updated: 2025/10/05 00:02:13 by mvisca-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,8 +184,17 @@ void printServerConfig(const ParsedServer& config)
 	std::cout << YELLOW << "Autoindex: " << RESET << autoindexToString(config.autoindex) << std::endl;
 
 
-	std::cout << YELLOW << "Client Max Body Size: " << RESET << config.client_max_body_size << std::endl;
-
+	size_t parsed_size = parseBodySize(config.client_max_body_size);
+	if (parsed_size > 0)
+	{
+	    std::cout << YELLOW << "Client Max Body Size: " << RESET 
+        << parsed_size << " bytes" << std::endl;
+	}
+	else
+	{
+    	std::cout << YELLOW << "Client Max Body Size " << RESET << " UNLIMITED" << std::endl;
+	}
+			  
 	std::cout << YELLOW << "Locations:" << RESET << std::endl;
 	for (std::map<std::string, Location>::const_iterator it = config.locations.begin();
 		 it != config.locations.end(); ++it)
