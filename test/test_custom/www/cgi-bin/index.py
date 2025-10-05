@@ -12,7 +12,7 @@ print("""<!DOCTYPE html>
     <title>CGI Python Test</title>
 </head>
 <body>
-    <h1>Python CGI is Working!</h1>
+    <h1>Python CGI</h1>
     <p>If you can see this, CGI execution is functioning correctly.</p>
     <ul>
         <li><a href="form.py">Form Test</a></li>

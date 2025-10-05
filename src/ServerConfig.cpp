@@ -294,71 +294,8 @@ const std::vector<std::string>& ServerConfig::getAllowMethods(const Location* lo
 	return allow_methods;
 }
 
-// getClientMaxBodySizeString
-std::string ServerConfig::getClientMaxBodySizeString() const {
-	if (client_max_body_size >= 1024 * 1024 * 1024) {
-		return wss::i_to_dec(client_max_body_size / (1024 * 1024 * 1024)) + "G";
-	} else if (client_max_body_size >= 1024 * 1024) {
-		return wss::i_to_dec(client_max_body_size / (1024 * 1024)) + "M";
-	} else if (client_max_body_size >= 1024) {
-		return wss::i_to_dec(client_max_body_size / 1024) + "K";
-	} else {
-		return wss::i_to_dec(client_max_body_size);
-	}
-}
-
 
 // PUBLICS
-size_t ServerConfig::parseBodySize(const std::string& size_str) const {
-	static const size_t DEFAULT_SIZE = 1048576;  // 1MB default
-	static const size_t MAX_SIZE = ~(static_cast<size_t>(0));  // MAX size_t
-
-	if (size_str.empty()) {
-		return DEFAULT_SIZE;
-	}
-
-	std::string number_part;
-	std::string unit_part;
-	size_t i;
-
-	// EXTRACT NUMBER
-	for (i = 0; i < size_str.length() && (std::isdigit(size_str[i]) || size_str[i] == '.'); ++i) {
-		number_part += size_str[i];
-	}
-
-	// EXTRACT UNIT
-	while (i < size_str.length()) {
-		unit_part += std::toupper(size_str[i]);
-		++i;
-	}
-
-	if (number_part.empty()) {
-		return DEFAULT_SIZE;
-	}
-
-	size_t base_size = static_cast<size_t>(std::atoll(number_part.c_str()));
-
-	// PROTECT FROM VALUE = 0
-	if (base_size == 0) {
-		return DEFAULT_SIZE;
-	}
-
-	// UNIT CONVERTION
-	if (unit_part.empty() || unit_part == "B" || unit_part == "BYTES") {
-		return base_size;
-	} else if (unit_part == "K" || unit_part == "KB" || unit_part == "KIB") {
-		if (base_size > MAX_SIZE / 1024) return MAX_SIZE;  // PROTECT OVERFLOW
-		return base_size * 1024;
-	} else if (unit_part == "M" || unit_part == "MB" || unit_part == "MIB") {
-		if (base_size > MAX_SIZE / (1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
-		return base_size * 1024 * 1024;
-	} else if (unit_part == "G" || unit_part == "GB" || unit_part == "GIB") {
-		if (base_size > MAX_SIZE / (1024 * 1024 * 1024)) return MAX_SIZE;  // PROTECT OVERFLOW
-		return base_size * 1024 * 1024 * 1024;
-	}
-	
-	return DEFAULT_SIZE;  // UNKNOWN UNIT
-}
 
 // getIndexes priorizado location -> server
 std::vector<std::string> ServerConfig::getIndexes(const Location* loc) const {

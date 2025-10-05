@@ -15,6 +15,7 @@ Client::Client(VirtualServersManager & vsm, int client_fd)
 , _last_activity(time(NULL))
 , _is_cgi(false)
 , _previous_directory_path("")
+, _max_size(1048576)
 {
 	_vsm.hookFileDescriptor(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
 	_active_fds.push_back(ActiveFileDescriptor(client_fd, POLLIN | POLLRDHUP));
@@ -265,24 +266,38 @@ void Client::handleRequestDone()
 	Location * location = NULL;
 	get_config(&server_config, &location);
 
-	_max_size = 0;
-	if (location && location->getMaxBodySize() > 0)
-		_max_size = location->getMaxBodySize();
-	else
-		_max_size = server_config->getClientMaxBodySize();
-
-	if (_max_size < _request.body.content.length())
-    {
-        _error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ " + wss::i_to_dec(_request.body.content.length()), CONTENT_TOO_LARGE);
-		handleRequestError();
-		return ;
-    }
-
 	if (!server_config)
 	{
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
-	else if (_stream_request.streaming_active && _error.status() == OK)
+	
+	// Conseguir el _max_size de location > server > fallback por constructor = 1M
+	if (location && location->getMaxBodySize() >= 0)
+		_max_size = location->getMaxBodySize();
+	else
+		_max_size = server_config->getClientMaxBodySize();
+
+	DEBUG_LOG("HandleRequestDone MAX SIZE = " << _max_size << " at file: '"
+			  << __FILE__ << "' - line: " << __LINE__);
+	DEBUG_LOG("HandleRequestDone REQUEST SIZE = " << _request.body.content.length() << " at file: '"
+			  << __FILE__ << "' - line: " << __LINE__);
+
+	size_t headers_len = _request.body.content.find("\r\n\r\n");
+	size_t body_len = _request.body.content.length() - headers_len;
+
+	DEBUG_LOG("HandleRequestDone BODY LEN = " << body_len << " at file: '"
+			  << __FILE__ << "' - line: " << __LINE__);
+
+
+	if (_max_size < body_len) // TODO editado
+    {
+        _error.set("Body size exceeds limit: " + wss::i_to_dec(_request.body.content.length())
+					+ " bytes (max: " + wss::i_to_dec(_max_size) + ")", CONTENT_TOO_LARGE);
+		handleRequestError();
+		return ;
+    }
+
+	if (_stream_request.streaming_active && _error.status() == OK)
 		prepareRequestStreaming();
 	else if (!autoindexTest() && isCgiRequest(location))
 	{
@@ -573,12 +588,18 @@ void Client::process_stream(int fd, int mode)
 				handleRequestError();
 				return ;
 			}
+			
+			DEBUG_LOG("ProcessStream VALOR DE: '_max_size': " << _max_size);
+			DEBUG_LOG("ProcessSrtram VALOR DE: '_stream_request.request_body_size': " << _stream_request.request_body_size);
+
 			if (_max_size < _stream_request.request_body_size)
 			{
-				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ " + wss::i_to_dec(_stream_request.request_body_size), CONTENT_TOO_LARGE, true);
+				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ "
+							+ wss::i_to_dec(_stream_request.request_body_size), CONTENT_TOO_LARGE, true);
 				handleRequestError();
 				return ;
 			}
+
 			if (_request_manager.request_done())
 			{
 				_stream_request.request_read_finished = true;
