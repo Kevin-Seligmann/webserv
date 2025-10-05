@@ -1,12 +1,10 @@
 #!/bin/bash
-
 ARG="$1"
-
-make clean -C ../..
-make -C ../.. $ARG
-
-cp -f ../../webserv webserv
-
-chmod +x webserv
-
-./webserv conf/webserv.conf
+if make -C ../.. $ARG; then
+    cp -f ../../webserv .
+    ./webserv conf/webserv.conf
+else
+    rm -f webserv
+    echo "Build failed."
+    exit 1
+fi

@@ -123,7 +123,6 @@ void CGIResponse::parseFromCGIOutput(const std::string& cgiOutput)
 
 	_bodyStream << bodyStr;
 
-	if (_status.empty()) { _status = "500 INTERNAL SERVER ERROR"; }
 	if (_contentType.empty()) { _contentType = "application/octet-stream"; }
 }
 

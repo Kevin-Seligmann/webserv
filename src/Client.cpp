@@ -283,19 +283,7 @@ void Client::handleRequestDone()
 	else
 		_max_size = server_config->getClientMaxBodySize();
 
-	DEBUG_LOG("HandleRequestDone MAX SIZE = " << _max_size << " at file: '"
-			  << __FILE__ << "' - line: " << __LINE__);
-	DEBUG_LOG("HandleRequestDone REQUEST SIZE = " << _request.body.content.length() << " at file: '"
-			  << __FILE__ << "' - line: " << __LINE__);
-
-	size_t headers_len = _request.body.content.find("\r\n\r\n");
-	size_t body_len = _request.body.content.length() - headers_len;
-
-	DEBUG_LOG("HandleRequestDone BODY LEN = " << body_len << " at file: '"
-			  << __FILE__ << "' - line: " << __LINE__);
-
-
-	if (_max_size < body_len) // TODO editado
+	if (_max_size < _request.body.content.length()) // TODO editado
     {
         _error.set("Body size exceeds limit: " + wss::i_to_dec(_request.body.content.length())
 					+ " bytes (max: " + wss::i_to_dec(_max_size) + ")", CONTENT_TOO_LARGE);
@@ -595,9 +583,6 @@ void Client::process_stream(int fd, int mode)
 				return ;
 			}
 			
-			DEBUG_LOG("ProcessStream VALOR DE: '_max_size': " << _max_size);
-			DEBUG_LOG("ProcessSrtram VALOR DE: '_stream_request.request_body_size': " << _stream_request.request_body_size);
-
 			if (_max_size < _stream_request.request_body_size)
 			{
 				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ "
@@ -629,9 +614,7 @@ void Client::process_stream(int fd, int mode)
 		_cgi.runCGIStreamed(fd);
 		if (_cgi.error())
 		{
-			_error.set("CGI Fatal error", INTERNAL_SERVER_ERROR, true);
-			handleRequestError();
-			return ;
+			prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 		}
 		updateStreamingFileDescriptors();
 	}
