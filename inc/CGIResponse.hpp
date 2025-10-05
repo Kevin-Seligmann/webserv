@@ -19,7 +19,7 @@
 # include <map>
 # include <sstream>
 # include <string>
-# include <unistd.h>   // write, close
+# include <unistd.h>
 
 #include "DebugView.hpp"
 

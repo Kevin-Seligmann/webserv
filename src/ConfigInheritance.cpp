@@ -29,12 +29,7 @@ void applyAutoindex(ParsedServer& server)
 			}
 		}
 	}
-/*	ESTO NO SIRVE PARA LO QUE ESPERA ResponseManager::is_autindex() PORQUE HACE LOS IF CON "...LOC..." NO CON "...SERV..."
-		if (it->second.getAutoindex() == AINDX_DEF_OFF)
-		{
-			it->second.setAutoindex(server.autoindex); // -> "...SERV..." o "...DEF..."
-		}
-*/
+
 }
 
 void applyAllowMethods(ParsedServer& server)

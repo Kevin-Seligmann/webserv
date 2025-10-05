@@ -29,7 +29,6 @@ struct FieldSection : public HTTPElement
     MediaType content_type;
     std::map<std::string, std::string> cookies;
     
-    // Other data
     e_close_status close_status;
 
     FieldSection();

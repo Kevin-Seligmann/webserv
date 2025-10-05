@@ -55,8 +55,6 @@ struct ParsedServer {
 
 typedef std::vector<ParsedServer> ParsedServers;
 
-// PARSING
-
 std::vector<std::string> tokenize(const std::string& content);
 
 size_t expect(const std::vector<std::string>& tokens, size_t i, const std::string& expected);
@@ -75,7 +73,6 @@ ParsedServer parseServer(const std::vector<std::string>& tokens, size_t& i);
 
 std::vector<ParsedServer> parseConfig(const std::vector<std::string>& tokens);
 
-// PROCESS
 int parseProcess(int argc, char **argv, ParsedServers& parsedConfig);
 
 size_t parseBodySize(const std::string& size_str);

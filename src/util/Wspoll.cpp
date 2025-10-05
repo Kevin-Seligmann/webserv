@@ -140,16 +140,11 @@ void Wspoll::update_fds()
     }
 }
 
-// _events.data(), _events.size()
 int Wspoll::wait()
 {
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll waiting requested." << std::endl;
     update_fds();
-    // for (int i = 0; i < _size; i++)
-    // {
-    //     std::cout << " fd "  << _fds[i].fd << " events " << _fds[i].events  << " revents " << _fds[i].revents  << "\n"; 
-    // }
     return poll(_fds, _size, TIMEOUT);
 }
 

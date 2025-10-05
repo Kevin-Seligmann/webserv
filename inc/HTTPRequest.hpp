@@ -9,7 +9,6 @@
 
 struct HTTPRequest : public HTTPElement
 {
-    // Request componentes
     URI uri;
     std::string protocol;
     HTTPMethod method;

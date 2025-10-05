@@ -15,13 +15,6 @@
 #include "HTTPError.hpp"
 #include "ElementParser.hpp"
 
-// struct headerType {
-//     char *name;
-//     bool singleton;
-//     void (RequestParser::*parser_f)(std::string const & value);
-// };
-
-
 class RequestParser 
 {
 public:
@@ -38,12 +31,10 @@ public:
 
     RequestParser(HTTPRequest & request, HTTPError & _error, ElementParser & _element_parser);
 
-    // Request managment
     void append(uint8_t const * str, ssize_t size);
     void new_request();
     parsing_status get_status() const;
     
-    // Parsing functions
     void parse_first_line();
     void parse_header_line();
     void parse_body();
@@ -63,7 +54,6 @@ public:
     ssize_t extract_buffer_chunk(uint8_t * dst, ssize_t buffer_size);
     size_t get_chunk_length();
     
-    // Debug
     void dump_remainder() const;
     std::string const get_remainder() const;
 

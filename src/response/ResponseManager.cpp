@@ -6,18 +6,6 @@ ResponseManager::ResponseManager(CGI & cgi, HTTPRequest & request, HTTPError & e
     _sys_buffer = SysBufferFactory::get_buffer(type, fd);
     _stream_request.set_response_write_fd(fd);
     total_writen_response_size = 0;
-    // TO_DELETE
-    // TESTING LOCATION CONFIG.
-    // lc->setPath("/def/");
-    // lc->setRoot("/home/kevin/42/webserv/test/net-request-tests");
-
-    // std::vector<std::string> m;
-    // m.push_back("GET");
-    // m.push_back("POST");
-    // m.push_back("DELETE");
-    // lc->setMethods(m);
-
-    // this->_location = lc;
 }
 
 ResponseManager::~ResponseManager(){delete _sys_buffer;}
@@ -131,8 +119,6 @@ void ResponseManager::generate_get_response(bool from_autoindex)
     if (_location && !_location->getRedirect().empty()) 
     {
         _error.set("Redirect configured", MOVED_PERMANENTLY);
-//      _redirecting_location = _location->getRedirect();
-//      centralizada en generate_default_status_response
         generate_default_status_response();
         return;
 
@@ -178,10 +164,6 @@ void ResponseManager::generate_cgi_response()
     _buffer.put_body(_cgi.getCGIResponse().getResponseBuffer());
 
     _cgi.reset();
-
-    // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". CGI Generated. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-    // if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    // Logger::getInstance() << msg << std::endl;
     
     _status = WRITING_RESPONSE;
 }
@@ -295,9 +277,6 @@ void ResponseManager::read_file()
     }
     if (bytes_read == 0)
     {
-        // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File read. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-        // if (msg.size() > 500) {msg = msg.substr(0, 500);}
-        // Logger::getInstance() << msg << std::endl;
         _status = WRITING_RESPONSE;
     }
 }
@@ -330,10 +309,6 @@ void ResponseManager::write_file()
         }
         _buffer.put_new_line();
         _buffer.put_body(_request.body.content);
-
-        // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". File writen. Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-        // if (msg.size() > 500) {msg = msg.substr(0, 500);}
-        // Logger::getInstance() << msg << std::endl;
 
         _status = WRITING_RESPONSE;
     }
@@ -425,10 +400,6 @@ void ResponseManager::read_directory()
 
     html += "<hr>\n</body>\n</html>";
 
-    // std::string msg = wss::ui_to_dec(_sys_buffer->_fd) + ". Full planned response: \n" + std::string(_buffer.itbegin(), _buffer.itend());
-    // if (msg.size() > 500) {msg = msg.substr(0, 500);}
-    // Logger::getInstance() << msg << std::endl;
-
     _buffer.put_header("Content-Length", wss::i_to_dec(html.size()));
     _buffer.put_new_line();
 
@@ -497,7 +468,6 @@ void ResponseManager::write_response()
     size_t max = _WRITE_BUFFER_SIZE;
     size_t write_qty = std::min<size_t>(max, _buffer.size());
 
-//    DEBUG_LOG("TO WRITE: "  << _buffer.get_start() << " first "  << write_qty << " chars " << std::endl);
     ssize_t written_bytes = _sys_buffer->write(_buffer.get_start(), write_qty);
     if (written_bytes > 0)
     {
@@ -506,20 +476,10 @@ void ResponseManager::write_response()
     }
     else if (written_bytes == 0)
     {
-        // Logger::getInstance() << "TOTAL OTPUT SEND AS RESPONSE  " << total_writen_response_size << " client " << _stream_request.get_request_buffer().read_fd() << std::endl;
         total_writen_response_size = 0;
         _buffer.clear();
         _file.close();
         _status = IDLE;
-    }
-    else
-    {
-        // We asume writting never fails due to errno restrictions. (also this is not a code error)
-        // We asume the writing bloqued for some reason (It CAN happen even if it's non-blocking. Will just return -1)
-
-        // Logger & i = Logger::getInstance();
-        // i.error("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close: " + std::string(strerror(errno)));
-        // CODE_ERR("Writing response, something went wrong with the operation. Can't reply with an status to the client. Must close.");
     }
 }
 
@@ -528,10 +488,6 @@ bool ResponseManager::response_done(){return _buffer.size() == 0 && _status == I
 
 std::string const ResponseManager::get_host_path()
 {
-    // DEFAULT. Default should be set in config, not here.
-    // Removed null check because they should never be empty.
-    // root_path = "/var/www/html";
-
     std::string path;
     if (_location)
         path = _location->getFilesystemLocation(_request.get_path());

@@ -14,6 +14,12 @@ header("Content-Type: text/html; charset=utf-8");
     <ul>
         <li><a href="cgi_demo_php.php">GET request demo</a></li>
         <li><a href="form.php">Form PHP Test</a></li>
+	</ul>
+    <p>GCI error</p>
+    <ul>
+        <li><a href="forbidden.php">CGI can't execute script (doesn't have permission - Error 403</a></li>
+
+
     </ul>
 </body>
 </html>

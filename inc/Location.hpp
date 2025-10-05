@@ -9,18 +9,6 @@
 #include "StringUtil.hpp"
 #include "HTTPRequest.hpp"
 
-// TODO: La clase Location no está terminada - falta implementar:
-// - Validación completa de configuración
-// - Manejo de herencia de configuración desde el server padre
-// - Implementación completa de CGI configuration
-// - CRITICAL: Manejo de exact match vs prefix match en locations:
-//   * location = /     -> exact match para "/"
-//   * location /       -> prefix match para todo lo que empiece con "/"
-//   * Si request es "/index.html" y existe "location = /" con "index index.html"
-//     debe hacer redirect INTERNO (no 301) para usar la location exacta
-//   * El match maker debe resolver esto internamente sin informar al cliente
-//   * Necesita re-matching automático cuando se resuelve un index file
-
 class Location {
 public:
 	enum MatchType { EXACT, PREFIX, UNSET };

@@ -27,7 +27,6 @@ int checkFile(const char* argv)
 
     if (!infile.is_open())
     {
-		// reemplazar por CODE_ERR 
         std::cerr << std::endl << RED <<
         "ERROR: file does not exist or can not be opened." <<
         RESET << std::endl << std::endl;
@@ -37,7 +36,6 @@ int checkFile(const char* argv)
     infile.seekg(0, std::ios_base::end);
     if (infile.tellg() == 0)
     {
-		// reemplazar por CODE_ERR // resolver file empty
         std::cerr << std::endl << RED <<
         "ERROR: file is empty." <<
         RESET << std::endl << std::endl;
@@ -47,7 +45,6 @@ int checkFile(const char* argv)
 
     if (infile.fail())
     {
-		// reemplazar por CODE_ERR
         std::cerr << std::endl << RED <<
         "ERROR: file stream error detected." <<
         RESET << std::endl << std::endl;
@@ -155,8 +152,6 @@ void printLocationConfig(const Location& loc)
 	if (loc.getMaxBodySize() > 0)
 		std::cout << YELLOW << "    Max Body Size: " << RESET << loc.getMaxBodySize() << " bytes" << std::endl;
 
-	// Error Pages (si existen)
-	// Nota: Location no expone getErrorPages() públicamente, skip por ahora
 }
 
 void printServerConfig(const ParsedServer& config)
@@ -185,8 +180,6 @@ void printServerConfig(const ParsedServer& config)
 	std::cout << YELLOW << "Allowed Methods:" << RESET << std::endl;
 	for (size_t i = 0; i < config.allow_methods.size(); ++i)
 		std::cout << "  - " << config.allow_methods[i] << std::endl;
-
-//	std::cout << YELLOW << "Autoindex: " << RESET << (config.autoindex ? "true" : "false") << std::endl;
 
 	std::cout << YELLOW << "Autoindex: " << RESET << autoindexToString(config.autoindex) << std::endl;
 
@@ -304,7 +297,6 @@ size_t str_to_sizet(const std::string& str, size_t max_value) {
 				base *= 1024UL * 1024UL * 1024UL;
 				break;
 		default:
-			// Si el sufijono es valido se usa el valor inicial bruto
 			break;
 		}
 	}
