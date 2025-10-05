@@ -621,7 +621,11 @@ void CGI::runCGIStreamed(int fd)
 	
 	if (_read_finished && _write_finished)
 	{		
-		setStatus(CGI_FINISHED, "CGI FINISHED");
+		// setStatus(CGI_FINISHED, "CGI FINISHED");
+		close(_cgi_pipe[0]);
+		_cgi_pipe[0] = -1;
+		close(_req_pipe[1]);
+		_req_pipe[1] = -1;
 	}
 }
 
