@@ -527,9 +527,9 @@ std::vector<ActiveFileDescriptor> CGI::getActiveFileDescriptors() const
 	std::vector<ActiveFileDescriptor> fds;
 	
 	if (!_read_finished && _cgi_pipe[0] != -1)
-	fds.push_back(ActiveFileDescriptor(_cgi_pipe[0], POLLIN));
+		fds.push_back(ActiveFileDescriptor(_cgi_pipe[0], POLLIN));
 	if (!_write_finished && _req_pipe[1] != -1)
-	fds.push_back(ActiveFileDescriptor(_req_pipe[1], POLLOUT));
+		fds.push_back(ActiveFileDescriptor(_req_pipe[1], POLLOUT));
 	return fds;
 }
 
@@ -600,11 +600,14 @@ void CGI::runCGIStreamed(int fd)
 				_cgi_pipe[0] = -1;
 			}
 		} 
-		else if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed)
+		else 
 		{
-			readed = _stream_request.get_response_buffer().read();
+			readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
 			if (readed > 0)
-			_stream_request.cgi_response_body_size += readed;
+			{
+				_parsed_header_stream_buffer += std::string(_rd_buffer, readed);
+				_stream_request.cgi_response_body_size += readed;
+			}
 			if (readed == 0)
 			{
 				_read_finished = true;
@@ -720,30 +723,18 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 
 void CGI::sendResponse()
 {
-	if (_header_stream_buffer_sent)
+	ssize_t sent = send(_stream_request.get_response_buffer().write_fd(), _parsed_header_stream_buffer.data(), _parsed_header_stream_buffer.size(), 0);	
+	if (sent > 0)
 	{
-		ssize_t sent = _stream_request.get_response_buffer().send();
-		if (sent > 0)
 		_stream_request.cgi_response_body_size_consumed += sent;
+		_parsed_header_stream_buffer.erase(0, sent);
 	}
-	else 
+	if (_headers_parsed && _read_finished && _parsed_header_stream_buffer.size() == 0)
 	{
-		ssize_t sent = send(
-			_stream_request.get_response_buffer().write_fd(), 
-			_parsed_header_stream_buffer.c_str() + _stream_request.cgi_response_body_size_consumed, 
-			_parsed_header_stream_buffer.size() - _stream_request.cgi_response_body_size_consumed, 0);
-			if (sent > 0)
-			_stream_request.cgi_response_body_size_consumed += sent; 
-			if (_parsed_header_stream_buffer.size() <= _stream_request.cgi_response_body_size_consumed && _headers_parsed)
-			_header_stream_buffer_sent = true;
-			
-		}
-		if (_header_stream_buffer_sent && _headers_parsed && _stream_request.cgi_read_finished && _stream_request.cgi_response_body_size_consumed >= _stream_request.cgi_response_body_size)
-		{
-			_stream_request.cgi_write_finished = true;
-		}
+		_stream_request.cgi_write_finished = true;
 	}
-	
+}
+
 	void CGI::parseStreamHeaders()
 	{
 		size_t pos = _header_stream_buffer.find("\r\n\r\n");

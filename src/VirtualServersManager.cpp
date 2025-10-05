@@ -158,9 +158,9 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 
 	int opt = 1;
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	#ifdef SO_REUSEPORT
-	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
-	#endif
+	// #ifdef SO_REUSEPORT
+	// setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+	// #endif
 
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
