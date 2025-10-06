@@ -232,6 +232,7 @@ void Client::handle_processing_response()
 	
 		if (_request_manager.close())
 		{
+			shutdown(_socket, SHUT_RD);
 		 	setStatus(CLOSING, "Closing");
 		}
 		else 
@@ -622,6 +623,7 @@ void Client::process_stream(int fd, int mode)
 	{
 		if (_cgi.getCGIResponse().close || _request_manager.close())
 		{
+			shutdown(_socket, SHUT_RD);
 			setStatus(CLOSING, "Closing");
 		}
 		else 
