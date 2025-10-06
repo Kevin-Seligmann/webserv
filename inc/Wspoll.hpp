@@ -51,7 +51,7 @@ private:
     };
 
     const static int POLLING_SIZE = 1000;
-    const static int TIMEOUT = -1;
+    const static int TIMEOUT = 1000;
     const static int WSPOLL_DEBUG = 0;
 
     struct pollfd _fds[POLLING_SIZE]; 
