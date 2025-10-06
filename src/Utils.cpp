@@ -263,6 +263,29 @@ std::string getLoopbackAddress()
 	return (loopbackIP);
 }
 
+
+std::string getHostnameAddress(std::string const & hostname, std::string const & port)
+{
+	struct addrinfo hints, *res;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;      // IPv4 or IPv6
+	hints.ai_socktype = SOCK_STREAM;  // TCP
+	hints.ai_flags = AI_PASSIVE;      // for binding
+
+	int ret = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &res);
+	if (ret != 0)
+	{
+        throw std::runtime_error("Could not resolve hostname and port '" + hostname + ":" + port + "': " + gai_strerror(ret));
+	}
+
+    char ipstr[INET_ADDRSTRLEN];
+    struct sockaddr_in* ipv4 = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+    inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
+
+    freeaddrinfo(res);
+    return std::string(ipstr);
+}
+
 /* Logs Utility */
 
 void OKlogsEntry(const std::string& title, const std::string& str) {

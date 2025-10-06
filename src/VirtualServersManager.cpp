@@ -158,7 +158,6 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 	if (socket_fd < 0) {
 		throw std::runtime_error("Faile to creat socket");
 	}
-	
 	make_socket_nonblocking(socket_fd);
 
 	int opt = 1;
@@ -295,6 +294,7 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 	if (client_fd < 0) {
 		return;
 	}
+
 
 	make_socket_nonblocking(client_fd);
 

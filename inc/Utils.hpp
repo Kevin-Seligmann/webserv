@@ -30,6 +30,8 @@
 # include <sys/socket.h>
 # include <unistd.h>
 # include <vector>
+#include <sys/types.h>
+#include <netdb.h>
 
 class Location;
 struct ParsedServer;
@@ -48,6 +50,7 @@ int checkFile(const char* argv);
 std::vector<std::string> loadCgiExtensions(const std::string& filename);
 
 std::string getLoopbackAddress();
+std::string getHostnameAddress(std::string const &, std::string const &);
 
 void printLocationConfig(const Location& loc);
 void printServerConfig(const ParsedServer& config);

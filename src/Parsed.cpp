@@ -414,7 +414,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 				}
 				else 
 				{
-					ld.host = token.substr(0, colon);
+					ld.host = ld.host = getHostnameAddress(token.substr(0, colon), token.substr(colon + 1));
 					ld.port = to_int(token.substr(colon + 1));
 				}
 			} 
@@ -427,7 +427,7 @@ Listen parse_listen(const std::vector<std::string>& tokens)
 				if (token == "localhost") {
 					ld.host = getLoopbackAddress(); }
 				else if (token[0] != '*')
-					ld.host = token;
+					ld.host = getHostnameAddress(token, "");
 			}
 		}
 	}
