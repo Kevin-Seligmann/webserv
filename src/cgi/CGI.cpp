@@ -53,8 +53,6 @@ CGI::CGI(StreamRequest & stream_request) : _env(), _stream_request(stream_reques
 	_cgi_pipe[0] = -1;
 	_cgi_pipe[1] = -1;
 	_pid = -1;
-	total_request_read = 0;
-	real_trs = 0;
 }
 
 
@@ -559,8 +557,6 @@ void CGI::reset()
 	_header_stream_buffer_sent = false;
 	_header_stream_buffer = "";
 	_parsed_header_stream_buffer = "";
-	total_request_read = 0;
-	real_trs = 0;
 }
 
 
@@ -572,8 +568,6 @@ void CGI::setStatus(CGIStatus status, std::string const & txt)
 
 void CGI::runCGIStreamed(int fd)
 {
-	errno = 0;
-
 	if (fd == _req_pipe[1])
 	{
 		
@@ -583,10 +577,7 @@ void CGI::runCGIStreamed(int fd)
 		if (written >= 0)
 		{
 			_req_body->erase(0, written);
-			
-			total_request_read += written;
 			_stream_request.request_body_size_consumed += written;
-			
 			if (_stream_request.request_read_finished && _req_body->size() == 0)
 			{
 				std::cout << "WRITE FINISHED!" << std::endl;
@@ -606,7 +597,6 @@ void CGI::runCGIStreamed(int fd)
 
 			if (readed > 0)
 			{
-				real_trs += readed;
 				_header_stream_buffer += std::string(_rd_buffer, readed);
 				parseStreamHeaders();					
 			}
@@ -623,7 +613,6 @@ void CGI::runCGIStreamed(int fd)
 			// std::cout << "READ " << readed << " " << strerror(errno)  << " total " << real_trs + readed << " fd " << fd <<std::endl;
 			if (readed > 0)
 			{
-				real_trs += readed;
 				_parsed_header_stream_buffer += std::string(_rd_buffer, readed);
 				_stream_request.cgi_response_body_size += readed;
 			}
@@ -641,7 +630,6 @@ void CGI::runCGIStreamed(int fd)
 	
 	if (_read_finished && _write_finished)
 	{		
-		// setStatus(CGI_FINISHED, "CGI FINISHED");
 		_close(_cgi_pipe[0]);
 	}
 }

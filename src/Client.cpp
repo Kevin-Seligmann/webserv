@@ -277,13 +277,12 @@ void Client::handleRequestDone()
 		CODE_ERR("No server found for client " + wss::i_to_dec(_socket));
 	}
 	
-	// Conseguir el _max_size de location > server > fallback por constructor = 1M
-	if (location) // && location->getMaxBodySize() >= 0) // -> 
+	if (location) 
 		_max_size = location->getMaxBodySize();
 	else
 		_max_size = server_config->getClientMaxBodySize();
 
-	if (_max_size < _request.body.content.length()) // TODO editado
+	if (_max_size < _request.body.content.length())
     {
         _error.set("Body size exceeds limit: " + wss::i_to_dec(_request.body.content.length())
 					+ " bytes (max: " + wss::i_to_dec(_max_size) + ")", CONTENT_TOO_LARGE);
@@ -294,9 +293,7 @@ void Client::handleRequestDone()
 	if (_stream_request.streaming_active && _error.status() == OK)
 		prepareRequestStreaming();
 	else if (!autoindexTest() && isCgiRequest(location))
-	{
 		prepareCgi(server_config, location);
-	}
 	else 
 		prepareResponse(server_config, location, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 }
@@ -576,11 +573,10 @@ void Client::process_stream(int fd, int mode)
 		if (mode & POLLIN)
 		{
 			_request_manager.process();
-			if (_error.status() != OK)
+			if (_cgi.error())
 			{
 				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
-				handleRequestError();
-				updateStreamingFileDescriptors();
+				prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 				return ;
 			}
 			
@@ -588,9 +584,7 @@ void Client::process_stream(int fd, int mode)
 			{
 				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ "
 							+ wss::i_to_dec(_stream_request.request_body_size), CONTENT_TOO_LARGE, true);
-				handleRequestError();
-			updateStreamingFileDescriptors();
-
+				prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 				return ;
 			}
 
@@ -603,12 +597,10 @@ void Client::process_stream(int fd, int mode)
 		if (mode & POLLOUT)
 		{
 			_cgi.sendResponse();
-			if (_error.status() != OK)
+			if (_cgi.error())
 			{
 				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
-				handleRequestError();
-				updateStreamingFileDescriptors();
-
+				prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
 				return ;
 			}
 		}
@@ -620,21 +612,15 @@ void Client::process_stream(int fd, int mode)
 		if (_cgi.error())
 		{
 			prepareResponse(NULL, NULL, ResponseManager::GENERATING_LOCATION_ERROR_PAGE);
+			return ;
 		}
-		else
-			updateStreamingFileDescriptors();
 	}
-		updateStreamingFileDescriptors();
-		updateStreamingFileDescriptors();
-		updateStreamingFileDescriptors();
-		updateStreamingFileDescriptors();
-		updateStreamingFileDescriptors();
-		updateStreamingFileDescriptors();
 
-	bool should_close = _cgi.getCGIResponse().close || _request_manager.close();
+	updateStreamingFileDescriptors();
+
 	if (_stream_request.cgi_read_finished)
 	{
-		if (should_close)
+		if (_cgi.getCGIResponse().close || _request_manager.close())
 		{
 			setStatus(CLOSING, "Closing");
 		}

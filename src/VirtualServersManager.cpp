@@ -158,6 +158,7 @@ int VirtualServersManager::createAndBindSocket(const Listen& listen_arg) {
 	if (socket_fd < 0) {
 		throw std::runtime_error("Faile to creat socket");
 	}
+	
 	make_socket_nonblocking(socket_fd);
 
 	int opt = 1;
@@ -295,9 +296,7 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 		return;
 	}
 
-
 	make_socket_nonblocking(client_fd);
-	// -> cerrar con notificacion
 
 	_client_to_listen[client_fd] = *listen;
 	
@@ -386,10 +385,10 @@ void VirtualServersManager::run() {
 
 		_loop_counter ++;
 		if (_loop_counter % 1000000 == 0)
-			{
-				std::cout <<"Running ... " << std::endl;
-				_loop_counter = 0;
-			}
+		{
+			Logger::getInstance() << "Running ... " << std::endl;
+			_loop_counter = 0;
+		}
 					
 		int active_event = 0;
 		for (int i = 0; i < _wspoll.size(); ++i) {

@@ -33,11 +33,13 @@ void Wspoll::add(int fd, int mode)
     if (fd == -1)
         return ;
     for (int i = 0; i < POLLING_SIZE; i++)
-{        if (_fds[i].fd == fd)
+    {
+        if (_fds[i].fd == fd)
         {
             mod(fd, mode);
             return ;
-        }}
+        }
+    }
     for (int i = 0; i < POLLING_SIZE; i++)
     {
         if (_fds[i].fd == -1)
@@ -50,11 +52,8 @@ void Wspoll::add(int fd, int mode)
     }
     throw std::runtime_error("Wspoll failed: No space left on addition");
 
-    // if (_adding_queue_size + _size >= POLLING_SIZE)
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll addition requested " + wss::i_to_dec(fd) + " " + wss::i_to_dec(mode) << std::endl;
-    // _adding_queue_size ++;
-    // _requests.push_back(Wspoll_request(WSPOLL_ADD, fd, mode));
 }
 
 void Wspoll::mod(int fd, int mode)
@@ -70,7 +69,6 @@ void Wspoll::mod(int fd, int mode)
             return ;
         }
     }
-    throw std::runtime_error("Wspoll failed: Mod not found");
 
     if (WSPOLL_DEBUG)
         Logger::getInstance() << "Wspoll modification requested " + wss::i_to_dec(fd) + " " + wss::i_to_dec(mode) << std::endl;
@@ -96,12 +94,6 @@ void Wspoll::del(int fd)
 
 int Wspoll::wait()
 {
-    for (int i = 0; i < POLLING_SIZE; ++i) {
-        if (_fds[i].fd != -1 && fcntl(_fds[i].fd, F_GETFD) == -1) {
-            Logger::getInstance() << "Stale FD in poll set: " << _fds[i].fd << std::endl;
-            // _fds[i].fd = -1;
-        }
-    }
     return poll(_fds, POLLING_SIZE, TIMEOUT);
 }
 
