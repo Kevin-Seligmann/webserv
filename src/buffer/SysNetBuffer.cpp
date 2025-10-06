@@ -4,7 +4,7 @@ SysNetBuffer::SysNetBuffer(int socket_fd):SysBuffer(socket_fd){}
 
 SysNetBuffer::~SysNetBuffer()
 {
-    close(_fd);
+    // close(_fd);
 }
 
 ssize_t SysNetBuffer::write(uint8_t *buff, size_t size)

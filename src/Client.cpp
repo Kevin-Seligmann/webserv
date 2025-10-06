@@ -580,6 +580,7 @@ void Client::process_stream(int fd, int mode)
 			{
 				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
 				handleRequestError();
+				updateStreamingFileDescriptors();
 				return ;
 			}
 			
@@ -588,6 +589,8 @@ void Client::process_stream(int fd, int mode)
 				_error.set("Body size too large: " + wss::i_to_dec(_max_size) + " \\ "
 							+ wss::i_to_dec(_stream_request.request_body_size), CONTENT_TOO_LARGE, true);
 				handleRequestError();
+			updateStreamingFileDescriptors();
+
 				return ;
 			}
 
@@ -604,6 +607,8 @@ void Client::process_stream(int fd, int mode)
 			{
 				Logger::getInstance() <<  "Request processed with error: " << _error.to_string() + _error.msg() << std::endl;
 				handleRequestError();
+				updateStreamingFileDescriptors();
+
 				return ;
 			}
 		}
@@ -619,6 +624,12 @@ void Client::process_stream(int fd, int mode)
 		else
 			updateStreamingFileDescriptors();
 	}
+		updateStreamingFileDescriptors();
+		updateStreamingFileDescriptors();
+		updateStreamingFileDescriptors();
+		updateStreamingFileDescriptors();
+		updateStreamingFileDescriptors();
+		updateStreamingFileDescriptors();
 
 	bool should_close = _cgi.getCGIResponse().close || _request_manager.close();
 	if (_stream_request.cgi_read_finished)

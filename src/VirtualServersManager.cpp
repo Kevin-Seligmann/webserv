@@ -253,8 +253,7 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ " POLLERR on socket " + wss::i_to_dec(fd) + ": " + strerror(errno));
 				disconnectClient(client->getSocket());
 			}
-			else if (event.events & POLLRDHUP) // siempre desconectar con POLLRHHUP (ES OK?)
-//			else if (event.events & POLLRDHUP && client->idle())
+			else if (event.events & POLLRDHUP && client->idle()) 
 			{
 				Logger::getInstance().info("Client " + wss::i_to_dec(client->id())+ ": connection closed by peer " );
 				disconnectClient(client->getSocket());
@@ -299,14 +298,6 @@ void VirtualServersManager::handleNewConnection(int listen_fd) {
 
 	make_socket_nonblocking(client_fd);
 	// -> cerrar con notificacion
-	if (_wspoll.is_full())
-	{    const char* response = "HTTP/1.1 503 Service Unavailable\r\n"
-                          "Connection: close\r\n"
-                          "Content-Length: 0\r\n\r\n";
-		send(client_fd, response, strlen(response), MSG_NOSIGNAL);
-		close(client_fd);
-		return ;
-	}
 
 	_client_to_listen[client_fd] = *listen;
 	
@@ -396,7 +387,7 @@ void VirtualServersManager::run() {
 		_loop_counter ++;
 		if (_loop_counter % 1000000 == 0)
 			{
-				Logger::getInstance() << "Running ... " << std::endl;
+				std::cout <<"Running ... " << std::endl;
 				_loop_counter = 0;
 			}
 					

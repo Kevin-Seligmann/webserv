@@ -5,7 +5,7 @@ SysFileBuffer::SysFileBuffer(int fd)
 
 SysFileBuffer::~SysFileBuffer()
 {
-    close(_fd);
+    // close(_fd);
 }
 
 ssize_t SysFileBuffer::write(uint8_t *buff, size_t size)

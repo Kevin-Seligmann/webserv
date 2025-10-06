@@ -1,10 +1,12 @@
 #!/bin/bash
 ARG="$1"
+
+rm -f webserv
+rm -f ../../webserv
 if make -C ../.. $ARG; then
-    cp -f ../../webserv .
-    ./webserv conf/webserv.conf
+    cp ../../webserv .
+    ./webserv conf/42.conf
 else
-    rm -f webserv
     echo "Build failed."
     exit 1
 fi

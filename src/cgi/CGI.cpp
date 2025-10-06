@@ -1,3 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
@@ -22,34 +54,16 @@ CGI::CGI(StreamRequest & stream_request) : _env(), _stream_request(stream_reques
 	_cgi_pipe[1] = -1;
 	_pid = -1;
 	total_request_read = 0;
+	real_trs = 0;
 }
 
 
 CGI::~CGI()
 {
-	if (_req_pipe[0] != -1)
-	{
-		close(_req_pipe[0]);
-		_req_pipe[0] = -1;
-	}
-	if (_req_pipe[1] != -1)
-	{
-		close(_req_pipe[1]);
-		_req_pipe[1] = -1;
-	}
-	if (_cgi_pipe[0] != -1) 
-	{
-		close(_cgi_pipe[0]);
-		_cgi_pipe[0] = -1;
-	}
-	if (_cgi_pipe[1] != -1)
-	{
-		close(_cgi_pipe[1]);
-		_cgi_pipe[1] = -1;
-	}
-	
-	int	status;
-	if (_pid > 0) { waitpid(_pid, &status, WNOHANG); }
+	_close(_req_pipe[0]);
+	_close(_req_pipe[1]);
+	_close(_cgi_pipe[0]);
+	_close(_cgi_pipe[1]);
 }
 
 std::string CGI::methodToString(HTTPMethod method) const 
@@ -337,8 +351,8 @@ void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::strin
 	
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
-		close(_req_pipe[0]); close(_req_pipe[1]);
-		close(_cgi_pipe[0]); close(_cgi_pipe[1]);
+		_close(_req_pipe[0]); _close(_req_pipe[1]);
+		_close(_cgi_pipe[0]); _close(_cgi_pipe[1]);
 		setStatus(CGI_ERROR, "CGI ERROR PIPE: " + std::string(strerror(errno)));
 		_cgi_response.buildInternalErrorResponse();
 		return ;
@@ -354,8 +368,8 @@ void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::strin
 	}
 	if (_pid == 0)
 	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
+		_close(_req_pipe[1]);
+		_close(_cgi_pipe[0]);
 		
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 		dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
@@ -365,8 +379,8 @@ void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::strin
 		}
 		
 		
-		close(_req_pipe[0]);
-		close(_cgi_pipe[1]);
+		_close(_req_pipe[0]);
+		_close(_cgi_pipe[1]);
 		
 		CGIArg	arg(_env);
 		
@@ -392,8 +406,8 @@ void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::strin
 	}
 	else 
 	{
-		close(_req_pipe[0]);
-		close(_cgi_pipe[1]);
+		_close(_req_pipe[0]);
+		_close(_cgi_pipe[1]);
 		
 		// Make pipes not blocking
 		int flags = fcntl(_req_pipe[1], F_GETFL, 0);
@@ -417,7 +431,7 @@ void CGI::init(HTTPRequest &req, const VirtualServersManager& server, std::strin
 		if (_wr_body_size == 0)
 		{
 			_write_finished = true;
-			close(_req_pipe[1]);
+			_close(_req_pipe[1]);
 		}
 		setStatus(CGI_RUNNING, "RUNNING CGI");
 	}
@@ -433,8 +447,7 @@ void CGI::runCGI(int fd)
 			_wr_bytes_sent += written;
 			if (_wr_bytes_sent >= _wr_body_size)
 			{
-				close(_req_pipe[1]);
-				_req_pipe[1] = -1;
+				_close(_req_pipe[1]);
 				_write_finished = true;
 			}
 		}
@@ -443,19 +456,18 @@ void CGI::runCGI(int fd)
 	{
 		ssize_t readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
 		if (readed > 0)
-		_cgi_output.append(_rd_buffer, readed);
+			_cgi_output.append(_rd_buffer, readed);
 		else if (readed == 0)
 		{
-			close(_cgi_pipe[0]);
-			_cgi_pipe[0] = -1;
+			_close(_cgi_pipe[0]);
 			_read_finished = true;
 		}
 	}
 	
 	if (_read_finished && _write_finished)
 	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
+		_close(_req_pipe[1]);
+		_close(_cgi_pipe[0]);
 		
 		int error_check = cgiErrorCheck(_cgi_output);
 		
@@ -548,6 +560,7 @@ void CGI::reset()
 	_header_stream_buffer = "";
 	_parsed_header_stream_buffer = "";
 	total_request_read = 0;
+	real_trs = 0;
 }
 
 
@@ -559,10 +572,14 @@ void CGI::setStatus(CGIStatus status, std::string const & txt)
 
 void CGI::runCGIStreamed(int fd)
 {
+	errno = 0;
+
 	if (fd == _req_pipe[1])
 	{
 		
 		ssize_t written = write(_req_pipe[1], _req_body->data(), _req_body->size());	
+		// std::cout << "WRITTEN " << written << " " << strerror(errno) << " total " << total_request_read + written << " fd " <<  fd << std::endl;
+
 		if (written >= 0)
 		{
 			_req_body->erase(0, written);
@@ -572,11 +589,10 @@ void CGI::runCGIStreamed(int fd)
 			
 			if (_stream_request.request_read_finished && _req_body->size() == 0)
 			{
+				std::cout << "WRITE FINISHED!" << std::endl;
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
-				close(_req_pipe[1]);
-				_req_pipe[1] = -1;
-				
+				_close(_req_pipe[1]);
 			}
 		}
 	}
@@ -586,8 +602,11 @@ void CGI::runCGIStreamed(int fd)
 		if (!_headers_parsed) 
 		{
 			readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
+			// std::cout << "READ " << readed << " " << strerror(errno)  << " total " << real_trs + readed << " fd " << fd <<std::endl;
+
 			if (readed > 0)
 			{
+				real_trs += readed;
 				_header_stream_buffer += std::string(_rd_buffer, readed);
 				parseStreamHeaders();					
 			}
@@ -596,15 +615,15 @@ void CGI::runCGIStreamed(int fd)
 				parseStreamHeaders();
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
-				close(_cgi_pipe[0]);
-				_cgi_pipe[0] = -1;
 			}
 		} 
 		else 
 		{
 			readed = read(_cgi_pipe[0], _rd_buffer, sizeof(_rd_buffer));
+			// std::cout << "READ " << readed << " " << strerror(errno)  << " total " << real_trs + readed << " fd " << fd <<std::endl;
 			if (readed > 0)
 			{
+				real_trs += readed;
 				_parsed_header_stream_buffer += std::string(_rd_buffer, readed);
 				_stream_request.cgi_response_body_size += readed;
 			}
@@ -612,8 +631,6 @@ void CGI::runCGIStreamed(int fd)
 			{
 				_read_finished = true;
 				_stream_request.cgi_read_finished = true;
-				close(_cgi_pipe[0]);
-				_cgi_pipe[0] = -1;
 			}
 		}
 	}
@@ -625,10 +642,7 @@ void CGI::runCGIStreamed(int fd)
 	if (_read_finished && _write_finished)
 	{		
 		// setStatus(CGI_FINISHED, "CGI FINISHED");
-		close(_cgi_pipe[0]);
-		_cgi_pipe[0] = -1;
-		close(_req_pipe[1]);
-		_req_pipe[1] = -1;
+		_close(_cgi_pipe[0]);
 	}
 }
 
@@ -638,8 +652,8 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 	
 	if (pipe(_req_pipe) < 0 || pipe(_cgi_pipe) < 0)
 	{
-		close(_req_pipe[0]); close(_req_pipe[1]);
-		close(_cgi_pipe[0]); close(_cgi_pipe[1]);
+		_close(_req_pipe[0]); _close(_req_pipe[1]);
+		_close(_cgi_pipe[0]); _close(_cgi_pipe[1]);
 		setStatus(CGI_ERROR, "CGI ERROR PIPE: " + std::string(strerror(errno)));
 		_cgi_response.buildInternalErrorResponse();
 		return ;
@@ -655,8 +669,8 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 	}
 	if (_pid == 0)
 	{
-		close(_req_pipe[1]);
-		close(_cgi_pipe[0]);
+		_close(_req_pipe[1]);
+		_close(_cgi_pipe[0]);
 		
 		if (dup2(_req_pipe[0], STDIN_FILENO) == -1 || 
 		dup2(_cgi_pipe[1], STDOUT_FILENO) == -1)
@@ -666,8 +680,8 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 		}
 		
 		
-		close(_req_pipe[0]);
-		close(_cgi_pipe[1]);
+		_close(_req_pipe[0]);
+		_close(_cgi_pipe[1]);
 		
 		CGIArg	arg(_env);
 		
@@ -698,8 +712,8 @@ void CGI::initStreamed(HTTPRequest &req, const VirtualServersManager& server, st
 		_header_stream_buffer = "";
 		_parsed_header_stream_buffer = "";
 		
-		close(_req_pipe[0]);
-		close(_cgi_pipe[1]);
+		_close(_req_pipe[0]);
+		_close(_cgi_pipe[1]);
 		
 		// Make pipes not blocking
 		int flags = fcntl(_req_pipe[1], F_GETFL, 0);
@@ -749,3 +763,41 @@ void CGI::parseStreamHeaders()
 	_stream_request.cgi_response_body_size = _parsed_header_stream_buffer.size();
 	_headers_parsed = true;
 }
+
+int CGI::_close(int & fd)
+{
+	if (fd == -1)
+		return 0;
+	int n = close(fd);
+	fd = -1;
+	return n;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
