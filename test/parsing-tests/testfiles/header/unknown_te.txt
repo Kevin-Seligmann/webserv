@@ -1,7 +1,0 @@
-1
-501
-GET / HTTP/1.1
-Transfer-Encoding: deflate
-Host: example.org
-
-

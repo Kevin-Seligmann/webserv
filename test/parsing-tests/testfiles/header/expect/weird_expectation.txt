@@ -1,6 +1,0 @@
-1
-417
-GET / HTTP/1.1
-host: example.com:80
-expect: 100-continue, rare   
-

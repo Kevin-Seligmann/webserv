@@ -409,7 +409,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 
 			std::string full_path;
 			// Get root path
-			if (ptr_location)
+			if (*ptr_location)
 			{
 				full_path = (*ptr_location)->getFilesystemLocation(new_request_path);
 			}
@@ -429,7 +429,7 @@ void Client::get_config(ServerConfig ** ptr_server_config, Location ** ptr_locat
 				// Guardar index encontrado
 				_request.uri.path = new_request_path;
 
-				if (!ptr_location || (*ptr_location)->getMatchType() != Location::EXACT)
+				if (!*ptr_location || (*ptr_location)->getMatchType() != Location::EXACT)
 				{
 					*ptr_location = (*ptr_server_config)->findLocation(_request.get_path());
 				}
