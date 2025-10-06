@@ -70,8 +70,6 @@ class CGI
 		bool 								_header_stream_buffer_sent;
 		std::string							_header_stream_buffer;
 		std::string							_parsed_header_stream_buffer;
-		ssize_t total_request_read;
-		ssize_t real_trs;
 		
 		std::string methodToString(HTTPMethod method) const;
 		std::map<std::string, std::string> pathToBlocks(const HTTPRequest& req) const;
