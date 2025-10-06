@@ -1,7 +1,0 @@
-PROGRAM, EXTENSION
-/bin/php, .bla, .php
-/bin/node, .js
-/bin/ubuntu_cgi_tester, .blabla
-/bin/mini.sh, .bla
-
-int execve("/bin/php", ["script.bla"], variables...);

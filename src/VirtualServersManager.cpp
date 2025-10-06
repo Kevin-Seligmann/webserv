@@ -227,7 +227,7 @@ void VirtualServersManager::disconnectClient(int client_fd) {
 		return ;
 	}
 
-	CODE_ERR("The server tried to find a client that does not exists. This is not possible. " + wss::i_to_dec(client_fd)); 
+	// CODE_ERR("The server tried to find a client that does not exists. This is not possible. " + wss::i_to_dec(client_fd)); 
 }
 
 // ================ EVENT ================
@@ -237,7 +237,12 @@ void VirtualServersManager::handleEvent(const struct Wspoll_event event) {
 
 	if (event.events & POLLIN && isListenSocket(fd)) 
 	{
-		handleNewConnection(fd);
+		try {
+			handleNewConnection(fd);
+		} catch (std::runtime_error & e) {
+			disconnectClient(fd);
+			Logger::getInstance().warning("Connection rejected: " + wss::i_to_dec(event.fd));
+		}
 	} else {
 		try {
 			Client* client = searchClient(fd);
@@ -401,8 +406,9 @@ void VirtualServersManager::run() {
 				} 
 				catch (const std::exception& e)
 				{
-					Logger::getInstance().error("Critical error handling event: " + std::string(e.what()) + " The server must close. ");
-					throw std::exception();
+					std::string s = "Critical error handling event: " + std::string(e.what()) + " The server must close. ";
+					Logger::getInstance().error(s);
+					throw std::runtime_error(s);
 				}
 			}
 		}

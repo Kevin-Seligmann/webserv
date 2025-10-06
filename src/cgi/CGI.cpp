@@ -580,7 +580,6 @@ void CGI::runCGIStreamed(int fd)
 			_stream_request.request_body_size_consumed += written;
 			if (_stream_request.request_read_finished && _req_body->size() == 0)
 			{
-				std::cout << "WRITE FINISHED!" << std::endl;
 				_stream_request.request_write_finished = true;
 				_write_finished = true;
 				_close(_req_pipe[1]);
