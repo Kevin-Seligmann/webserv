@@ -61,7 +61,7 @@ bool Location::matchesPath(const std::string& path) const {
 
 std::string Location::getFilesystemLocation(std::string const & path) const
 {
-    if (_alias.size() > 0)
+    if (MatchType() != EXACT && _alias.size() > 0)
     {
         if (path.compare(0, _path.size(), _path) == 0) {
             return _alias + path.substr(_path.size());
