@@ -78,3 +78,16 @@ How to proceed: https://nginx.org/en/docs/http/server_names.html (Virtual server
 ¿Does nginx understands a request that comes from either hostname or ip that didn't save? ¿Do we?
 ¿Do we store the ip and port hit by the client, adn the ip and port of the client? ¿Do we send it to CGI? ¿Do we use to match our servers?
 
+
+nm webserv \
+| grep ' U ' \
+| c++filt \
+| grep -E '^[^_Z]' \
+| grep -v 'std::' \
+| grep -v 'vtable' \
+| grep -v 'GLIBCXX' \
+| sed 's/@.*//' \
+| sort -u
+
+time, strlen, strftime, strdup, strchr, sygemptyset, sigaddset, sigaction, remove, memset, memmove, memcpy, memcmp, isspace, isalpha,
+inep_pton, inet_ntop, gmtime, getifaddres, getcwd, fstat, freeifaddrs, fdopendir, _exit, ctime
